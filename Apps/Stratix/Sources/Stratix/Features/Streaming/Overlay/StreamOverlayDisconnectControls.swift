@@ -10,7 +10,7 @@ extension StreamOverlayDetailsPanel {
         infoCard(title: "Controller Shortcuts", systemImage: "button.horizontal.top.press") {
             VStack(alignment: .leading, spacing: 6) {
                 Text("A: Disconnect")
-                Text("B or Play/Pause: Close Overlay")
+                Text("B: Close Overlay")
                 Text("L3 + R3 hold: Toggle Overlay")
             }
             .font(.system(size: 17, weight: .semibold, design: .rounded))

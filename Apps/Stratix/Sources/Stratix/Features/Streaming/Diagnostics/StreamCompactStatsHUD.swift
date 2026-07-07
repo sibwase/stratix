@@ -19,10 +19,8 @@ struct StreamCompactStatsHUD: View {
     /// Renders the HUD only when stream state or diagnostics require it.
     var body: some View {
         if shouldShowHUD {
-            hudStrip
-                .frame(maxWidth: 520, alignment: .leading)
-                .padding(28)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: hudAlignment)
+            hudContainer
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .allowsHitTesting(false)
                 .transition(.opacity)
         }
@@ -34,20 +32,51 @@ struct StreamCompactStatsHUD: View {
         showStatsHUD &&
         session.lifecycle == .connected
     }
-    
-    
-    private var hudAlignment: Alignment {
+
+    /// Mirrors the Connected badge layout so the panel's trailing edge lines up exactly.
+    @ViewBuilder
+    private var hudContainer: some View {
         switch statsHUDPosition {
-        case "topLeft":
-            return .topLeading
         case "bottomLeft":
-            return .bottomLeading
+            VStack {
+                Spacer(minLength: 0)
+                HStack {
+                    hudStrip
+                    Spacer(minLength: 0)
+                }
+                .padding(.leading, StreamStatusChipStyle.overlayEdgeInset)
+                .padding(.bottom, StreamStatusChipStyle.overlayEdgeInset)
+            }
+        case "topLeft":
+            VStack {
+                HStack {
+                    hudStrip
+                    Spacer(minLength: 0)
+                }
+                .padding(.leading, StreamStatusChipStyle.overlayEdgeInset)
+                .padding(.top, StreamStatusChipStyle.overlayEdgeInset)
+                Spacer(minLength: 0)
+            }
         case "bottomRight":
-            return .bottomTrailing
-        case "topRight":
-            fallthrough
-        default:
-            return .topTrailing
+            VStack {
+                Spacer(minLength: 0)
+                HStack {
+                    Spacer(minLength: 0)
+                    hudStrip
+                }
+                .padding(.trailing, StreamStatusChipStyle.overlayEdgeInset)
+                .padding(.bottom, StreamStatusChipStyle.overlayEdgeInset)
+            }
+        case "topRight", _:
+            VStack {
+                HStack {
+                    Spacer(minLength: 0)
+                    hudStrip
+                }
+                .padding(.trailing, StreamStatusChipStyle.overlayEdgeInset)
+                .padding(.top, StreamStatusChipStyle.overlayEdgeInset)
+                Spacer(minLength: 0)
+            }
         }
     }
 
@@ -72,19 +101,19 @@ struct StreamCompactStatsHUD: View {
             if let rungSummary = surfaceModel.rendererRungSummaryText {
                 Text(rungSummary)
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.82))
+                    .foregroundStyle(StratixTheme.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if let lastError = surfaceModel.lastError {
                 Text("Last renderer error: \(shortenedError(lastError))")
                     .font(.system(size: 10, weight: .semibold, design: .rounded))
-                    .foregroundStyle(Color.white.opacity(0.82))
+                    .foregroundStyle(StratixTheme.Colors.textSecondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
             if showRuntimeStatusProbe {
                 Text(runtimeProbeValue)
                     .font(.system(size: 10, weight: .semibold, design: .monospaced))
-                    .foregroundStyle(Color.white.opacity(0.84))
+                    .foregroundStyle(StratixTheme.Colors.textPrimary.opacity(0.84))
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityValue(runtimeProbeValue)
                     .accessibilityIdentifier("stream_runtime_probe")
@@ -92,9 +121,8 @@ struct StreamCompactStatsHUD: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(Color.black.opacity(0.72))
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .foregroundStyle(Color.white)
+        .streamStatusStatsHUDPanelBackground(cornerRadius: 12)
+        .foregroundStyle(StratixTheme.Colors.textPrimary)
     }
 
     /// Renders one fixed row of key/value diagnostics cells without per-render array allocation.
@@ -145,7 +173,9 @@ struct StreamCompactStatsHUD: View {
     private func hudItem(_ title: String, _ value: String) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(value).font(.system(size: 14, weight: .bold, design: .rounded)).monospacedDigit()
-            Text(title).font(.system(size: 10, weight: .semibold, design: .rounded)).opacity(0.8)
+            Text(title)
+                .font(.system(size: 10, weight: .semibold, design: .rounded))
+                .foregroundStyle(StratixTheme.Colors.textSecondary)
         }
     }
 

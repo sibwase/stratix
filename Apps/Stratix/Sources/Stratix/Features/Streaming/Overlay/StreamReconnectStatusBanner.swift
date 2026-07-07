@@ -5,14 +5,14 @@
 import SwiftUI
 
 enum StreamStatusChipStyle {
+    /// Shared inset for Connected badge, compact stats HUD, and overlay chips.
+    static let overlayEdgeInset: CGFloat = 20
     static let fill = Color.white.opacity(0.07)
     static let stroke = Color.white.opacity(0.12)
     static let strokeWidth: CGFloat = 1
-    static let readableFill = Color.white.opacity(0.09)
-    static let readableStroke = Color.white.opacity(0.14)
-    static let emphasizedScrim = Color.black.opacity(0.62)
-    static let emphasizedFill = Color.white.opacity(0.22)
-    static let emphasizedStroke = Color.white.opacity(0.24)
+    static let statsHUDScrim = Color.black.opacity(0.58)
+    static let statsHUDFill = Color.white.opacity(0.10)
+    static let statsHUDStroke = Color.white.opacity(0.16)
 }
 
 extension View {
@@ -38,31 +38,21 @@ extension View {
         )
     }
 
-    func streamStatusReadablePanelBackground(cornerRadius: CGFloat) -> some View {
-        background(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(StreamStatusChipStyle.readableFill)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(StreamStatusChipStyle.readableStroke, lineWidth: StreamStatusChipStyle.strokeWidth)
-        )
-    }
-
-    func streamStatusEmphasizedPanelBackground(cornerRadius: CGFloat) -> some View {
+    func streamStatusStatsHUDPanelBackground(cornerRadius: CGFloat) -> some View {
         background {
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(.thinMaterial)
+                .fill(.ultraThinMaterial)
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(StreamStatusChipStyle.emphasizedScrim)
+                .fill(StreamStatusChipStyle.statsHUDScrim)
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(StreamStatusChipStyle.emphasizedFill)
+                .fill(StreamStatusChipStyle.statsHUDFill)
         }
         .overlay(
             RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .stroke(StreamStatusChipStyle.emphasizedStroke, lineWidth: StreamStatusChipStyle.strokeWidth)
+                .stroke(StreamStatusChipStyle.statsHUDStroke, lineWidth: StreamStatusChipStyle.strokeWidth)
         )
     }
+
 }
 
 struct StreamReconnectStatusBanner: View {

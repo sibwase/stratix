@@ -97,9 +97,6 @@
 		AA0001000000000000000034 /* CASShader.metal in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000030 /* CASShader.metal */; };
 		AA0001000000000000000035 /* NavigationTypes.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000036 /* NavigationTypes.swift */; };
 		AA0001000000000000000039 /* StreamOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000040 /* StreamOverlay.swift */; };
-
-		D4F100000000000000000007 /* CloudLibrarySearchFieldLeadingAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000007 /* CloudLibrarySearchFieldLeadingAlignment.swift */; };
-		D4F100000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift */; };
 		AA0001000000000000000043 /* CloudLibraryStatusViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000044 /* CloudLibraryStatusViews.swift */; };
 		AA0001000000000000000045 /* CloudLibrary/CloudLibraryDataSource.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000046 /* CloudLibrary/CloudLibraryDataSource.swift */; };
 		AA0001000000000000000050 /* CloudLibraryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000050 /* CloudLibraryViewModel.swift */; };
@@ -135,6 +132,7 @@
 		B71000000000000000000005 /* StreamSurfaceModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72000000000000000000005 /* StreamSurfaceModelTests.swift */; };
 		B71000000000000000000006 /* StreamOverlayStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72000000000000000000006 /* StreamOverlayStateTests.swift */; };
 		B71000000000000000000007 /* RenderSurfaceCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72000000000000000000007 /* RenderSurfaceCoordinatorTests.swift */; };
+		B71000000000000000000008 /* RenderSurfaceCoordinatorDisappearTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72000000000000000000008 /* RenderSurfaceCoordinatorDisappearTests.swift */; };
 		C1F000000000000000000001 /* CloudLibraryShellVisibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F100000000000000000001 /* CloudLibraryShellVisibilityTests.swift */; };
 		C1F000000000000000000002 /* ConsoleListShellVisibilityTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F100000000000000000002 /* ConsoleListShellVisibilityTests.swift */; };
 		C1F000000000000000000003 /* StratixAppExitHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F100000000000000000003 /* StratixAppExitHandlingTests.swift */; };
@@ -151,13 +149,12 @@
 		C8A100000000000000000001 /* AuthenticatedShellDynamicTypeSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A100000000000000000004 /* AuthenticatedShellDynamicTypeSmokeTests.swift */; };
 		C8A100000000000000000005 /* AuthenticatedShellPresenceStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A100000000000000000006 /* AuthenticatedShellPresenceStatusTests.swift */; };
 		CBC6BD78396E10A53E6ED62B /* CloudLibraryHomeHeroSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93067D5B02A271F6B7CBCA06 /* CloudLibraryHomeHeroSection.swift */; };
-
 		D4F100000000000000000001 /* CloudLibraryLibraryScreenHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000001 /* CloudLibraryLibraryScreenHeader.swift */; };
 		D4F100000000000000000002 /* CloudLibraryLibraryScreenFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000002 /* CloudLibraryLibraryScreenFocus.swift */; };
 		D4F100000000000000000003 /* CloudLibraryLibraryScreenControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000003 /* CloudLibraryLibraryScreenControls.swift */; };
 		D4F100000000000000000004 /* CloudLibraryLibraryLetterIndexView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000004 /* CloudLibraryLibraryLetterIndexView.swift */; };
-
-
+		D4F100000000000000000007 /* CloudLibrarySearchFieldLeadingAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000007 /* CloudLibrarySearchFieldLeadingAlignment.swift */; };
+		D4F100000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift */; };
 		DACD095874B988D0D0676B30 /* CloudLibrarySceneStateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16A6BC80EE7E175DA37D32DC /* CloudLibrarySceneStateTests.swift */; };
 		E123EE8A2F7DBCF900DA591E /* CloudLibraryDetailHydrationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E123EE292F7DBCF900DA591E /* CloudLibraryDetailHydrationView.swift */; };
 		E123EEA32F7DBCF900DA591E /* CloudLibraryTitleDetailPanels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E123EE272F7DBCF900DA591E /* CloudLibraryTitleDetailPanels.swift */; };
@@ -167,10 +164,10 @@
 		E123EECC2F7DBCF900DA591E /* CloudLibraryTitleDetailHeroHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = E123EE252F7DBCF900DA591E /* CloudLibraryTitleDetailHeroHeader.swift */; };
 		E123EED12F7DBCF900DA591E /* CloudLibraryTitleDetailGallery.swift in Sources */ = {isa = PBXBuildFile; fileRef = E123EE242F7DBCF900DA591E /* CloudLibraryTitleDetailGallery.swift */; };
 		E12781B02F78896E005548D0 /* StreamOverlayComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781AF2F78896E005548D0 /* StreamOverlayComposition.swift */; };
-		E12781B62F788971005548D0 /* StreamReconnectStatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781B72F788971005548D0 /* StreamReconnectStatusBanner.swift */; };
 		E12781B22F78896E005548D0 /* StreamOverlayDiagnosticsPanel.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781B12F78896E005548D0 /* StreamOverlayDiagnosticsPanel.swift */; };
 		E12781B42F78896F005548D0 /* StreamOverlayHUDStats.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781B32F78896F005548D0 /* StreamOverlayHUDStats.swift */; };
 		E12781B62F788970005548D0 /* StreamOverlayDisconnectControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781B52F788970005548D0 /* StreamOverlayDisconnectControls.swift */; };
+		E12781B62F788971005548D0 /* StreamReconnectStatusBanner.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781B72F788971005548D0 /* StreamReconnectStatusBanner.swift */; };
 		E12781B92F789CDA005548D0 /* GuidePaneModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781B82F789CDA005548D0 /* GuidePaneModels.swift */; };
 		E12781BB2F789CDB005548D0 /* GuideSettingCatalog.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781BA2F789CDB005548D0 /* GuideSettingCatalog.swift */; };
 		E12781BD2F789CDC005548D0 /* GuidePaneSections.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781BC2F789CDC005548D0 /* GuidePaneSections.swift */; };
@@ -183,6 +180,7 @@
 		E50000000000000000000002 /* CloudLibraryHomeRailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E50000000000000000000012 /* CloudLibraryHomeRailComponents.swift */; };
 		E60000000000000000000001 /* StreamCompactStatsHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60000000000000000000011 /* StreamCompactStatsHUD.swift */; };
 		E60000000000000000000002 /* StreamControllerInputHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60000000000000000000012 /* StreamControllerInputHost.swift */; };
+		E60000000000000000000003 /* StreamPresentationFocusCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60000000000000000000014 /* StreamPresentationFocusCapture.swift */; };
 		EA5C4A4219F3E679EE78FC64 /* CloudLibrarySettingsDiagnosticsPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 34A899828FD2992D98D41153 /* CloudLibrarySettingsDiagnosticsPane.swift */; };
 		F0A1B2C3D4E5F60718293A40 /* WebRTCClientStateSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A41 /* WebRTCClientStateSupport.swift */; };
 		F0A1B2C3D4E5F60718293A42 /* WebRTCClientImplTVOSAudioBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0A1B2C3D4E5F60718293A43 /* WebRTCClientImplTVOSAudioBootstrap.swift */; };
@@ -220,9 +218,8 @@
 		F4A100000000000000000009 /* CloudLibraryShellPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A200000000000000000009 /* CloudLibraryShellPresentation.swift */; };
 		F4A10000000000000000000B /* CloudLibraryUtilityRoutePresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A20000000000000000000B /* CloudLibraryUtilityRoutePresentation.swift */; };
 		F4A10000000000000000000E /* CloudLibraryShellHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A20000000000000000000E /* CloudLibraryShellHost.swift */; };
-		F4A100000000000000000010 /* CloudLibraryDetailPathBindingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A200000000000000000010 /* CloudLibraryDetailPathBindingPolicy.swift */; };
-		E60000000000000000000003 /* StreamPresentationFocusCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60000000000000000000014 /* StreamPresentationFocusCapture.swift */; };
 		F4A10000000000000000000F /* CloudLibraryBrowseRoute.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A20000000000000000000F /* CloudLibraryBrowseRoute.swift */; };
+		F4A100000000000000000010 /* CloudLibraryDetailPathBindingPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A200000000000000000010 /* CloudLibraryDetailPathBindingPolicy.swift */; };
 		F4A100000000000000000011 /* CloudLibraryShellInteractionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4A200000000000000000011 /* CloudLibraryShellInteractionCoordinator.swift */; };
 		F4B100000000000000000001 /* CloudLibraryTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B200000000000000000001 /* CloudLibraryTestSupport.swift */; };
 		F4B100000000000000000002 /* CloudLibraryStateSnapshotTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B200000000000000000002 /* CloudLibraryStateSnapshotTests.swift */; };
@@ -234,7 +231,6 @@
 		F4B100000000000000000009 /* CloudLibraryShellHostTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B200000000000000000009 /* CloudLibraryShellHostTests.swift */; };
 		F4B10000000000000000000A /* CloudLibraryShellHostActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B20000000000000000000A /* CloudLibraryShellHostActionTests.swift */; };
 		F4B10000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B20000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift */; };
-		B71000000000000000000008 /* RenderSurfaceCoordinatorDisappearTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = B72000000000000000000008 /* RenderSurfaceCoordinatorDisappearTests.swift */; };
 		F6D29E9C36404A85E7043A11 /* CloudLibrarySettingsStreamPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA7A3527B80A2A185E52474 /* CloudLibrarySettingsStreamPane.swift */; };
 		FC2D1BA53F0C7135A62C8681 /* ShellPerformanceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DBB86F639E8A633FD39F3B4 /* ShellPerformanceUITests.swift */; };
 /* End PBXBuildFile section */
@@ -313,7 +309,6 @@
 		1A9200000000000000000003 /* ShellCheckpointStreamUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShellCheckpointStreamUITests.swift; sourceTree = "<group>"; };
 		1AA7A3527B80A2A185E52474 /* CloudLibrarySettingsStreamPane.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsStreamPane.swift; sourceTree = "<group>"; };
 		1DBB86F639E8A633FD39F3B4 /* ShellPerformanceUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ShellPerformanceUITests.swift; sourceTree = "<group>"; };
-
 		2D1035C73AE30752482EBC14 /* ConsoleGridSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConsoleGridSection.swift; sourceTree = "<group>"; };
 		34A899828FD2992D98D41153 /* CloudLibrarySettingsDiagnosticsPane.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsDiagnosticsPane.swift; sourceTree = "<group>"; };
 		36CA82EF9EED3E89AA59BA21 /* CloudLibrarySceneRouteState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySceneRouteState.swift; sourceTree = "<group>"; };
@@ -387,9 +382,6 @@
 		AA0002000000000000000035 /* RemoteArtworkView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RemoteArtworkView.swift; sourceTree = "<group>"; };
 		AA0002000000000000000036 /* NavigationTypes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationTypes.swift; sourceTree = "<group>"; };
 		AA0002000000000000000040 /* StreamOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamOverlay.swift; sourceTree = "<group>"; };
-
-		D4F200000000000000000007 /* CloudLibrarySearchFieldLeadingAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibrarySearchFieldLeadingAlignment.swift; sourceTree = "<group>"; };
-		D4F200000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryLibraryShoulderTabSwitch.swift; sourceTree = "<group>"; };
 		AA0002000000000000000044 /* CloudLibraryStatusViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryStatusViews.swift; sourceTree = "<group>"; };
 		AA0002000000000000000046 /* CloudLibrary/CloudLibraryDataSource.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibrary/CloudLibraryDataSource.swift; sourceTree = "<group>"; };
 		AA0002000000000000000050 /* CloudLibraryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryViewModel.swift; sourceTree = "<group>"; };
@@ -425,6 +417,7 @@
 		B72000000000000000000005 /* StreamSurfaceModelTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreamSurfaceModelTests.swift; sourceTree = "<group>"; };
 		B72000000000000000000006 /* StreamOverlayStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StreamOverlayStateTests.swift; sourceTree = "<group>"; };
 		B72000000000000000000007 /* RenderSurfaceCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RenderSurfaceCoordinatorTests.swift; sourceTree = "<group>"; };
+		B72000000000000000000008 /* RenderSurfaceCoordinatorDisappearTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RenderSurfaceCoordinatorDisappearTests.swift; sourceTree = "<group>"; };
 		C1F100000000000000000001 /* CloudLibraryShellVisibilityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellVisibilityTests.swift; sourceTree = "<group>"; };
 		C1F100000000000000000002 /* ConsoleListShellVisibilityTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConsoleListShellVisibilityTests.swift; sourceTree = "<group>"; };
 		C1F100000000000000000003 /* StratixAppExitHandlingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StratixAppExitHandlingTests.swift; sourceTree = "<group>"; };
@@ -448,8 +441,8 @@
 		D4F200000000000000000002 /* CloudLibraryLibraryScreenFocus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryLibraryScreenFocus.swift; sourceTree = "<group>"; };
 		D4F200000000000000000003 /* CloudLibraryLibraryScreenControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryLibraryScreenControls.swift; sourceTree = "<group>"; };
 		D4F200000000000000000004 /* CloudLibraryLibraryLetterIndexView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryLibraryLetterIndexView.swift; sourceTree = "<group>"; };
-
-
+		D4F200000000000000000007 /* CloudLibrarySearchFieldLeadingAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibrarySearchFieldLeadingAlignment.swift; sourceTree = "<group>"; };
+		D4F200000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryLibraryShoulderTabSwitch.swift; sourceTree = "<group>"; };
 		E123EE232F7DBCF900DA591E /* CloudLibraryTitleDetailFullscreenMedia.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryTitleDetailFullscreenMedia.swift; sourceTree = "<group>"; };
 		E123EE242F7DBCF900DA591E /* CloudLibraryTitleDetailGallery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryTitleDetailGallery.swift; sourceTree = "<group>"; };
 		E123EE252F7DBCF900DA591E /* CloudLibraryTitleDetailHeroHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryTitleDetailHeroHeader.swift; sourceTree = "<group>"; };
@@ -458,10 +451,10 @@
 		E123EE282F7DBCF900DA591E /* CloudLibraryTitleDetailScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryTitleDetailScreen.swift; sourceTree = "<group>"; };
 		E123EE292F7DBCF900DA591E /* CloudLibraryDetailHydrationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryDetailHydrationView.swift; sourceTree = "<group>"; };
 		E12781AF2F78896E005548D0 /* StreamOverlayComposition.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamOverlayComposition.swift; sourceTree = "<group>"; };
-		E12781B72F788971005548D0 /* StreamReconnectStatusBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamReconnectStatusBanner.swift; sourceTree = "<group>"; };
 		E12781B12F78896E005548D0 /* StreamOverlayDiagnosticsPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamOverlayDiagnosticsPanel.swift; sourceTree = "<group>"; };
 		E12781B32F78896F005548D0 /* StreamOverlayHUDStats.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamOverlayHUDStats.swift; sourceTree = "<group>"; };
 		E12781B52F788970005548D0 /* StreamOverlayDisconnectControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamOverlayDisconnectControls.swift; sourceTree = "<group>"; };
+		E12781B72F788971005548D0 /* StreamReconnectStatusBanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamReconnectStatusBanner.swift; sourceTree = "<group>"; };
 		E12781B82F789CDA005548D0 /* GuidePaneModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidePaneModels.swift; sourceTree = "<group>"; };
 		E12781BA2F789CDB005548D0 /* GuideSettingCatalog.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuideSettingCatalog.swift; sourceTree = "<group>"; };
 		E12781BC2F789CDC005548D0 /* GuidePaneSections.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GuidePaneSections.swift; sourceTree = "<group>"; };
@@ -475,6 +468,7 @@
 		E50000000000000000000012 /* CloudLibraryHomeRailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeRailComponents.swift; sourceTree = "<group>"; };
 		E60000000000000000000011 /* StreamCompactStatsHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamCompactStatsHUD.swift; sourceTree = "<group>"; };
 		E60000000000000000000012 /* StreamControllerInputHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamControllerInputHost.swift; sourceTree = "<group>"; };
+		E60000000000000000000014 /* StreamPresentationFocusCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamPresentationFocusCapture.swift; sourceTree = "<group>"; };
 		F03E2D30991FBE460D81696C /* CloudLibraryHomeFocusCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeFocusCoordinator.swift; sourceTree = "<group>"; };
 		F0A1B2C3D4E5F60718293A41 /* WebRTCClientStateSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCClientStateSupport.swift; sourceTree = "<group>"; };
 		F0A1B2C3D4E5F60718293A43 /* WebRTCClientImplTVOSAudioBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCClientImplTVOSAudioBootstrap.swift; sourceTree = "<group>"; };
@@ -512,9 +506,8 @@
 		F4A200000000000000000009 /* CloudLibraryShellPresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellPresentation.swift; sourceTree = "<group>"; };
 		F4A20000000000000000000B /* CloudLibraryUtilityRoutePresentation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryUtilityRoutePresentation.swift; sourceTree = "<group>"; };
 		F4A20000000000000000000E /* CloudLibraryShellHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellHost.swift; sourceTree = "<group>"; };
-		F4A200000000000000000010 /* CloudLibraryDetailPathBindingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryDetailPathBindingPolicy.swift; sourceTree = "<group>"; };
-		E60000000000000000000014 /* StreamPresentationFocusCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamPresentationFocusCapture.swift; sourceTree = "<group>"; };
 		F4A20000000000000000000F /* CloudLibraryBrowseRoute.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryBrowseRoute.swift; sourceTree = "<group>"; };
+		F4A200000000000000000010 /* CloudLibraryDetailPathBindingPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryDetailPathBindingPolicy.swift; sourceTree = "<group>"; };
 		F4A200000000000000000011 /* CloudLibraryShellInteractionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellInteractionCoordinator.swift; sourceTree = "<group>"; };
 		F4B200000000000000000001 /* CloudLibraryTestSupport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryTestSupport.swift; sourceTree = "<group>"; };
 		F4B200000000000000000002 /* CloudLibraryStateSnapshotTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryStateSnapshotTests.swift; sourceTree = "<group>"; };
@@ -526,7 +519,6 @@
 		F4B200000000000000000009 /* CloudLibraryShellHostTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellHostTests.swift; sourceTree = "<group>"; };
 		F4B20000000000000000000A /* CloudLibraryShellHostActionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellHostActionTests.swift; sourceTree = "<group>"; };
 		F4B20000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryDetailPathBindingPolicyTests.swift; sourceTree = "<group>"; };
-		B72000000000000000000008 /* RenderSurfaceCoordinatorDisappearTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RenderSurfaceCoordinatorDisappearTests.swift; sourceTree = "<group>"; };
 		FDD888169C0334F1EB5F0362 /* CloudLibrarySettingsBindings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsBindings.swift; sourceTree = "<group>"; };
 		FEB9DBA0F1D68DF25F27062A /* StratixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StratixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -1089,7 +1081,6 @@
 				D4F200000000000000000003 /* CloudLibraryLibraryScreenControls.swift */,
 				D4F200000000000000000004 /* CloudLibraryLibraryLetterIndexView.swift */,
 				D4F200000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift */,
-
 			);
 			path = Library;
 			sourceTree = "<group>";
@@ -1155,7 +1146,6 @@
 				157CA9EDC0762B5961E30965 /* CloudLibrarySettingsControllerPane.swift */,
 				34A899828FD2992D98D41153 /* CloudLibrarySettingsDiagnosticsPane.swift */,
 				98FEE4EF5691E33AEF87556F /* CloudLibrarySettingsInterfacePane.swift */,
-
 				61B6E4EA50BE46ED07D648CC /* CloudLibrarySettingsSidebar.swift */,
 				1AA7A3527B80A2A185E52474 /* CloudLibrarySettingsStreamPane.swift */,
 				C23CB0AF4B8EB4CB55728009 /* CloudLibrarySettingsVideoAudioPane.swift */,
@@ -1441,7 +1431,7 @@
 			);
 			mainGroup = AA0004000000000000000000;
 			packageReferences = (
-				A30000000000000000000022 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */,
+				AA000A000000000000000009 /* XCLocalSwiftPackageReference "../../ThirdParty/swift-async-algorithms" */,
 				AA000A000000000000000001 /* XCLocalSwiftPackageReference "../../Packages/StratixModels" */,
 				AA000A000000000000000002 /* XCLocalSwiftPackageReference "../../Packages/InputBridge" */,
 				AA000A000000000000000003 /* XCLocalSwiftPackageReference "../../Packages/XCloudAPI" */,
@@ -1590,8 +1580,6 @@
 				D4F100000000000000000003 /* CloudLibraryLibraryScreenControls.swift in Sources */,
 				D4F100000000000000000004 /* CloudLibraryLibraryLetterIndexView.swift in Sources */,
 				D4F100000000000000000008 /* CloudLibraryLibraryShoulderTabSwitch.swift in Sources */,
-
-
 				AA0001000000000000000058 /* CloudLibraryProfileView.swift in Sources */,
 				E12781BD2F789CDC005548D0 /* GuidePaneSections.swift in Sources */,
 				AA0001000000000000000004 /* AuthenticatedShellView.swift in Sources */,
@@ -1708,7 +1696,6 @@
 				66FE7D8823BB82790D7E3B0C /* SideRailActionList.swift in Sources */,
 				C440E010E8AC87C303079CD8 /* CloudLibrarySettingsBindings.swift in Sources */,
 				38DFAE16DCDF1442ED356818 /* CloudLibrarySettingsSidebar.swift in Sources */,
-
 				F6D29E9C36404A85E7043A11 /* CloudLibrarySettingsStreamPane.swift in Sources */,
 				0205DCA7B32DF4EEF4A7E7BA /* CloudLibrarySettingsControllerPane.swift in Sources */,
 				241C9AB6F293FB14F2CE9236 /* CloudLibrarySettingsVideoAudioPane.swift in Sources */,
@@ -1899,7 +1886,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.2;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
+				TVOS_DEPLOYMENT_TARGET = 26.6;
 			};
 			name = Profile;
 		};
@@ -2176,7 +2163,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.2;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
+				TVOS_DEPLOYMENT_TARGET = 26.6;
 			};
 			name = Debug;
 		};
@@ -2216,7 +2203,7 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.2;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
+				TVOS_DEPLOYMENT_TARGET = 26.6;
 			};
 			name = Release;
 		};
@@ -2447,23 +2434,16 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../../Packages/VideoRenderingKit;
 		};
-/* End XCLocalSwiftPackageReference section */
-
-/* Begin XCRemoteSwiftPackageReference section */
-		A30000000000000000000022 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/apple/swift-async-algorithms";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
+		AA000A000000000000000009 /* XCLocalSwiftPackageReference "../../ThirdParty/swift-async-algorithms" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../../ThirdParty/swift-async-algorithms;
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		A30000000000000000000023 /* AsyncAlgorithms */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = A30000000000000000000022 /* XCRemoteSwiftPackageReference "swift-async-algorithms" */;
+			package = AA000A000000000000000009 /* XCLocalSwiftPackageReference "../../ThirdParty/swift-async-algorithms" */;
 			productName = AsyncAlgorithms;
 		};
 		AA0009000000000000000001 /* StratixModels */ = {

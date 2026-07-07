@@ -296,16 +296,20 @@ struct StreamPreparingOverlay: View {
 
     /// Renders the pre-session preparation message and cancel affordance.
     var body: some View {
-        StreamLaunchOverlayLayout(
-            gameTitle: overlayInfo.title,
-            gameSubtitle: overlayInfo.subtitle,
-            statusTitle: "Preparing Stream",
-            progress: 0.08,
-            summary: "Loading stream details and reserving a session.",
-            leadingAction: {
-                StreamLaunchCancelButton(onCancel: onCancel)
-            }
-        )
+        ZStack {
+            StreamLaunchOverlayLayout(
+                gameTitle: overlayInfo.title,
+                gameSubtitle: overlayInfo.subtitle,
+                statusTitle: "Preparing Stream",
+                progress: 0.08,
+                summary: "Loading stream details and reserving a session.",
+                leadingAction: {
+                    StreamLaunchCancelButton(onCancel: onCancel)
+                }
+            )
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .focusSection()
     }
 }
 

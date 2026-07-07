@@ -67,9 +67,6 @@ extension CloudLibraryLibraryScreen {
             case .headerButton(let id) where id == "sort":
                 applyFocusDrivenTransition(to: .headerButton(id))
                 return
-            case .headerButton(let id) where id == "clear-filters" && !state.activeFilterLabels.isEmpty:
-                applyFocusDrivenTransition(to: .headerButton(id))
-                return
             case .headerButton(let id) where id == "clear-filters":
                 applyFocusDrivenTransition(to: .headerButton(id))
                 return
@@ -185,13 +182,12 @@ extension CloudLibraryLibraryScreen {
             targetTitleID = state.gridItems.first?.titleID
         }
         guard let targetTitleID,
-              scrollTargetID(for: targetTitleID) != nil else { return }
+              let targetID = scrollTargetID(for: targetTitleID) else { return }
         pendingFocusTask?.cancel()
         if focusDriven {
             applyFocusDrivenTransition(to: .tile(targetTitleID))
             return
         }
-        guard let targetID = scrollTargetID(for: targetTitleID) else { return }
         pendingFocusTask = Task { @MainActor in
             withAnimation(nil) {
                 scrollProxy.scrollTo(targetID, anchor: .topLeading)
@@ -228,8 +224,13 @@ extension CloudLibraryLibraryScreen {
         index % cachedGridColumnCount == 0
     }
 
-    func isTrailingGridColumn(index: Int) -> Bool {
-        index % cachedGridColumnCount == cachedGridColumnCount - 1
+    /// True for the rightmost tile in a row, including partially filled rows in My games.
+    func isRightmostGridTile(index: Int) -> Bool {
+        let column = index % cachedGridColumnCount
+        let rowStart = (index / cachedGridColumnCount) * cachedGridColumnCount
+        let itemsInRow = min(cachedGridColumnCount, state.gridItems.count - rowStart)
+        guard itemsInRow > 0 else { return false }
+        return column == itemsInRow - 1
     }
 
     func focusLetterIndex(for letter: String) {

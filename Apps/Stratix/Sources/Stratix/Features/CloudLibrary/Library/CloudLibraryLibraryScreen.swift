@@ -76,9 +76,14 @@ struct CloudLibraryLibraryScreen: View, Equatable {
     )
 
     var showsLetterIndex: Bool {
-        !isLibrarySearchActive
-            && state.sortLabel.contains("A-Z")
-            && state.gridItems.count >= 12
+        guard !isLibrarySearchActive else { return false }
+        guard state.sortLabel.contains("A-Z") else { return false }
+        guard cachedLetterSections.count >= 2 else { return false }
+
+        if state.selectedTabID == LibraryTabID.myGames {
+            return !state.gridItems.isEmpty
+        }
+        return state.gridItems.count >= 12
     }
 
     /// Letter rail accepts focus only when entered from the grid's trailing column.
@@ -190,7 +195,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                                     NavigationPerformanceTracker.recordRemoteMoveStart(surface: "library", direction: direction)
                                     if direction == .left, isLeadingGridColumn(index: index) {
                                         onRequestSideRailEntry()
-                                    } else if direction == .right, isTrailingGridColumn(index: index), showsLetterIndex {
+                                    } else if direction == .right, isRightmostGridTile(index: index), showsLetterIndex {
                                         focusLetterIndex(for: sectionLetter)
                                     } else if direction == .up, isTopGridRow(index: index) {
                                         requestHeaderFocusFromGrid(scrollProxy: scrollProxy)
@@ -204,7 +209,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                         .focusScope(gridFocusNamespace)
                         .focusSection()
                         .padding(.horizontal, gridEdgeFocusInset)
-                        .padding(.bottom, 0)
+
                         .animation(nil, value: state.selectedTabID)
                         .animation(nil, value: isLibrarySearchActive)
                     }
