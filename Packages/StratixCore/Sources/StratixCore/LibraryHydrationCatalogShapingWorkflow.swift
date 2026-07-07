@@ -89,7 +89,7 @@ struct LibraryHydrationCatalogShapingWorkflow {
         let authorizationToken = context.authorizationToken
 
         try await withThrowingTaskGroup(
-            of: [GamePassCatalogClient.CatalogProduct].self,
+            of: (requestedProductIds: [String], products: [GamePassCatalogClient.CatalogProduct]).self,
             returning: Void.self
         ) { group in
             for batch in batches {
@@ -98,35 +98,34 @@ struct LibraryHydrationCatalogShapingWorkflow {
                     return
                 }
 
+                let requestedProductIds = batch.map(\.rawValue)
                 group.addTask {
-                    try await hydrateProducts(
-                        batch.map(\.rawValue),
+                    let products = try await hydrateProducts(
+                        requestedProductIds,
                         market,
                         language,
                         hydration,
                         authorizationToken
                     )
+                    return (requestedProductIds: requestedProductIds, products: products)
                 }
             }
 
-            for try await catalogProducts in group {
+            for try await batchResult in group {
                 guard !dependencies.isSuspendedForStreaming() else {
                     group.cancelAll()
                     return
                 }
 
                 completedBatches += 1
-                hydratedCatalogProducts.append(contentsOf: catalogProducts)
+                hydratedCatalogProducts.append(contentsOf: batchResult.products)
 
-                for product in catalogProducts {
-                    productMap[product.ProductId] = product
-                    if let storeId = product.StoreId, !storeId.isEmpty {
-                        productMap[storeId] = product
-                    }
-                    if let xCloudTitleId = product.XCloudTitleId, !xCloudTitleId.isEmpty {
-                        productByXCloudTitleId[xCloudTitleId] = product
-                    }
-                }
+                LibraryShaper.indexCatalogProducts(
+                    batchResult.products,
+                    requestedProductIds: batchResult.requestedProductIds,
+                    into: &productMap,
+                    productByXCloudTitleId: &productByXCloudTitleId
+                )
 
                 let candidateSections = await dependencies.makeSections(
                     titles,

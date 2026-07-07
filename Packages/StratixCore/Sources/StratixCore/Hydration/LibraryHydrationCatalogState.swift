@@ -149,9 +149,49 @@ struct LibraryHydrationCatalogState: Sendable {
                 titleID: titleId,
                 productID: productId,
                 inputs: dto.details?.supportedInputTypes ?? [],
-                fallbackName: dto.details?.name
+                fallbackName: resolvedFallbackName(
+                    detailsName: dto.details?.name,
+                    titleId: rawTitleId,
+                    productId: rawProductId
+                )
             )
         }
+    }
+
+    private static func resolvedFallbackName(
+        detailsName: String?,
+        titleId: String,
+        productId: String
+    ) -> String? {
+        if let name = detailsName?.trimmingCharacters(in: .whitespacesAndNewlines), !name.isEmpty {
+            return name
+        }
+
+        let trimmedTitleId = titleId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitleId.isEmpty else { return nil }
+        guard trimmedTitleId.caseInsensitiveCompare(productId) != .orderedSame else { return nil }
+        guard looksLikeDisplayTitleId(trimmedTitleId) else { return nil }
+        return humanizedTitleId(trimmedTitleId)
+    }
+
+    private static func looksLikeDisplayTitleId(_ value: String) -> Bool {
+        let scidPattern = #"^[0-9a-zA-Z]{12}$"#
+        if value.range(of: scidPattern, options: .regularExpression) != nil {
+            return false
+        }
+        return value.range(of: #"^[A-Za-z][A-Za-z0-9 _\-]{2,}$"#, options: .regularExpression) != nil
+    }
+
+    private static func humanizedTitleId(_ value: String) -> String {
+        if value == value.uppercased(),
+           value.count > 2,
+           value.allSatisfy({ $0.isLetter || $0 == "_" || $0 == "-" }) {
+            return value.split(whereSeparator: { $0 == "_" || $0 == "-" }).map { part in
+                let token = String(part)
+                return token.prefix(1).uppercased() + token.dropFirst().lowercased()
+            }.joined(separator: " ")
+        }
+        return value
     }
 
     private static func fallbackMRUEntries(

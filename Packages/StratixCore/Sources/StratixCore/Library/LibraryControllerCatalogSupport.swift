@@ -81,10 +81,9 @@ extension LibraryController {
         fallback: TitleEntry?,
         isInMRU: Bool
     ) -> CloudLibraryItem? {
-        let displayName = productTitle(product) ?? fallback?.fallbackName ?? productId
-        if product == nil && fallback?.fallbackName == nil {
-            return nil
-        }
+        let displayName = productTitle(product)
+            ?? fallback?.fallbackName
+            ?? productId
 
         return CloudLibraryItem(
             titleId: titleId,
@@ -281,10 +280,27 @@ extension LibraryController {
         productMap: [String: GamePassCatalogClient.CatalogProduct],
         productByXCloudTitleId: [String: GamePassCatalogClient.CatalogProduct]
     ) -> GamePassCatalogClient.CatalogProduct? {
-        if let match = productByXCloudTitleId[titleId] {
-            return match
+        for key in catalogLookupKeys(for: titleId) {
+            if let match = productByXCloudTitleId[key] {
+                return match
+            }
         }
-        return productMap[productId]
+        for key in catalogLookupKeys(for: productId) {
+            if let match = productMap[key] {
+                return match
+            }
+        }
+        return nil
+    }
+
+    private func catalogLookupKeys(for rawValue: String) -> [String] {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        let lowercased = trimmed.lowercased()
+        if lowercased == trimmed {
+            return [trimmed]
+        }
+        return [trimmed, lowercased]
     }
 
     func logString(for error: Error) -> String {

@@ -85,7 +85,64 @@ enum LibraryShaper {
         productMap: [String: CatalogProduct],
         productByXCloudTitleId: [String: CatalogProduct]
     ) -> CatalogProduct? {
-        productByXCloudTitleId[titleID.rawValue] ?? productMap[productID.rawValue]
+        let titleKeys = catalogLookupKeys(for: titleID.rawValue)
+        for key in titleKeys {
+            if let match = productByXCloudTitleId[key] {
+                return match
+            }
+        }
+
+        let productKeys = catalogLookupKeys(for: productID.rawValue)
+        for key in productKeys {
+            if let match = productMap[key] {
+                return match
+            }
+        }
+        return nil
+    }
+
+    static func indexCatalogProducts(
+        _ products: [CatalogProduct],
+        requestedProductIds: [String],
+        into productMap: inout [String: CatalogProduct],
+        productByXCloudTitleId: inout [String: CatalogProduct]
+    ) {
+        if products.count == 1,
+           requestedProductIds.count == 1,
+           let product = products.first {
+            for key in catalogLookupKeys(for: requestedProductIds[0]) {
+                productMap[key] = product
+            }
+        }
+
+        for product in products {
+            for key in catalogLookupKeys(for: product.ProductId) {
+                productMap[key] = product
+            }
+            if let storeId = product.StoreId?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !storeId.isEmpty {
+                for key in catalogLookupKeys(for: storeId) {
+                    productMap[key] = product
+                }
+            }
+            for titleId in [product.XCloudTitleId, product.XboxTitleId] {
+                guard let rawTitleId = titleId?.trimmingCharacters(in: .whitespacesAndNewlines),
+                      !rawTitleId.isEmpty else { continue }
+                for key in catalogLookupKeys(for: rawTitleId) {
+                    productByXCloudTitleId[key] = product
+                }
+            }
+        }
+    }
+
+    private static func catalogLookupKeys(for rawValue: String) -> [String] {
+        let trimmed = rawValue.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return [] }
+        let lowercased = trimmed.lowercased()
+        if lowercased == trimmed {
+            return [trimmed]
+        }
+        return [trimmed, lowercased]
     }
 
     private static func makeItem(
@@ -95,8 +152,9 @@ enum LibraryShaper {
         fallback: TitleEntry?,
         isInMRU: Bool
     ) -> CloudLibraryItem? {
-        let displayName = productTitle(product) ?? fallback?.fallbackName ?? productID.rawValue
-        guard product != nil || fallback?.fallbackName != nil else { return nil }
+        let displayName = productTitle(product)
+            ?? fallback?.fallbackName
+            ?? productID.rawValue
         return CloudLibraryItem(
             titleId: titleID.rawValue,
             productId: productID.rawValue,

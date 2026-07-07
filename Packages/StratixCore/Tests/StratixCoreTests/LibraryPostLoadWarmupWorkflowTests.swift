@@ -14,7 +14,7 @@ struct LibraryPostLoadWarmupWorkflowTests {
     @Test
     func warmProfileAndSocialAfterLibraryLoad_requestsProfileAndSocialWarmup() async {
         let controller = LibraryController()
-        let dependencies = TestLibraryControllerDependencies()
+        let dependencies = WarmupTestLibraryControllerDependencies()
         controller.attach(dependencies)
 
         await controller.warmProfileAndSocialAfterLibraryLoad()
@@ -32,7 +32,7 @@ struct LibraryPostLoadWarmupWorkflowTests {
     @Test
     func warmProfileAndSocialAfterLibraryLoad_skipsWhenSuspendedForStreaming() async {
         let controller = LibraryController()
-        let dependencies = TestLibraryControllerDependencies()
+        let dependencies = WarmupTestLibraryControllerDependencies()
         controller.attach(dependencies)
 
         await controller.suspendForStreaming()
@@ -44,7 +44,7 @@ struct LibraryPostLoadWarmupWorkflowTests {
 }
 
 @MainActor
-private final class TestLibraryControllerDependencies: LibraryControllerDependencies {
+private final class WarmupTestLibraryControllerDependencies: LibraryControllerDependencies {
     private let recorder = WarmupRecorder()
 
     var profileLoads: Int {
