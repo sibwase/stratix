@@ -8,6 +8,8 @@ import Foundation
 final class StreamOverlayController {
     private var commandContinuation: AsyncStream<StreamUICommand>.Continuation?
     private var pendingCommands: [StreamUICommand] = []
+    private var lastOverlayToggleRequestedAt: ContinuousClock.Instant?
+    private let overlayToggleDebounce = Duration.milliseconds(750)
 
     func makeCommandStream() -> AsyncStream<StreamUICommand> {
         AsyncStream(bufferingPolicy: .bufferingNewest(16)) { [weak self] continuation in
@@ -27,6 +29,12 @@ final class StreamOverlayController {
     }
 
     func requestOverlayToggle() {
+        let now = ContinuousClock.now
+        if let lastOverlayToggleRequestedAt,
+           now - lastOverlayToggleRequestedAt < overlayToggleDebounce {
+            return
+        }
+        lastOverlayToggleRequestedAt = now
         enqueue(.toggleOverlay)
     }
 
@@ -41,6 +49,7 @@ final class StreamOverlayController {
     func reset() {
         commandContinuation = nil
         pendingCommands.removeAll(keepingCapacity: true)
+        lastOverlayToggleRequestedAt = nil
     }
 
     private func enqueue(_ command: StreamUICommand) {

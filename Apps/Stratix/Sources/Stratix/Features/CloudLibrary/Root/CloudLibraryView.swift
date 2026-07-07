@@ -6,8 +6,6 @@ import SwiftUI
 import DiagnosticsKit
 import StratixCore
 import StratixModels
-import OSLog
-import os.signpost
 
 // MARK: - Cloud Library View
 
@@ -15,9 +13,7 @@ import os.signpost
 struct CloudLibraryView: View {
     static let debugQuickLaunchProductID = ProductID("9NZQPT0MWTD0")
     static let uiLogger = GLogger(category: .ui)
-    private static let perfLogger = Logger(subsystem: "com.stratix.app", category: "CloudLibraryPerf")
-    private static let perfSignpostLog = OSLog(subsystem: "com.stratix.app", category: "CloudLibraryPerf")
-    
+
     @Environment(LibraryController.self) private var libraryController
     @Environment(SettingsStore.self) private var settingsStore
     @Environment(SessionController.self) private var sessionController
@@ -48,42 +44,24 @@ struct CloudLibraryView: View {
     }
     // MARK: - Body
 
-    /// Mounts the shell and layers the stream surface above it when a launch succeeds.
+    /// Mounts the shell and presents the full-screen stream surface when a launch succeeds.
     var body: some View {
-        ZStack {
-            mountedShell
-
-            if let ctx = activeStreamContext {
-                streamPresentation(for: ctx)
-            }
-        }
-        .onExitCommand(perform: handleRootExitCommand)
-    }
-
-    /// Presents the live stream above the shell without a modal `fullScreenCover`.
-    /// tvOS always dismisses that modal on Menu/Back, which was ejecting players mid-session.
-    @ViewBuilder
-    private func streamPresentation(for context: StreamContext) -> some View {
-        StreamControllerInputHost(onOverlayToggle: {
-            streamController.requestOverlayToggle()
-        }) {
-            StreamView(context: context, onStreamExit: {
-                Task { @MainActor in
-                    await finishStreamExit()
+        mountedShell
+            .fullScreenCover(item: $activeStreamContext, onDismiss: handleActiveStreamDismissed) { ctx in
+                StreamControllerInputHost(
+                    allowsControllerUIFocus: streamController.allowsStreamControllerUIFocus,
+                    onOverlayToggle: {
+                        streamController.requestOverlayToggle()
+                    }
+                ) {
+                    StreamView(context: ctx)
                 }
-            })
-        }
-        .ignoresSafeArea()
-        .streamPresentationFocusCapture()
-    }
-
-    private func handleRootExitCommand() {
-        // Always consume Menu/Back while streaming. Only the overlay dismisses on Back.
-        guard activeStreamContext != nil else { return }
-        guard streamController.isStreamOverlayVisible else { return }
-        Task {
-            await streamController.setOverlayVisible(false, trigger: .explicitDismiss)
-        }
+                .ignoresSafeArea()
+                .interactiveDismissDisabled(true)
+                .onExitCommand {
+                    // Prevent controller back/menu from dismissing the stream modal.
+                }
+            }
     }
 
     /// Builds the routed shell host with the current controller snapshots and refresh closures.
@@ -139,7 +117,6 @@ struct CloudLibraryView: View {
         .opacity(visibility.opacity)
         .allowsHitTesting(visibility.allowsHitTesting)
         .accessibilityHidden(visibility.isAccessibilityHidden)
-        .disabled(activeStreamContext != nil)
         .overlay(alignment: .topLeading) {
             CloudLibraryDiagnosticsOverlay(
                 browseRouteRawValue: routeState.browseRoute.rawValue,
@@ -306,16 +283,15 @@ struct CloudLibraryView: View {
         }
     }
 
-    @MainActor
-    private func finishStreamExit() async {
-        guard activeStreamContext != nil else { return }
-        activeStreamContext = nil
-        await actionCoordinator.handleStreamDismiss(
-            browseRoute: routeState.browseRoute,
-            stopStreaming: { await streamController.stopStreaming() },
-            exitPriorityMode: { await streamController.exitStreamPriorityMode() },
-            requestTopContentFocus: { focusState.requestTopContentFocus(for: $0) }
-        )
+    private func handleActiveStreamDismissed() {
+        Task { @MainActor in
+            await actionCoordinator.handleStreamDismiss(
+                browseRoute: routeState.browseRoute,
+                stopStreaming: { await streamController.stopStreaming() },
+                exitPriorityMode: { await streamController.exitStreamPriorityMode() },
+                requestTopContentFocus: { focusState.requestTopContentFocus(for: $0) }
+            )
+        }
     }
 
     // MARK: - Data Loading
@@ -366,13 +342,6 @@ struct CloudLibraryView: View {
         )
     }
 
-    // MARK: - Debug
-
-    private static func perfLog(_ message: @autoclosure @escaping () -> String) {
-        #if DEBUG
-        perfLogger.log("\(message(), privacy: .public)")
-        #endif
-    }
 }
 
 #if DEBUG

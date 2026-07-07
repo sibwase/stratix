@@ -202,7 +202,8 @@ struct StreamCloudLaunchWorkflowTests {
             cachedHeroURL: cachedHeroURL,
             apiSession: .shared,
             publish: publish,
-            onLifecycleChange: { _ in }
+            onLifecycleChange: { _ in },
+            requestLaunchExit: {}
         )
     }
 }

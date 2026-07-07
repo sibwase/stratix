@@ -35,4 +35,5 @@ struct StreamCloudLaunchWorkflowEnvironment {
     let apiSession: URLSession
     let publish: @Sendable @MainActor ([StreamAction]) -> Void
     let onLifecycleChange: @Sendable @MainActor (StreamSessionLifecycleEvent) -> Void
+    let requestLaunchExit: @Sendable @MainActor () -> Void
 }

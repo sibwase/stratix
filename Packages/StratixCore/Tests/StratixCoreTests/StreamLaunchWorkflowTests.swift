@@ -89,7 +89,8 @@ struct StreamLaunchWorkflowTests {
                 cachedHeroURL: { _ in nil },
                 apiSession: .shared,
                 publish: { published.append(contentsOf: $0) },
-                onLifecycleChange: { _ in }
+                onLifecycleChange: { _ in },
+                requestLaunchExit: {}
             )
         )
 
@@ -139,7 +140,8 @@ struct StreamLaunchWorkflowTests {
                 cachedHeroURL: { _ in nil },
                 apiSession: .shared,
                 publish: { published.append(contentsOf: $0) },
-                onLifecycleChange: { _ in }
+                onLifecycleChange: { _ in },
+                requestLaunchExit: {}
             )
         )
 
@@ -248,5 +250,93 @@ struct StreamLaunchWorkflowTests {
                 return true
             }.count == 1
         )
+    }
+
+    @Test
+    func startHome_releasesStartGateAfterCancelledLaunch() async {
+        let homeLaunchWorkflow = StreamHomeLaunchWorkflow(
+            makeSession: { _, _, _, _ in
+                await makeStreamingSession()
+            },
+            connectHome: { _, _ in
+                try? await Task.sleep(for: .milliseconds(200))
+            }
+        )
+        let workflow = StreamLaunchWorkflow(
+            homeLaunchWorkflow: homeLaunchWorkflow,
+            cloudLaunchWorkflow: StreamCloudLaunchWorkflow()
+        )
+        let reconnectCoordinator = StreamReconnectCoordinator()
+        let homeEnvironment = StreamHomeLaunchWorkflowEnvironment(
+            launchEnvironment: makeStreamLaunchEnvironment(),
+            runtimeAttachmentEnvironment: makeRuntimeAttachmentEnvironment(),
+            priorityModeEnvironment: StreamPriorityModeEnvironment(
+                enterPriorityMode: {},
+                exitPriorityMode: {}
+            ),
+            logger: GLogger(category: .auth),
+            tokens: StreamTokens(
+                xhomeToken: "xhome",
+                xhomeHost: "https://xhome.example.com",
+                xcloudToken: nil,
+                xcloudHost: nil,
+                webToken: nil,
+                webTokenUHS: nil,
+                xcloudRegions: []
+            ),
+            updateControllerSettings: {},
+            prepareVideoCapabilities: {},
+            apiSession: .shared,
+            publish: { _ in },
+            onLifecycleChange: { _ in }
+        )
+
+        let cancelledLaunch = Task {
+            await workflow.startHome(
+                console: makeRemoteConsole(),
+                bridge: TestWebRTCBridge(),
+                state: { .empty },
+                reconnectCoordinator: reconnectCoordinator,
+                environment: homeEnvironment
+            )
+        }
+
+        try? await Task.sleep(for: .milliseconds(50))
+        cancelledLaunch.cancel()
+        await cancelledLaunch.value
+        try? await Task.sleep(for: .milliseconds(30))
+
+        var secondStartPublished: [StreamAction] = []
+        await workflow.startHome(
+            console: makeRemoteConsole(),
+            bridge: TestWebRTCBridge(),
+            state: { .empty },
+            reconnectCoordinator: reconnectCoordinator,
+            environment: StreamHomeLaunchWorkflowEnvironment(
+                launchEnvironment: makeStreamLaunchEnvironment(),
+                runtimeAttachmentEnvironment: makeRuntimeAttachmentEnvironment(),
+                priorityModeEnvironment: StreamPriorityModeEnvironment(
+                    enterPriorityMode: {},
+                    exitPriorityMode: {}
+                ),
+                logger: GLogger(category: .auth),
+                tokens: StreamTokens(
+                    xhomeToken: "xhome",
+                    xhomeHost: "https://xhome.example.com",
+                    xcloudToken: nil,
+                    xcloudHost: nil,
+                    webToken: nil,
+                    webTokenUHS: nil,
+                    xcloudRegions: []
+                ),
+                updateControllerSettings: {},
+                prepareVideoCapabilities: {},
+                apiSession: .shared,
+                publish: { secondStartPublished.append(contentsOf: $0) },
+                onLifecycleChange: { _ in }
+            )
+        )
+
+        #expect(secondStartPublished.contains(.homeLaunchRequested("console-1")))
     }
 }

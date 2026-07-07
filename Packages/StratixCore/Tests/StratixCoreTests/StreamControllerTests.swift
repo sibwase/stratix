@@ -169,7 +169,10 @@ struct StreamControllerTests {
         await controller.setOverlayVisible(true, trigger: .userToggle)
         #expect(controller.isStreamOverlayVisible == true)
 
-        await controller.setOverlayVisible(false, trigger: .explicitDismiss)
+        await controller.setOverlayVisible(false, trigger: .userToggle)
+        #expect(controller.isStreamOverlayVisible == true)
+
+        await controller.setOverlayVisible(false, trigger: .explicitExit)
         #expect(controller.isStreamOverlayVisible == false)
         #expect(controller.currentStreamAchievementSnapshot == nil)
         #expect(controller.lastStreamAchievementError == nil)

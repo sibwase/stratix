@@ -52,6 +52,7 @@ final class StreamLaunchWorkflow {
             environment.logger.warning("Ignoring duplicate home stream start while another start is in progress")
             return
         }
+        defer { Task { await startGate.end() } }
 
         await homeLaunchWorkflow.run(
             console: console,
@@ -60,7 +61,6 @@ final class StreamLaunchWorkflow {
             reconnectCoordinator: reconnectCoordinator,
             environment: environment
         )
-        await startGate.end()
     }
 
     @MainActor
@@ -79,6 +79,7 @@ final class StreamLaunchWorkflow {
             environment.logger.warning("Ignoring duplicate cloud stream start while another start is in progress")
             return
         }
+        defer { Task { await startGate.end() } }
 
         await cloudLaunchWorkflow.run(
             titleId: titleId,
@@ -87,7 +88,6 @@ final class StreamLaunchWorkflow {
             reconnectCoordinator: reconnectCoordinator,
             environment: environment
         )
-        await startGate.end()
     }
 
     @MainActor

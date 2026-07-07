@@ -52,6 +52,7 @@ protocol InputControllerDependencies: AnyObject {
     func requestOverlayToggle()
     func requestDisconnect()
     var isStreamOverlayVisible: Bool { get }
+    var allowsStreamLaunchCancellation: Bool { get }
     func toggleStatsHUD()
     func recordStreamUserActivity()
 }

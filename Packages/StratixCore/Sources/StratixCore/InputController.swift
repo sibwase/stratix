@@ -23,6 +23,8 @@ final class HoldComboCommandInterpreter {
     private var l3r3Pressed = false
     private var didFireStartSelect = false
     private var didFireL3R3 = false
+    private var overlayToggleLatchUntil: ContinuousClock.Instant?
+    private let overlayToggleLatchDuration = Duration.milliseconds(750)
     private var startSelectTask: Task<Void, Never>?
     private var l3r3Task: Task<Void, Never>?
 
@@ -52,6 +54,7 @@ final class HoldComboCommandInterpreter {
         l3r3Pressed = false
         didFireStartSelect = false
         didFireL3R3 = false
+        overlayToggleLatchUntil = nil
     }
 
     private func updateStartSelect(pressed: Bool) {
@@ -81,6 +84,10 @@ final class HoldComboCommandInterpreter {
     private func updateL3R3(pressed: Bool) {
         if pressed {
             guard !l3r3Pressed else { return }
+            if let overlayToggleLatchUntil, ContinuousClock.now < overlayToggleLatchUntil {
+                l3r3Pressed = true
+                return
+            }
             l3r3Pressed = true
             didFireL3R3 = false
             l3r3Task?.cancel()
@@ -91,15 +98,19 @@ final class HoldComboCommandInterpreter {
                 guard !Task.isCancelled else { return }
                 guard self.l3r3Pressed, !self.didFireL3R3 else { return }
                 self.didFireL3R3 = true
+                self.overlayToggleLatchUntil = ContinuousClock.now + self.overlayToggleLatchDuration
                 self.onCommand(.overlayToggle)
             }
             return
         }
 
         l3r3Pressed = false
-        didFireL3R3 = false
         l3r3Task?.cancel()
         l3r3Task = nil
+        if let overlayToggleLatchUntil, ContinuousClock.now < overlayToggleLatchUntil {
+            return
+        }
+        didFireL3R3 = false
     }
 
     deinit {
@@ -118,6 +129,8 @@ public final class InputController {
     @ObservationIgnored private var gamepadHandlers: [ObjectIdentifier: GamepadHandler] = [:]
     @ObservationIgnored private var comboInterpreters: [ObjectIdentifier: HoldComboCommandInterpreter] = [:]
     @ObservationIgnored private var startupHapticsProbeControllers: Set<ObjectIdentifier> = []
+    @ObservationIgnored private var overlayShortcutSuppressedUntil: ContinuousClock.Instant?
+    private let overlayShortcutSuppressionDuration = Duration.milliseconds(750)
     @ObservationIgnored private var didRunAppLaunchHapticsProbe = false
     @ObservationIgnored private var hapticsProbeTask: Task<Void, Never>?
     @ObservationIgnored private var activeStreamingSession: (any StreamingSessionFacade)?
@@ -161,6 +174,19 @@ public final class InputController {
             attachController(controller)
         }
 
+        ensureControllerObserversConfigured()
+    }
+
+    func setupLaunchInputObservation() {
+        guard dependencies != nil else { return }
+        logger.info("Launch input observation enabled (pre-session)")
+        for controller in GCController.controllers() {
+            attachController(controller)
+        }
+        ensureControllerObserversConfigured()
+    }
+
+    private func ensureControllerObserversConfigured() {
         guard !didConfigureControllerObservers else { return }
         didConfigureControllerObservers = true
 
@@ -204,6 +230,15 @@ public final class InputController {
                 settingsStore: settingsStore
             )
         }
+    }
+
+    private var isOverlayShortcutSuppressed: Bool {
+        guard let overlayShortcutSuppressedUntil else { return false }
+        return ContinuousClock.now < overlayShortcutSuppressedUntil
+    }
+
+    private func armOverlayShortcutSuppression() {
+        overlayShortcutSuppressedUntil = ContinuousClock.now + overlayShortcutSuppressionDuration
     }
 
     func routeVibration(_ report: VibrationReport, settingsStore: SettingsStore) {
@@ -280,6 +315,9 @@ public final class InputController {
     func clearStreamingInputBindings() {
         activeStreamingSession = nil
         activeInputQueue = nil
+        if dependencies?.allowsStreamLaunchCancellation == true {
+            setupLaunchInputObservation()
+        }
     }
 
     func resetForSignOut() {
@@ -294,8 +332,10 @@ public final class InputController {
     }
 
     private func attachController(_ controller: GCController) {
-        guard let queue = activeInputQueue else { return }
         guard let extended = controller.extendedGamepad else { return }
+        let queue = activeInputQueue
+        let supportsLaunchOnlyInput = queue == nil && dependencies?.allowsStreamLaunchCancellation == true
+        guard queue != nil || supportsLaunchOnlyInput else { return }
         configureControllerSystemGestureHandling(controller)
         let handler = GamepadHandler(gamepadIndex: 0)
         handler.controller = controller
@@ -316,10 +356,12 @@ public final class InputController {
 
             switch command {
             case .nexusTap:
+                guard let queue else { return }
                 self.logger.info("[INPUT] Combo fired: Start+Select hold → Nexus tap")
                 self.injectNexusTap(into: queue, index: handler.gamepadIndex)
             case .overlayToggle:
                 self.logger.info("[INPUT] Combo fired: L3+R3 hold → overlay toggle")
+                self.armOverlayShortcutSuppression()
                 self.dependencies?.requestOverlayToggle()
             }
         }
@@ -331,6 +373,14 @@ public final class InputController {
             if !didLogFirstControllerValueChange {
                 didLogFirstControllerValueChange = true
                 self.logger.info("First controller valueChanged event: \(controllerName)")
+            }
+
+            guard let queue else {
+                self.handleLaunchOnlyInput(
+                    gamepad: gamepad,
+                    previousAPressed: &previousAPressed
+                )
+                return
             }
 
             let leftStickClickPressed = gamepad.leftThumbstickButton?.isPressed == true
@@ -352,6 +402,13 @@ public final class InputController {
                 return
             }
 
+            if self.isOverlayShortcutSuppressed {
+                previousAPressed = aPressed
+                previousBPressed = bPressed
+                queue.enqueueGamepadFrame(handler.idleFrame())
+                return
+            }
+
             if self.dependencies?.isStreamOverlayVisible == true {
                 if aPressed && !previousAPressed {
                     self.logger.info("Overlay shortcut: A -> disconnect stream")
@@ -364,6 +421,18 @@ public final class InputController {
                 previousAPressed = aPressed
                 previousBPressed = bPressed
                 queue.enqueueGamepadFrame(handler.idleFrame())
+                return
+            }
+
+            if self.dependencies?.allowsStreamLaunchCancellation == true {
+                self.handleLaunchCancelShortcut(
+                    aPressed: aPressed,
+                    bPressed: bPressed,
+                    previousAPressed: &previousAPressed,
+                    previousBPressed: &previousBPressed,
+                    queue: queue,
+                    handler: handler
+                )
                 return
             }
 
@@ -437,6 +506,37 @@ public final class InputController {
             handler.sendHaptics(from: probe)
             self.logger.info("Controller startup haptics probe pulse 2/2 fired: \(controllerName)")
         }
+    }
+
+    private func handleLaunchOnlyInput(
+        gamepad: GCExtendedGamepad,
+        previousAPressed: inout Bool
+    ) {
+        guard dependencies?.allowsStreamLaunchCancellation == true else { return }
+        let aPressed = gamepad.buttonA.isPressed
+        if aPressed && !previousAPressed {
+            logger.info("Launch shortcut (pre-session): A -> cancel stream launch")
+            dependencies?.requestDisconnect()
+        }
+        previousAPressed = aPressed
+    }
+
+    private func handleLaunchCancelShortcut(
+        aPressed: Bool,
+        bPressed: Bool,
+        previousAPressed: inout Bool,
+        previousBPressed: inout Bool,
+        queue: InputQueue,
+        handler: GamepadHandler
+    ) {
+        if aPressed && !previousAPressed {
+            logger.info("Launch shortcut: A -> cancel stream launch")
+            dependencies?.requestDisconnect()
+        }
+
+        previousAPressed = aPressed
+        previousBPressed = bPressed
+        queue.enqueueGamepadFrame(handler.idleFrame())
     }
 
     private func configureControllerSystemGestureHandling(_ controller: GCController) {

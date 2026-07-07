@@ -36,36 +36,29 @@ struct ConsoleListView: View {
         self.onRequestSideRailEntry = onRequestSideRailEntry
     }
 
-    /// Mounts the console shell and layers the stream surface above it when a launch is active.
+    /// Mounts the console shell and presents the stream surface when a console launch is active.
     var body: some View {
-        ZStack {
-            rootContent
-                .opacity(shellVisibility.opacity)
-                .allowsHitTesting(shellVisibility.allowsHitTesting)
-                .accessibilityHidden(shellVisibility.isAccessibilityHidden)
-                .disabled(showingStream)
-
-            if showingStream, let console = selectedConsole {
-                StreamControllerInputHost(onOverlayToggle: {
-                    streamController.requestOverlayToggle()
-                }) {
-                    StreamView(context: .home(console: console), onStreamExit: {
-                        Task { @MainActor in
-                            await finishStreamExit()
+        rootContent
+            .opacity(shellVisibility.opacity)
+            .allowsHitTesting(shellVisibility.allowsHitTesting)
+            .accessibilityHidden(shellVisibility.isAccessibilityHidden)
+            .fullScreenCover(isPresented: $showingStream, onDismiss: handleStreamDismissed) {
+                if let console = selectedConsole {
+                    StreamControllerInputHost(
+                        allowsControllerUIFocus: streamController.allowsStreamControllerUIFocus,
+                        onOverlayToggle: {
+                            streamController.requestOverlayToggle()
                         }
-                    })
+                    ) {
+                        StreamView(context: .home(console: console))
+                    }
+                    .ignoresSafeArea()
+                    .interactiveDismissDisabled(true)
+                    .onExitCommand {
+                        // Prevent controller back/menu from dismissing the stream modal.
+                    }
                 }
-                .ignoresSafeArea()
-                .streamPresentationFocusCapture()
             }
-        }
-        .onExitCommand {
-            guard showingStream else { return }
-            guard streamController.isStreamOverlayVisible else { return }
-            Task {
-                await streamController.setOverlayVisible(false, trigger: .explicitDismiss)
-            }
-        }
     }
 
     private var shellVisibility: RootShellVisibility {
@@ -195,22 +188,23 @@ struct ConsoleListView: View {
         }
     }
 
-    @MainActor
-    private func finishStreamExit() async {
-        guard showingStream else { return }
-        selectedConsole = nil
-        showingStream = false
-        await Self.restoreShellAfterStreamDismissal(
-            stopStreaming: {
-                await streamController.stopStreaming()
-            },
-            exitPriorityMode: {
-                await streamController.exitStreamPriorityMode()
-            },
-            restoreFocus: {
-                requestPrimaryFocus()
-            }
-        )
+    /// Restores console-shell state after the full-screen stream view is dismissed.
+    func handleStreamDismissed() {
+        Task { @MainActor in
+            selectedConsole = nil
+            showingStream = false
+            await Self.restoreShellAfterStreamDismissal(
+                stopStreaming: {
+                    await streamController.stopStreaming()
+                },
+                exitPriorityMode: {
+                    await streamController.exitStreamPriorityMode()
+                },
+                restoreFocus: {
+                    requestPrimaryFocus()
+                }
+            )
+        }
     }
 
     /// Enters stream-priority mode and returns the selected console when launch can proceed.

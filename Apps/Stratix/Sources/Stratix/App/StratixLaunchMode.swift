@@ -6,13 +6,12 @@ import Foundation
 
 /// Centralizes process-argument and environment-based launch flags used by harnesses and targeted UI tests.
 enum StratixLaunchMode {
-    private static let processInfo = ProcessInfo.processInfo
-    private static let arguments = processInfo.arguments
-    private static let environment = processInfo.environment
+    private static let arguments = ProcessInfo.processInfo.arguments
+    private static let environment = ProcessInfo.processInfo.environment
 
     /// Enables the shell-focused UI-test harness instead of the real authenticated root.
     static var isShellUITestModeEnabled: Bool {
-        arguments.contains("-stratix-uitest-shell")
+        hasArgument("-stratix-uitest-shell")
     }
 
     /// Enables the deterministic Game Pass home harness used by focused browse-route UI tests.
@@ -47,6 +46,12 @@ enum StratixLaunchMode {
     /// Enables the runtime probe harness mode used by stream telemetry and runtime marker tests.
     static var isStreamRuntimeProbeUITestModeEnabled: Bool {
         hasArgument("-stratix-uitest-stream-runtime-probe")
+    }
+
+    /// Allows Siri Remote Play/Pause to toggle the stream overlay in UI-test harnesses only.
+    /// Production gameplay opens the overlay exclusively via L3+R3 hold (see `InputController`).
+    static var allowsPlayPauseStreamOverlayToggle: Bool {
+        isStreamDisconnectUITestModeEnabled || isStreamRuntimeProbeUITestModeEnabled
     }
 
     /// Forces a one-time live home refresh after authentication so tests can avoid cached-home startup paths.

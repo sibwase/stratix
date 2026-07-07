@@ -60,6 +60,10 @@ final class StreamCloudLaunchWorkflow {
             environment.logger.warning("Ignoring cloud stream start because a session is already active")
             return
         }
+        guard !StreamLaunchCancellation.isCancelled() else {
+            environment.logger.info("Cloud stream launch cancelled before start")
+            return
+        }
 
         let target = StreamLaunchTarget.cloud(titleId)
         StreamMetricsPipeline.shared.recordMilestone(
@@ -105,6 +109,10 @@ final class StreamCloudLaunchWorkflow {
         do {
             environment.logger.info("Preparing cloud stream auth…")
             cloudConnectAuth = try await environment.cloudConnectAuth()
+            try StreamLaunchCancellation.throwIfCancelled()
+        } catch is CancellationError {
+            environment.logger.info("Cloud stream launch cancelled during auth")
+            return
         } catch {
             let message = "Cloud connect auth failed: \(error.localizedDescription)"
             environment.logger.error(message)
@@ -113,6 +121,7 @@ final class StreamCloudLaunchWorkflow {
                 .streamStartFailed(message),
                 .sessionAttachmentStateSet(.detached)
             ])
+            environment.requestLaunchExit()
             return
         }
 
@@ -124,6 +133,12 @@ final class StreamCloudLaunchWorkflow {
                 .streamStartFailed(message),
                 .sessionAttachmentStateSet(.detached)
             ])
+            environment.requestLaunchExit()
+            return
+        }
+
+        guard !StreamLaunchCancellation.isCancelled() else {
+            environment.logger.info("Cloud stream launch cancelled after auth")
             return
         }
 
@@ -167,6 +182,12 @@ final class StreamCloudLaunchWorkflow {
                 .streamStartFailed(message),
                 .sessionAttachmentStateSet(.detached)
             ])
+            environment.requestLaunchExit()
+            return
+        }
+
+        guard !StreamLaunchCancellation.isCancelled() else {
+            environment.logger.info("Cloud stream launch cancelled before session creation")
             return
         }
 
@@ -198,6 +219,11 @@ final class StreamCloudLaunchWorkflow {
             .readyToConnect,
             metadata: ["context": "cloud", "target_id": titleId.rawValue]
         )
+
+        guard !StreamLaunchCancellation.isCancelled() else {
+            environment.logger.info("Cloud stream launch cancelled before connect")
+            return
+        }
 
         await connectCloud(session, titleId.rawValue, cloudConnectAuth.userToken)
     }

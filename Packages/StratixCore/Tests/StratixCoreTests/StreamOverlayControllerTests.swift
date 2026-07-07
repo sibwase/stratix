@@ -46,6 +46,16 @@ struct StreamOverlayControllerTests {
     }
 
     @Test
+    func requestOverlayToggle_debouncesRapidRepeatRequests() async {
+        let controller = StreamOverlayController()
+        controller.requestOverlayToggle()
+        controller.requestOverlayToggle()
+
+        var iterator = controller.makeCommandStream().makeAsyncIterator()
+        #expect(await iterator.next() == .toggleOverlay)
+    }
+
+    @Test
     func reset_clearsBufferedCommandsAndContinuation() async {
         let controller = StreamOverlayController()
         controller.requestOverlayToggle()

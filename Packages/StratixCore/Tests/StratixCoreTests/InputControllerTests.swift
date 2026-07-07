@@ -86,4 +86,23 @@ struct InputControllerTests {
 
         #expect(commands == [.overlayToggle])
     }
+
+    @Test
+    func holdComboInterpreter_latchesOverlayToggleAgainstReleaseBounce() async {
+        var commands: [HoldComboCommandInterpreter.Command] = []
+        let interpreter = HoldComboCommandInterpreter(holdDurationMs: 40) { command in
+            commands.append(command)
+        }
+
+        interpreter.update(startSelectPressed: false, l3r3Pressed: true)
+        try? await Task.sleep(nanoseconds: 90_000_000)
+        #expect(commands == [.overlayToggle])
+
+        commands.removeAll()
+        interpreter.update(startSelectPressed: false, l3r3Pressed: false)
+        interpreter.update(startSelectPressed: false, l3r3Pressed: true)
+        try? await Task.sleep(nanoseconds: 90_000_000)
+
+        #expect(commands.isEmpty)
+    }
 }

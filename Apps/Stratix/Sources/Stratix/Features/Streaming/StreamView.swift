@@ -12,9 +12,9 @@ import StreamingCore
 /// Renders the active stream session and keeps the overlay, renderer, and exit behavior in sync.
 struct StreamView: View {
     let context: StreamContext
-    var onStreamExit: (() -> Void)? = nil
 
     @Environment(StreamController.self) private var streamController
+    @Environment(\.dismiss) private var dismiss
     @Environment(LibraryController.self) private var libraryController
     @Environment(SettingsStore.self) private var settingsStore
     @State private var surfaceModel = StreamSurfaceModel()
@@ -70,6 +70,7 @@ struct StreamView: View {
         .ignoresSafeArea()
         .onAppear {
             renderSurfaceCoordinator.resetExitGuard()
+            streamController.beginLaunchInputObservation()
             streamController.registerReconnectBridgeProvider { [renderSurfaceCoordinator, surfaceModel] in
                 await renderSurfaceCoordinator.bridgeForRelaunch(
                     surfaceModel: surfaceModel,
@@ -119,13 +120,9 @@ struct StreamView: View {
                 exitPriorityMode: { await streamController.exitStreamPriorityMode() }
             )
         }
-        .onPlayPauseCommand {
-            Task {
-                await streamController.setOverlayVisible(!overlayVisible, trigger: .userToggle)
-            }
-        }
         .onExitCommand {
-            // Always consume Menu/Back while streaming. Only the overlay dismisses on Back.
+            // Do not use controller B/Menu as an in-game escape shortcut.
+            // Keep it available to the stream; if the overlay is open, treat Exit as "close overlay".
             guard overlayVisible else { return }
             Task {
                 await streamController.setOverlayVisible(false, trigger: .explicitDismiss)
@@ -149,6 +146,8 @@ struct StreamView: View {
 
             if session != nil || surfaceModel.videoTrack != nil {
                 videoSurface(proxy: proxy)
+                    .allowsHitTesting(false)
+                    .focusable(streamController.allowsStreamControllerUIFocus)
             }
 
             if streamController.showsReconnectControl {
@@ -164,7 +163,7 @@ struct StreamView: View {
                 sessionOverlay(session: session)
             } else if shouldShowPreparingOverlay {
                 StreamPreparingOverlay(overlayInfo: overlayInfo) {
-                    cancelStreamLaunch()
+                    requestStreamExit()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -233,6 +232,8 @@ struct StreamView: View {
         !streamController.isReconnecting && streamController.streamingSession == nil
     }
 
+
+
     /// Creates the active WebRTC-backed video surface with the current renderer callbacks attached.
     private func videoSurface(proxy: GeometryProxy) -> some View {
         WebRTCVideoSurfaceView(
@@ -263,7 +264,7 @@ struct StreamView: View {
                 }
             }
         ) {
-            cancelStreamLaunch()
+            requestStreamExit()
         }
 
         if case .failed(let error) = session.lifecycle, shouldShowStreamFailurePanel {
@@ -277,7 +278,7 @@ struct StreamView: View {
                         .font(.caption)
                         .foregroundStyle(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text("Press Play/Pause to open controls.")
+                    Text("Hold L3+R3 to open controls.")
                         .font(.caption2)
                         .foregroundStyle(.secondary)
                 }
@@ -329,17 +330,6 @@ struct StreamView: View {
     }
 
     @MainActor
-    private func cancelStreamLaunch() {
-        streamController.requestDisconnect()
-    }
-
-    @MainActor
-    private func performStreamDisconnect() async {
-        await streamController.stopStreaming()
-        requestStreamExit()
-    }
-
-    @MainActor
     private func requestStreamExit() {
         renderSurfaceCoordinator.requestExit(
             session: streamController.streamingSession,
@@ -348,7 +338,7 @@ struct StreamView: View {
             },
             stopStreaming: { await streamController.stopStreaming() },
             exitPriorityMode: { await streamController.exitStreamPriorityMode() },
-            dismiss: { onStreamExit?() }
+            dismiss: { dismiss() }
         )
     }
 
@@ -377,9 +367,12 @@ struct StreamView: View {
     private func handleCommand(_ command: StreamUICommand) async {
         switch command {
         case .toggleOverlay:
-            await streamController.setOverlayVisible(!overlayVisible, trigger: .userToggle)
+            await streamController.setOverlayVisible(
+                !streamController.isStreamOverlayVisible,
+                trigger: .userToggle
+            )
         case .disconnect:
-            await performStreamDisconnect()
+            requestStreamExit()
         case .toggleStatsHUD:
             updateStreamSettings { $0.showStreamStats.toggle() }
         }

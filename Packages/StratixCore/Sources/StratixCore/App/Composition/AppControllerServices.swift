@@ -153,6 +153,10 @@ extension StreamController: InputControllerDependencies {
     func currentStreamingSession() -> (any StreamingSessionFacade)? {
         state.streamingSession
     }
+
+    var allowsStreamLaunchCancellation: Bool {
+        allowsStreamControllerUIFocus && !state.isStreamOverlayVisible
+    }
 }
 
 @MainActor

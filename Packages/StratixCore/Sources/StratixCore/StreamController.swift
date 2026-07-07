@@ -47,7 +47,21 @@ public final class StreamController {
         return state.lastReconnectSuppressionReason == .attemptsExhausted
     }
 
-    @ObservationIgnored let taskRegistry = TaskRegistry()
+    /// Enables tvOS controller-driven UI focus while launch controls or the stream overlay are active.
+    public var allowsStreamControllerUIFocus: Bool {
+        if state.isStreamOverlayVisible { return true }
+        if showsReconnectControl { return true }
+        guard let session = state.streamingSession else {
+            return isStreamPriorityModeActive
+        }
+        switch session.lifecycle {
+        case .connected, .disconnecting, .disconnected, .failed:
+            return false
+        default:
+            return true
+        }
+    }
+
     @ObservationIgnored private weak var dependencies: (any StreamControllerDependencies)?
     @ObservationIgnored private let logger = GLogger(category: .auth)
 
@@ -66,6 +80,8 @@ public final class StreamController {
     @ObservationIgnored private let startCloudWorkflow: (@MainActor (TitleID, any WebRTCBridge) async -> Void)?
     @ObservationIgnored private let stopWorkflow: (@MainActor () async -> Void)?
     @ObservationIgnored private let overlayVisibilityWorkflow: (@MainActor (Bool) -> Void)?
+    @ObservationIgnored private var overlayDismissGuardUntil: ContinuousClock.Instant?
+    private let overlayDismissGuardDuration = Duration.milliseconds(750)
 
     init(
         startHomeWorkflow: (@MainActor (RemoteConsole, any WebRTCBridge) async -> Void)? = nil,
@@ -198,10 +214,23 @@ public final class StreamController {
     }
 
     public func setOverlayVisible(_ visible: Bool, trigger: StreamOverlayTrigger) async {
+        if !visible, shouldIgnoreOverlayDismiss(trigger: trigger) {
+            logger.info("Ignoring overlay dismiss during post-open guard window")
+            return
+        }
+
+        let wasVisible = state.isStreamOverlayVisible
+
         if let overlayVisibilityWorkflow {
             overlayVisibilityWorkflow(visible)
         } else {
             await performSetOverlayVisible(visible, trigger: trigger)
+        }
+
+        if !visible {
+            clearOverlayDismissGuard()
+        } else if trigger == .userToggle, !wasVisible, state.isStreamOverlayVisible {
+            armOverlayDismissGuard()
         }
     }
 
@@ -258,6 +287,7 @@ public final class StreamController {
         await overlayVisibilityCoordinator.stopPresentationRefresh()
         await streamReconnectCoordinator.reset()
         overlayController.reset()
+        clearOverlayDismissGuard()
         runtimeAttachmentService.reset(
             environment: makeRuntimeAttachmentEnvironment()
         )
@@ -344,9 +374,16 @@ public final class StreamController {
                     Task { @MainActor in
                         await self?.handleLifecycleEvent(event)
                     }
+                },
+                requestLaunchExit: { [weak self] in
+                    self?.requestDisconnect()
                 }
             )
         )
+    }
+
+    public func beginLaunchInputObservation() {
+        dependencies?.inputController.setupLaunchInputObservation()
     }
 
     func performStopStreaming(disconnectReason: StreamingDisconnectIntent = .userInitiated) async {
@@ -361,6 +398,20 @@ public final class StreamController {
             ),
             disconnectReason: disconnectReason
         )
+    }
+
+    private func shouldIgnoreOverlayDismiss(trigger: StreamOverlayTrigger) -> Bool {
+        guard trigger == .userToggle || trigger == .explicitDismiss else { return false }
+        guard let overlayDismissGuardUntil else { return false }
+        return ContinuousClock.now < overlayDismissGuardUntil
+    }
+
+    private func armOverlayDismissGuard() {
+        overlayDismissGuardUntil = ContinuousClock.now + overlayDismissGuardDuration
+    }
+
+    private func clearOverlayDismissGuard() {
+        overlayDismissGuardUntil = nil
     }
 
     func performSetOverlayVisible(_ visible: Bool, trigger: StreamOverlayTrigger) async {
