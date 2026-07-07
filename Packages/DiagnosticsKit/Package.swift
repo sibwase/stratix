@@ -9,7 +9,7 @@ let package = Package(
     ],
     dependencies: [
         .package(path: "../StratixModels"),
-        .package(url: "https://github.com/apple/swift-async-algorithms", from: "1.0.0")
+        .package(path: "../../ThirdParty/swift-async-algorithms")
     ],
     targets: [
         .target(name: "DiagnosticsKit", dependencies: [
