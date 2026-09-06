@@ -313,10 +313,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                     focusedTarget: $focusedTarget,
                     letterFocusValue: { .letter($0) },
                     onSelectLetter: { letter in
-                        jumpToLetter(letter, scrollProxy: scrollProxy, transferFocusToGrid: true)
-                    },
-                    onHighlightLetter: { letter in
-                        jumpToLetter(letter, scrollProxy: scrollProxy, transferFocusToGrid: false)
+                        jumpToLetter(letter, scrollProxy: scrollProxy)
                     },
                     onMoveFromLetterIndex: { direction in
                         if direction == .left {

@@ -11,7 +11,6 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
     var focusedTarget: FocusState<FocusValue?>.Binding
     let letterFocusValue: (String) -> FocusValue
     let onSelectLetter: (String) -> Void
-    var onHighlightLetter: ((String) -> Void)? = nil
     var onMoveFromLetterIndex: ((MoveCommandDirection) -> Void)? = nil
     var isFocusEnabled: Bool = true
     let namespace: Namespace.ID
@@ -88,7 +87,6 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
         withTransaction(transaction) {
             focusedTarget.wrappedValue = letterFocusValue(nextLetter)
         }
-        onHighlightLetter?(nextLetter)
     }
 }
 
