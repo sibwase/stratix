@@ -136,6 +136,16 @@ For most development, you will use `Stratix-Debug` while iterating, then switch 
 
 ---
 
+## Install on a physical Apple TV
+
+From a Mac with Xcode 26+ and a paired Apple TV in Developer Mode:
+
+```bash
+git clone https://github.com/sibwase/stratix.git && cd stratix && bash Tools/dev/install-apple-tv.sh
+```
+
+See the README section **Install on your Apple TV** for pairing, Team ID, and multiple-device notes.
+
 ## Your First Build
 
 ### In Xcode

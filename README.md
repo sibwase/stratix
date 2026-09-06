@@ -94,6 +94,37 @@ If any of these affects you, they are also great places to contribute.
 
 ---
 
+## Install on your Apple TV
+
+One command clones Stratix, builds it, installs it on a paired Apple TV, and launches it:
+
+```bash
+git clone https://github.com/sibwase/stratix.git && cd stratix && bash Tools/dev/install-apple-tv.sh
+```
+
+Before you run it:
+
+1. Install **Xcode 26+** and open it once so the tvOS SDK finishes installing.
+2. On the Apple TV: **Settings → Privacy & Security → Developer Mode** (or Settings → System → Developer), then restart if asked.
+3. Connect the Apple TV to the same network as the Mac. In Xcode open **Window → Devices and Simulators** and wait until the Apple TV appears as paired.
+4. Sign in to Xcode with an Apple ID that can sign tvOS apps (**Xcode → Settings → Accounts**).
+
+If Xcode has more than one Apple TV, pass the UDID from Devices and Simulators:
+
+```bash
+APPLE_TV_DEVICE_ID=00008020-XXXXXXXX git clone https://github.com/sibwase/stratix.git && cd stratix && bash Tools/dev/install-apple-tv.sh
+```
+
+If code signing fails with someone else’s team ID, pass yours (10-character Team ID from [developer.apple.com/account](https://developer.apple.com/account)):
+
+```bash
+DEVELOPMENT_TEAM=YOURTEAMID git clone https://github.com/sibwase/stratix.git && cd stratix && bash Tools/dev/install-apple-tv.sh
+```
+
+The first build takes several minutes. After that, Stratix should appear on the Apple TV home screen and launch.
+
+---
+
 ## Quick Start
 
 **1. Clone the repository.**
@@ -101,14 +132,6 @@ If any of these affects you, they are also great places to contribute.
 git clone https://github.com/sibwase/stratix.git
 cd stratix
 ```
-
-**Install on a connected Apple TV in one command** (Xcode 26+, Apple TV in Developer Mode, signed in to a development team):
-
-```bash
-bash Tools/dev/install-apple-tv.sh
-```
-
-If several Apple TVs are paired, set `APPLE_TV_DEVICE_ID` to the UDID from Xcode → Window → Devices and Simulators.
 
 **2. Open the workspace — not the project file.**
 ```bash

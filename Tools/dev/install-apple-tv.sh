@@ -10,6 +10,10 @@ SCHEME="${SCHEME:-Stratix-Debug}"
 BUNDLE_ID="${BUNDLE_ID:-com.sibwase.stratix.appletv}"
 DERIVED_DATA="${DERIVED_DATA:-/tmp/stratix_apple_tv_install}"
 APP_PATH="$DERIVED_DATA/Build/Products/Debug-appletvos/Stratix.app"
+SIGNING_ARGS=()
+if [[ -n "${DEVELOPMENT_TEAM:-}" ]]; then
+  SIGNING_ARGS+=(DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" CODE_SIGN_STYLE=Automatic)
+fi
 
 pick_device_id() {
   if [[ -n "${APPLE_TV_DEVICE_ID:-}" ]]; then
@@ -54,6 +58,7 @@ xcodebuild \
   -derivedDataPath "$DERIVED_DATA" \
   -clonedSourcePackagesDirPath "$DERIVED_DATA/spm" \
   -allowProvisioningUpdates \
+  ${SIGNING_ARGS[@]+"${SIGNING_ARGS[@]}"} \
   build
 
 if [[ ! -d "$APP_PATH" ]]; then
