@@ -68,6 +68,7 @@ struct StreamView: View {
             streamViewport(proxy: proxy)
         }
         .ignoresSafeArea()
+        .streamPresentationFocusCapture()
         .onAppear {
             renderSurfaceCoordinator.resetExitGuard()
             streamController.beginLaunchInputObservation()
@@ -147,7 +148,7 @@ struct StreamView: View {
             if session != nil || surfaceModel.videoTrack != nil {
                 videoSurface(proxy: proxy)
                     .allowsHitTesting(false)
-                    .focusable(streamController.allowsStreamControllerUIFocus)
+                    .focusable(false)
             }
 
             if streamController.showsReconnectControl {
@@ -162,9 +163,13 @@ struct StreamView: View {
             } else if let session {
                 sessionOverlay(session: session)
             } else if shouldShowPreparingOverlay {
-                StreamPreparingOverlay(overlayInfo: overlayInfo) {
-                    requestStreamExit()
-                }
+                StreamPreparingOverlay(
+                    overlayInfo: overlayInfo,
+                    failureMessage: streamController.lastStreamStartFailure,
+                    onCancel: {
+                        requestStreamExit()
+                    }
+                )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
 
@@ -271,7 +276,7 @@ struct StreamView: View {
             VStack {
                 Spacer()
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Cloud Stream Failed")
+                    Text(streamFailureTitle)
                         .font(.headline)
                         .foregroundStyle(.white)
                     Text(error.description)
@@ -288,6 +293,15 @@ struct StreamView: View {
                 .padding(.bottom, 40)
             }
             .padding(.horizontal, 40)
+        }
+    }
+
+    private var streamFailureTitle: String {
+        switch context {
+        case .home:
+            return "Remote Play Failed"
+        case .cloud:
+            return "Cloud Stream Failed"
         }
     }
 

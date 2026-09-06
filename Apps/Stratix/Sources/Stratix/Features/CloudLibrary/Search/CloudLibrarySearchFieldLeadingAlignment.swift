@@ -1,177 +1,191 @@
 // CloudLibrarySearchFieldLeadingAlignment.swift
-// Opens the tvOS searchable letter keyboard when library search is active.
+// Implements the native tvOS-styled single-line linear character keyboard.
 //
 
+import Foundation
 import SwiftUI
-import UIKit
 
 extension Notification.Name {
     static let librarySearchRequestKeyboard = Notification.Name("CloudLibraryLibrarySearchRequestKeyboard")
     static let librarySearchResignKeyboard = Notification.Name("CloudLibraryLibrarySearchResignKeyboard")
 }
 
-struct CloudLibrarySearchFieldLeadingAlignment: UIViewRepresentable {
-    var activatesKeyboard: Bool
+enum CloudLibrarySearchLayout {
+    static let leadingOffset: CGFloat = 150
+    static let searchFieldMaxWidth: CGFloat = 680
+    static let searchFieldCornerRadius: CGFloat = 18
+}
 
-    func makeCoordinator() -> Coordinator {
-        Coordinator()
+/// A native tvOS-styled single-line character strip keyboard with "123" / "ABC" mode toggle,
+/// perfectly vertically centered in the row with the Home chip.
+struct SingleLineCharacterKeyboard: View {
+    @Binding var queryText: String
+    var focusedTarget: FocusState<CloudLibraryLibraryScreen.LibraryFocusTarget?>.Binding
+    var onRequestSideRailEntry: () -> Void
+    var onRequestDownNavigation: () -> Void
+
+    @State private var isNumbersMode: Bool = false
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private static let alphabet = [
+        "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
+        "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T",
+        "U", "V", "W", "X", "Y", "Z"
+    ]
+
+    private static let digitsAndSymbols = [
+        "1", "2", "3", "4", "5", "6", "7", "8", "9", "0",
+        "-", "/", ":", ".", "&", "@", "'", "#"
+    ]
+
+    var currentKeys: [String] {
+        isNumbersMode ? Self.digitsAndSymbols : Self.alphabet
     }
 
-    func makeUIView(context: Context) -> SearchFocusHostView {
-        let view = SearchFocusHostView()
-        view.isUserInteractionEnabled = false
-        view.backgroundColor = .clear
-        view.onWindowChange = { [weak coordinator = context.coordinator] window in
-            guard let coordinator, let window else { return }
-            Task { @MainActor in
-                coordinator.handleWindowChange(window)
+    var body: some View {
+        HStack(spacing: 0) {
+            // "123" / "ABC" Mode Toggle Button
+            CharacterKeyButton(
+                title: isNumbersMode ? "ABC" : "123",
+                width: 58
+            ) {
+                isNumbersMode.toggle()
             }
-        }
-        return view
-    }
-
-    func updateUIView(_ uiView: SearchFocusHostView, context: Context) {
-        context.coordinator.activatesKeyboard = activatesKeyboard
-        if let window = uiView.window {
-            context.coordinator.handleWindowChange(window)
-        }
-    }
-
-    static func dismantleUIView(_ uiView: SearchFocusHostView, coordinator: Coordinator) {
-        uiView.onWindowChange = nil
-        coordinator.stop()
-    }
-
-    @MainActor
-    final class Coordinator {
-        var activatesKeyboard = false
-        private var keyboardSuppressed = false
-        private weak var focusedSearchBar: UISearchBar?
-        private var focusTask: Task<Void, Never>?
-        private var keyboardObservers: [NSObjectProtocol] = []
-
-        init() {
-            keyboardObservers = [
-                NotificationCenter.default.addObserver(
-                    forName: .librarySearchRequestKeyboard,
-                    object: nil,
-                    queue: .main
-                ) { [weak self] _ in
-                    Task { @MainActor in
-                        self?.keyboardSuppressed = false
-                        self?.requestKeyboardFocus()
-                    }
-                },
-                NotificationCenter.default.addObserver(
-                    forName: .librarySearchResignKeyboard,
-                    object: nil,
-                    queue: .main
-                ) { [weak self] _ in
-                    Task { @MainActor in
-                        self?.keyboardSuppressed = true
-                        self?.resignKeyboardFocus()
-                    }
-                }
-            ]
-        }
-
-        func handleWindowChange(_ window: UIWindow) {
-            if activatesKeyboard, !keyboardSuppressed {
-                requestKeyboardFocus(in: window)
-            } else if !activatesKeyboard {
-                keyboardSuppressed = false
-                resignKeyboardFocus()
-            }
-        }
-
-        func stop() {
-            focusTask?.cancel()
-            focusTask = nil
-            keyboardSuppressed = false
-            resignKeyboardFocus()
-            keyboardObservers.forEach { NotificationCenter.default.removeObserver($0) }
-            keyboardObservers.removeAll()
-        }
-
-        func requestKeyboardFocus() {
-            guard let window = focusedSearchBar?.window ?? keyWindow() else { return }
-            requestKeyboardFocus(in: window)
-        }
-
-        private func requestKeyboardFocus(in window: UIWindow) {
-            focusTask?.cancel()
-            focusTask = Task { @MainActor in
-                for _ in 0..<24 {
-                    try? await Task.sleep(for: .milliseconds(50))
-                    guard !Task.isCancelled, activatesKeyboard else { return }
-                    guard let rootView = window.rootViewController?.view else { continue }
-                    let searchBars = Self.findSearchBars(in: rootView)
-                    guard let searchBar = Self.primarySearchBar(in: searchBars, window: window) else { continue }
-
-                    Self.hideDuplicateSearchBars(searchBars, in: window, keeping: searchBar)
-                    focusedSearchBar = searchBar
-                    if searchBar.becomeFirstResponder() {
-                        return
-                    }
+            .focused(focusedTarget, equals: .letterKey("mode_toggle"))
+            .onMoveCommand { direction in
+                switch direction {
+                case .left:
+                    onRequestSideRailEntry()
+                case .right:
+                    focusedTarget.wrappedValue = .letterKey("space")
+                case .down:
+                    onRequestDownNavigation()
+                default:
+                    break
                 }
             }
-        }
 
-        private func resignKeyboardFocus() {
-            focusTask?.cancel()
-            focusTask = nil
-            focusedSearchBar?.resignFirstResponder()
-            focusedSearchBar = nil
-        }
+            Spacer(minLength: 4)
 
-        private func keyWindow() -> UIWindow? {
-            UIApplication.shared.connectedScenes
-                .compactMap { $0 as? UIWindowScene }
-                .flatMap(\.windows)
-                .first(where: \.isKeyWindow)
-        }
+            // Space Key (immediately after 123)
+            CharacterKeyButton(title: "SPACE", width: 84) {
+                if !queryText.isEmpty && !queryText.hasSuffix(" ") {
+                    queryText.append(" ")
+                }
+            }
+            .focused(focusedTarget, equals: .letterKey("space"))
+            .onMoveCommand { direction in
+                switch direction {
+                case .left:
+                    focusedTarget.wrappedValue = .letterKey("mode_toggle")
+                case .right:
+                    if let firstChar = currentKeys.first {
+                        focusedTarget.wrappedValue = .letterKey(firstChar)
+                    }
+                case .down:
+                    onRequestDownNavigation()
+                default:
+                    break
+                }
+            }
 
-        private static func primarySearchBar(in searchBars: [UISearchBar], window: UIWindow) -> UISearchBar? {
-            searchBars.min {
-                $0.convert($0.bounds, to: window).minX < $1.convert($1.bounds, to: window).minX
-            } ?? searchBars.first
-        }
+            Spacer(minLength: 4)
 
-        private static func hideDuplicateSearchBars(
-            _ searchBars: [UISearchBar],
-            in window: UIWindow,
-            keeping primary: UISearchBar
-        ) {
-            guard searchBars.count > 1 else { return }
+            // Subtle vertical separator
+            Rectangle()
+                .fill(Color.white.opacity(0.18))
+                .frame(width: 1.5, height: 26)
+                .padding(.horizontal, 4)
 
-            for duplicate in searchBars where duplicate !== primary {
-                let primaryMinX = primary.convert(primary.bounds, to: window).minX
-                let duplicateMinX = duplicate.convert(duplicate.bounds, to: window).minX
-                guard duplicateMinX > primaryMinX + 0.5 else { continue }
-                duplicate.isHidden = true
-                duplicate.alpha = 0
-                duplicate.superview?.isHidden = true
+            Spacer(minLength: 4)
+
+            // Characters Row (A-Z or 1-0 / symbols)
+            ForEach(currentKeys, id: \.self) { char in
+                CharacterKeyButton(title: char, width: 42) {
+                    queryText.append(char)
+                }
+                .focused(focusedTarget, equals: .letterKey(char))
+                .onMoveCommand { direction in
+                    switch direction {
+                    case .left where (!isNumbersMode && char == "A"):
+                        focusedTarget.wrappedValue = .letterKey("space")
+                    case .left where (isNumbersMode && char == currentKeys.first):
+                        focusedTarget.wrappedValue = .letterKey("space")
+                    case .down:
+                        onRequestDownNavigation()
+                    default:
+                        break
+                    }
+                }
+
+                if char != currentKeys.last {
+                    Spacer(minLength: 4)
+                }
+            }
+
+            Spacer(minLength: 4)
+
+            // Clear & Backspace Key (with CLEAR text + icon, reaching right boundary)
+            CharacterKeyButton(title: "CLEAR", icon: "delete.left.fill", width: 110) {
+                if !queryText.isEmpty {
+                    queryText.removeLast()
+                }
+            }
+            .focused(focusedTarget, equals: .letterKey("backspace"))
+            .onMoveCommand { direction in
+                if direction == .down {
+                    onRequestDownNavigation()
+                }
             }
         }
-
-        private static func findSearchBars(in view: UIView) -> [UISearchBar] {
-            var bars: [UISearchBar] = []
-            if let searchBar = view as? UISearchBar {
-                bars.append(searchBar)
-            }
-            for subview in view.subviews {
-                bars.append(contentsOf: findSearchBars(in: subview))
-            }
-            return bars
-        }
+        .frame(maxWidth: .infinity)
+        .frame(height: StratixTheme.SideRail.collapsedBadgeHeight, alignment: .leading)
+        .offset(y: -16)
+        .animation(.easeInOut(duration: 0.18), value: isNumbersMode)
     }
 }
 
-final class SearchFocusHostView: UIView {
-    var onWindowChange: ((UIWindow?) -> Void)?
+/// A native tvOS-styled character key button with pure typographical focus (bold + scale, no background box, no underline).
+struct CharacterKeyButton: View {
+    let title: String
+    var icon: String? = nil
+    var width: CGFloat = 42
+    let action: () -> Void
 
-    override func didMoveToWindow() {
-        super.didMoveToWindow()
-        onWindowChange?(window)
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Button(action: action) {
+            FocusAwareView { isFocused in
+                HStack(spacing: 6) {
+                    if !title.isEmpty {
+                        Text(title)
+                            .font(
+                                StratixTypography.rounded(
+                                    title.count > 1 ? 18 : 26,
+                                    weight: isFocused ? .heavy : .semibold,
+                                    dynamicTypeSize: dynamicTypeSize
+                                )
+                            )
+                    }
+                    if let icon {
+                        Image(systemName: icon)
+                            .font(.system(size: 18, weight: isFocused ? .bold : .semibold))
+                    }
+                }
+                .foregroundStyle(isFocused ? Color.white : Color.white.opacity(0.45))
+                .frame(width: width, height: 46)
+                .scaleEffect(isFocused ? 1.25 : 1.0)
+                .shadow(
+                    color: isFocused ? Color.white.opacity(0.65) : Color.clear,
+                    radius: 8,
+                    x: 0,
+                    y: 0
+                )
+                .animation(.spring(response: 0.18, dampingFraction: 0.72), value: isFocused)
+            }
+        }
+        .buttonStyle(CloudLibraryTVButtonStyle())
+        .gamePassDisableSystemFocusEffect()
     }
 }

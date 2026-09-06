@@ -46,22 +46,24 @@ struct CloudLibraryView: View {
 
     /// Mounts the shell and presents the full-screen stream surface when a launch succeeds.
     var body: some View {
-        mountedShell
-            .fullScreenCover(item: $activeStreamContext, onDismiss: handleActiveStreamDismissed) { ctx in
-                StreamControllerInputHost(
-                    allowsControllerUIFocus: streamController.allowsStreamControllerUIFocus,
-                    onOverlayToggle: {
-                        streamController.requestOverlayToggle()
-                    }
-                ) {
-                    StreamView(context: ctx)
+        ZStack {
+            mountedShell
+        }
+        .fullScreenCover(item: $activeStreamContext, onDismiss: handleActiveStreamDismissed) { ctx in
+            StreamControllerInputHost(
+                allowsControllerUIFocus: streamController.allowsStreamControllerUIFocus,
+                onOverlayToggle: {
+                    streamController.requestOverlayToggle()
                 }
-                .ignoresSafeArea()
-                .interactiveDismissDisabled(true)
-                .onExitCommand {
-                    // Prevent controller back/menu from dismissing the stream modal.
-                }
+            ) {
+                StreamView(context: ctx)
             }
+            .ignoresSafeArea()
+            .interactiveDismissDisabled(true)
+            .onExitCommand {
+                // Prevent controller back/menu from dismissing the stream modal.
+            }
+        }
     }
 
     /// Builds the routed shell host with the current controller snapshots and refresh closures.
@@ -112,8 +114,12 @@ struct CloudLibraryView: View {
             },
             achievementErrorText: { titleID in
                 achievementsController.lastTitleAchievementsError(titleID: titleID)
+            },
+            removeFromMRU: { titleID in
+                libraryController.removeFromMRU(titleID: titleID)
             }
         )
+        .environment(\.libraryGamepadChromeEnabled, !isStreamPresentationActive)
         .opacity(visibility.opacity)
         .allowsHitTesting(visibility.allowsHitTesting)
         .accessibilityHidden(visibility.isAccessibilityHidden)
@@ -130,6 +136,17 @@ struct CloudLibraryView: View {
             handleSectionRefresh(oldSections: oldSections, newSections: newSections)
             attemptPendingDebugQuickLaunch()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .stratixDeepLinkPlay)) { notification in
+            if let titleIdString = notification.object as? String {
+                launchCloudStream(titleId: TitleID(rawValue: titleIdString), source: "top_shelf_play")
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .stratixDeepLinkDetail)) { notification in
+            if let titleIdString = notification.object as? String {
+                routeState.utilityRoute = nil
+                routeState.detailPath = [TitleID(rawValue: titleIdString)]
+            }
+        }
         .task(id: sceneModel.sceneMutationTaskID(
             libraryStateInputs: stateSnapshot,
             queryState: queryState,
@@ -144,7 +161,7 @@ struct CloudLibraryView: View {
             )
         }
         .task(id: sceneModel.statusMutationTaskID(
-            isHomeRoute: routeState.browseRoute.isHome,
+            isHomeRoute: false,
             loadState: loadState,
             sections: stateSnapshot.sections,
             hasCompletedInitialHomeMerchandising: stateSnapshot.hasCompletedInitialHomeMerchandising,
@@ -173,8 +190,8 @@ struct CloudLibraryView: View {
             browseRouteRawValue: routeState.browseRoute.rawValue,
             utilityRouteVisible: routeState.utilityRoute != nil,
             detailTitleID: routeState.detailPath.last,
-            homeFocusedTitleID: focusState.settledHeroTileID(for: .home),
-            libraryFocusedTitleID: focusState.settledHeroTileID(for: .library)
+            homeFocusedTitleID: nil,
+            libraryFocusedTitleID: nil
         )) {
             shellInteractionCoordinator.rebuildHeroBackgroundContext(
                 viewModel: vm,
@@ -266,6 +283,11 @@ struct CloudLibraryView: View {
     // MARK: - Streaming
 
     func launchCloudStream(titleId: TitleID, source: String) {
+        guard activeStreamContext == nil else { return }
+        var hiddenIDs = Set(UserDefaults.standard.stringArray(forKey: "stratix_hidden_mru_title_ids") ?? [])
+        if hiddenIDs.remove(titleId.rawValue) != nil {
+            UserDefaults.standard.set(Array(hiddenIDs), forKey: "stratix_hidden_mru_title_ids")
+        }
         Task { @MainActor in
             await actionCoordinator.launchCloudStream(
                 titleId: titleId,

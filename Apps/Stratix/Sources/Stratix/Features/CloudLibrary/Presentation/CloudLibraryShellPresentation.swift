@@ -33,8 +33,7 @@ struct CloudLibrarySideRailShellProjection: Equatable, Hashable, Sendable {
             profileImageURL: profileImageURL,
             profileInitials: profileInitials,
             navItems: [
-                .init(id: .home, title: "Home", systemImage: "house.fill"),
-                .init(id: .library, title: "Library", systemImage: "square.grid.2x2.fill", badgeText: libraryCount > 0 ? "\(libraryCount)" : nil),
+                .init(id: .library, title: "Home", systemImage: "house.fill", badgeText: libraryCount > 0 ? "\(libraryCount)" : nil),
                 .init(id: .consoles, title: "Local", systemImage: "tv.fill", badgeText: consoleCount > 0 ? "\(consoleCount)" : nil)
             ],
             trailingActions: []

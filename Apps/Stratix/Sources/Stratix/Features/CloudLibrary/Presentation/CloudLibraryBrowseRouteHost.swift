@@ -7,8 +7,6 @@ import StratixCore
 
 /// Renders the active browse destination and handles load-state gating for each route.
 struct CloudLibraryBrowseRouteHost: View {
-    @Environment(ShellBootstrapController.self) private var shellBootstrapController
-
     let presentation: CloudLibraryBrowseRoutePresentation
     let searchText: Binding<String>
     let isLibrarySearchActive: Bool
@@ -18,15 +16,13 @@ struct CloudLibraryBrowseRouteHost: View {
         switch presentation.browseRoute {
         case .consoles:
             CloudLibraryConsolesView(onRequestSideRailEntry: actions.requestSideRailEntry)
-        case .home:
-            loadStateGatedContent { loadedHomeContent }
         case .library:
             loadStateGatedContent { libraryScreen }
         }
     }
 
     @ViewBuilder
-    /// Applies the shared load-state gate used by home and library before rendering live content.
+    /// Applies the shared load-state gate used by library before rendering live content.
     private func loadStateGatedContent<Content: View>(@ViewBuilder content: () -> Content) -> some View {
         if presentation.loadState.showsBrowseContent {
             content()
@@ -41,8 +37,8 @@ struct CloudLibraryBrowseRouteHost: View {
         CloudLibraryStatusPanel(
             state: .init(
                 kind: .loading,
-                title: "Refreshing Game Pass",
-                message: "Syncing your cloud catalog and recent titles.",
+                title: "Updating Library",
+                message: "",
                 primaryActionTitle: nil
             )
         )
@@ -60,22 +56,6 @@ struct CloudLibraryBrowseRouteHost: View {
         )
     }
 
-    private var loadedHomeContent: some View {
-        CloudLibraryHomeScreen(
-            state: presentation.homeState,
-            preferredTitleID: presentation.preferredHomeTileID,
-            onSelectRailItem: actions.homeSelectRailItem,
-            onSelectCarouselPlay: actions.homeSelectCarouselPlay,
-            onSelectCarouselDetails: actions.homeSelectCarouselDetails,
-            onRequestSideRailEntry: actions.requestSideRailEntry,
-            onFocusTileID: actions.homeFocusTileID,
-            onSettledTileID: actions.homeSettledTileID,
-            tileLookup: presentation.homeTileLookup
-        )
-        .equatable()
-        .modifier(RouteHomeRootAccessibilityModifier(isEnabled: shellBootstrapController.phase == .ready))
-    }
-
     private var libraryScreen: some View {
         CloudLibraryLibraryScreen(
             state: presentation.libraryState,
@@ -85,6 +65,7 @@ struct CloudLibraryBrowseRouteHost: View {
             isLibrarySearchActive: isLibrarySearchActive,
             preferredTitleID: presentation.preferredLibraryTileID,
             onSelectTile: actions.librarySelectTile,
+            onPlayTile: actions.libraryPlayTile,
             onActivateSearch: actions.libraryActivateSearch,
             onFocusTileID: actions.libraryFocusTileID,
             onSettledTileID: actions.librarySettledTileID,
@@ -93,22 +74,9 @@ struct CloudLibraryBrowseRouteHost: View {
             onSelectSort: actions.librarySelectSort,
             onClearFilters: actions.libraryClearFilters,
             onClearSearch: actions.searchClearQuery,
+            onRemoveTileFromMRU: actions.libraryRemoveTileFromMRU ?? { _ in },
             onRequestSideRailEntry: actions.requestSideRailEntry
         )
         .equatable()
-    }
-}
-
-private struct RouteHomeRootAccessibilityModifier: ViewModifier {
-    let isEnabled: Bool
-
-    @ViewBuilder
-    /// Delays the home-root accessibility marker until shell bootstrap has published a ready phase.
-    func body(content: Content) -> some View {
-        if isEnabled {
-            content.accessibilityIdentifier("route_home_root")
-        } else {
-            content
-        }
     }
 }

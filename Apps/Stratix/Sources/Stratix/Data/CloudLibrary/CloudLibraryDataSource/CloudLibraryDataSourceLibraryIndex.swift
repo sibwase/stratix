@@ -116,29 +116,12 @@ extension CloudLibraryDataSource {
 
     /// Builds the filter-chip category definitions that the library screen uses for scoped browsing.
     static func libraryCategoryDefinitions(
-        sections: [CloudLibrarySection],
+        sections _: [CloudLibrarySection],
         merchandising: HomeMerchandisingSnapshot?,
-        mru: [CloudLibraryItem]? = nil
+        mru _: [CloudLibraryItem]? = nil
     ) -> [LibraryCategoryDefinition] {
         var definitions: [LibraryCategoryDefinition] = []
         var seenAliases = Set<String>()
-
-        let recentItems = mru ?? deduplicate(mruItems(from: sections))
-        if !recentItems.isEmpty {
-            let titleIDs = Set(recentItems.map(\.typedTitleID))
-            if !titleIDs.isEmpty, seenAliases.insert("mru").inserted {
-                definitions.append(
-                    LibraryCategoryDefinition(
-                        context: LibraryScopedCategoryContext(
-                            alias: "mru",
-                            label: "Jump back in",
-                            allowedTitleIDs: titleIDs
-                        ),
-                        systemImage: "play.fill"
-                    )
-                )
-            }
-        }
 
         for row in merchandising?.rows ?? [] {
             let titleIDs = Set(row.items.map(\.typedTitleID))

@@ -60,23 +60,38 @@ struct GlassBubble<Content: View>: View {
 
     var body: some View {
         content
-            .background(stratixGlassSurface(cornerRadius: cornerRadius, fill: fill))
+            .background(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(Color.black.opacity(0.65))
+            )
             .overlay(
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .stroke(stroke, lineWidth: 1)
             )
-            .shadow(color: .black.opacity(0.32), radius: 10, x: 0, y: 4)
+            .shadow(color: .black.opacity(0.32), radius: 6, x: 0, y: 3)
     }
 }
 
 @ViewBuilder
-private func stratixGlassSurface(cornerRadius: CGFloat, fill: Color) -> some View {
+func stratixGlassSurface(cornerRadius: CGFloat, fill: Color) -> some View {
     if #available(tvOS 26.0, *) {
         Color.clear
-            .glassEffect(.regular.tint(fill), in: .rect(cornerRadius: cornerRadius))
+            .glassEffect(.regular.tint(fill), in: .rect(cornerRadius: cornerRadius, style: .continuous))
     } else {
         RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
             .fill(fill)
+    }
+}
+
+/// Untinted liquid-glass plate used by the TV-app-style floating sidebar.
+@ViewBuilder
+func stratixSidebarGlass(cornerRadius: CGFloat) -> some View {
+    if #available(tvOS 26.0, *) {
+        Color.clear
+            .glassEffect(.regular, in: .rect(cornerRadius: cornerRadius, style: .continuous))
+    } else {
+        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            .fill(.ultraThinMaterial)
     }
 }
 
@@ -84,6 +99,7 @@ private func stratixGlassSurface(cornerRadius: CGFloat, fill: Color) -> some Vie
 struct FocusRingModifier: ViewModifier {
     let isFocused: Bool
     let cornerRadius: CGFloat
+    let appliesScaling: Bool
     @Environment(SettingsStore.self) private var settingsStore
 
     func body(content: Content) -> some View {
@@ -120,8 +136,8 @@ struct FocusRingModifier: ViewModifier {
                 }
                 .shadow(color: .white.opacity(isFocused ? (highVisibilityFocus ? 0.28 : 0.20) : 0), radius: highVisibilityFocus ? 16 : 12)
             )
-            .scaleEffect(isFocused ? focusScale : 1.0)
-            .shadow(color: .black.opacity(isFocused ? 0.56 : 0.16), radius: isFocused ? 30 : 12, y: isFocused ? 18 : 6)
+            .scaleEffect(appliesScaling && isFocused ? focusScale : 1.0)
+            .shadow(color: .black.opacity(appliesScaling && isFocused ? 0.56 : 0.16), radius: appliesScaling && isFocused ? 30 : 12, y: appliesScaling && isFocused ? 18 : 6)
             .zIndex(isFocused ? 10 : 0)
             .animation(reduceMotion ? nil : .easeOut(duration: 0.14), value: isFocused)
     }
@@ -152,10 +168,9 @@ struct FocusAwareView<Content: View>: View {
 }
 
 extension View {
-    /// Applies the repo's custom focus ring and disables the default tvOS focus effect.
-    func gamePassFocusRing(isFocused: Bool, cornerRadius: CGFloat = StratixTheme.Radius.lg) -> some View {
-        modifier(FocusRingModifier(isFocused: isFocused, cornerRadius: cornerRadius))
-            .gamePassDisableSystemFocusEffect()
+    /// Applies the repo's custom focus ring.
+    func gamePassFocusRing(isFocused: Bool, cornerRadius: CGFloat = StratixTheme.Radius.lg, appliesScaling: Bool = true) -> some View {
+        modifier(FocusRingModifier(isFocused: isFocused, cornerRadius: cornerRadius, appliesScaling: appliesScaling))
     }
 
     @ViewBuilder

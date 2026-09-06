@@ -1,15 +1,28 @@
 // CloudLibraryLibraryShoulderTabSwitch.swift
-// Maps gamepad LB/RB to library header tab cycling.
+// Maps gamepad LB/RB to library header tab cycling via event-driven handlers.
 //
 
 import GameController
 import SwiftUI
 import UIKit
 
+private struct LibraryGamepadChromeEnabledKey: EnvironmentKey {
+    static let defaultValue = true
+}
+
+extension EnvironmentValues {
+    var libraryGamepadChromeEnabled: Bool {
+        get { self[LibraryGamepadChromeEnabledKey.self] }
+        set { self[LibraryGamepadChromeEnabledKey.self] = newValue }
+    }
+}
+
 struct CloudLibraryLibraryShoulderTabSwitch: UIViewRepresentable {
     var isEnabled: Bool
     var onShoulderLeft: () -> Void
     var onShoulderRight: () -> Void
+    var onThumbstickLeft: (() -> Void)? = nil
+    var onThumbstickRight: (() -> Void)? = nil
 
     func makeCoordinator() -> Coordinator {
         Coordinator()
@@ -27,11 +40,9 @@ struct CloudLibraryLibraryShoulderTabSwitch: UIViewRepresentable {
         context.coordinator.isEnabled = isEnabled
         context.coordinator.onShoulderLeft = onShoulderLeft
         context.coordinator.onShoulderRight = onShoulderRight
-        if isEnabled {
-            context.coordinator.resumePolling()
-        } else {
-            context.coordinator.pausePolling()
-        }
+        context.coordinator.onThumbstickLeft = onThumbstickLeft
+        context.coordinator.onThumbstickRight = onThumbstickRight
+        context.coordinator.updateBindings()
     }
 
     static func dismantleUIView(_ uiView: UIView, coordinator: Coordinator) {
@@ -42,13 +53,13 @@ struct CloudLibraryLibraryShoulderTabSwitch: UIViewRepresentable {
         var isEnabled = false
         var onShoulderLeft: (() -> Void)?
         var onShoulderRight: (() -> Void)?
+        var onThumbstickLeft: (() -> Void)?
+        var onThumbstickRight: (() -> Void)?
 
         private var observers: [NSObjectProtocol] = []
-        private var displayLink: CADisplayLink?
-        private var displayLinkTarget: DisplayLinkTarget?
-        private var previousLeftPressed = false
-        private var previousRightPressed = false
         private var isObserving = false
+        private var wasStickLeft = false
+        private var wasStickRight = false
 
         func start() {
             guard !isObserving else { return }
@@ -60,142 +71,88 @@ struct CloudLibraryLibraryShoulderTabSwitch: UIViewRepresentable {
                     object: nil,
                     queue: .main
                 ) { [weak self] _ in
-                    DispatchQueue.main.async {
-                        self?.resumePolling()
-                    }
+                    self?.updateBindings()
                 },
                 NotificationCenter.default.addObserver(
                     forName: .GCControllerDidDisconnect,
                     object: nil,
                     queue: .main
                 ) { [weak self] _ in
-                    DispatchQueue.main.async {
-                        self?.resetShoulderEdgeState()
-                    }
-                },
-                NotificationCenter.default.addObserver(
-                    forName: .librarySearchRequestKeyboard,
-                    object: nil,
-                    queue: .main
-                ) { [weak self] _ in
-                    DispatchQueue.main.async {
-                        self?.resumePolling()
-                    }
-                },
-                NotificationCenter.default.addObserver(
-                    forName: .librarySearchResignKeyboard,
-                    object: nil,
-                    queue: .main
-                ) { [weak self] _ in
-                    DispatchQueue.main.async {
-                        self?.syncShoulderEdgeStateToHardware()
-                    }
+                    self?.updateBindings()
                 }
             ]
 
-            resumePolling()
+            updateBindings()
         }
 
         func stop() {
             guard isObserving else { return }
             isObserving = false
-            pausePolling()
             observers.forEach { NotificationCenter.default.removeObserver($0) }
             observers.removeAll()
-            resetShoulderEdgeState()
+            unbindHandlers()
         }
 
-        func resumePolling() {
-            guard isEnabled else { return }
-            guard displayLink == nil else { return }
+        private var boundControllerIDs: Set<ObjectIdentifier> = []
 
-            let target = DisplayLinkTarget()
-            target.onTick = { [weak self] in
-                self?.pollShoulderButtons()
-            }
-            displayLinkTarget = target
-
-            let link = CADisplayLink(target: target, selector: #selector(DisplayLinkTarget.tick))
-            link.add(to: .main, forMode: .common)
-            displayLink = link
-        }
-
-        func pausePolling() {
-            displayLink?.invalidate()
-            displayLink = nil
-            displayLinkTarget = nil
-        }
-
-        private func pollShoulderButtons() {
-            guard isEnabled else { return }
-
-            let gamepad = GCController.controllers()
-                .compactMap(\.extendedGamepad)
-                .first
-
-            guard let gamepad else {
-                resetShoulderEdgeState()
+        func updateBindings() {
+            let currentIDs = Set(GCController.controllers().map { ObjectIdentifier($0) })
+            if !isEnabled {
+                if !boundControllerIDs.isEmpty {
+                    unbindHandlers()
+                    boundControllerIDs.removeAll()
+                }
                 return
             }
-
-            handleLeftShoulder(gamepad.leftShoulder.isPressed)
-            handleRightShoulder(gamepad.rightShoulder.isPressed)
+            guard currentIDs != boundControllerIDs else { return }
+            bindHandlers()
+            boundControllerIDs = currentIDs
         }
 
-        private func handleLeftShoulder(_ pressed: Bool) {
-            guard isEnabled else {
-                previousLeftPressed = pressed
-                return
+        private func bindHandlers() {
+            unbindHandlers()
+            for controller in GCController.controllers() {
+                guard let gamepad = controller.extendedGamepad else { continue }
+                gamepad.leftShoulder.pressedChangedHandler = { [weak self] _, _, pressed in
+                    guard let self, self.isEnabled, pressed else { return }
+                    DispatchQueue.main.async {
+                        self.onShoulderLeft?()
+                    }
+                }
+                gamepad.rightShoulder.pressedChangedHandler = { [weak self] _, _, pressed in
+                    guard let self, self.isEnabled, pressed else { return }
+                    DispatchQueue.main.async {
+                        self.onShoulderRight?()
+                    }
+                }
+                gamepad.leftThumbstick.xAxis.valueChangedHandler = { [weak self] _, value in
+                    guard let self, self.isEnabled else { return }
+                    let isLeft = value < -0.75
+                    let isRight = value > 0.75
+                    if isLeft && !self.wasStickLeft {
+                        DispatchQueue.main.async {
+                            self.onThumbstickLeft?()
+                        }
+                    }
+                    if isRight && !self.wasStickRight {
+                        DispatchQueue.main.async {
+                            self.onThumbstickRight?()
+                        }
+                    }
+                    self.wasStickLeft = isLeft
+                    self.wasStickRight = isRight
+                }
             }
-            if pressed, !previousLeftPressed {
-                invokeShoulderAction(onShoulderLeft)
+        }
+
+        private func unbindHandlers() {
+            for controller in GCController.controllers() {
+                guard let gamepad = controller.extendedGamepad else { continue }
+                gamepad.leftShoulder.pressedChangedHandler = nil
+                gamepad.rightShoulder.pressedChangedHandler = nil
+                gamepad.leftThumbstick.xAxis.valueChangedHandler = nil
             }
-            previousLeftPressed = pressed
+            boundControllerIDs.removeAll()
         }
-
-        private func handleRightShoulder(_ pressed: Bool) {
-            guard isEnabled else {
-                previousRightPressed = pressed
-                return
-            }
-            if pressed, !previousRightPressed {
-                invokeShoulderAction(onShoulderRight)
-            }
-            previousRightPressed = pressed
-        }
-
-        private func resetShoulderEdgeState() {
-            previousLeftPressed = false
-            previousRightPressed = false
-        }
-
-        /// Keeps edge detection aligned with the physical buttons so a held shoulder
-        /// cannot fire a second tab shift when search resigns mid-press.
-        private func syncShoulderEdgeStateToHardware() {
-            let gamepad = GCController.controllers()
-                .compactMap(\.extendedGamepad)
-                .first
-
-            guard let gamepad else {
-                resetShoulderEdgeState()
-                return
-            }
-
-            previousLeftPressed = gamepad.leftShoulder.isPressed
-            previousRightPressed = gamepad.rightShoulder.isPressed
-        }
-
-        /// CADisplayLink ticks on the main run loop, so shoulder actions can run inline.
-        private func invokeShoulderAction(_ action: (() -> Void)?) {
-            action?()
-        }
-    }
-}
-
-private final class DisplayLinkTarget: NSObject {
-    var onTick: (() -> Void)?
-
-    @objc func tick() {
-        onTick?()
     }
 }

@@ -3,29 +3,272 @@
 //
 
 import SwiftUI
+import UIKit
 import StratixModels
 
+/// Horizontal header moves that must not steal focus from in-header tabs.
+enum LibraryHeaderFocusPolicy {
+    enum HorizontalMove: Equatable {
+        case enterSideRail
+        case focusTab(String)
+        case focusSearch
+    }
+
+    /// Only the leading header tab may enter the side rail; other tabs move to the previous tab.
+    static func moveLeft(
+        fromTabID tabID: String,
+        tabs: [CloudLibraryLibraryTabViewState]
+    ) -> HorizontalMove {
+        guard let index = tabs.firstIndex(where: { $0.id == tabID }) else {
+            return .enterSideRail
+        }
+        if index == 0 {
+            return .enterSideRail
+        }
+        return .focusTab(tabs[index - 1].id)
+    }
+}
+
+/// Packs library filter chips into the game-grid width and reveals overflow chips
+/// only when focus is on the last or second-to-last visible chip.
+@MainActor
+enum LibraryFilterChipLayout {
+    static let spacing: CGFloat = 14
+    static let lookahead = 2
+
+    private static let widthCache = NSCache<NSString, NSNumber>()
+
+    static func packedCount(
+        from start: Int,
+        widths: [CGFloat],
+        spacing: CGFloat = spacing,
+        maxWidth: CGFloat
+    ) -> Int {
+        guard start < widths.count, maxWidth > 0 else { return 0 }
+        var used: CGFloat = 0
+        var count = 0
+        for index in start..<widths.count {
+            let extra = count == 0 ? widths[index] : widths[index] + spacing
+            if used + extra > maxWidth + 0.5 {
+                if count == 0 {
+                    return 1
+                }
+                break
+            }
+            used += extra
+            count += 1
+        }
+        return count
+    }
+
+    static func visibleRange(
+        focusedIndex: Int?,
+        widths: [CGFloat],
+        spacing: CGFloat = spacing,
+        maxWidth: CGFloat,
+        lookahead: Int = lookahead
+    ) -> Range<Int> {
+        let count = widths.count
+        guard count > 0 else { return 0..<0 }
+
+        var start = 0
+        if let focused = focusedIndex {
+            let clamped = min(max(focused, 0), count - 1)
+            let targetLast = min(count - 1, clamped + lookahead)
+            var candidate = 0
+            while candidate <= clamped {
+                let packed = packedCount(
+                    from: candidate,
+                    widths: widths,
+                    spacing: spacing,
+                    maxWidth: maxWidth
+                )
+                let end = candidate + packed
+                if packed > 0, clamped < end, targetLast < end {
+                    start = candidate
+                    break
+                }
+                if candidate == clamped {
+                    start = candidate
+                    break
+                }
+                candidate += 1
+            }
+        }
+
+        let packed = packedCount(
+            from: start,
+            widths: widths,
+            spacing: spacing,
+            maxWidth: maxWidth
+        )
+        let totalWithOverflow = min(packed + 1, count - start)
+        return start..<(start + totalWithOverflow)
+    }
+
+    static func estimatedWidth(label: String, hasIcon: Bool) -> CGFloat {
+        let key = "\(label)|\(hasIcon)" as NSString
+        if let cached = widthCache.object(forKey: key) {
+            return CGFloat(cached.doubleValue)
+        }
+        let descriptor = UIFont.systemFont(ofSize: 22, weight: .bold).fontDescriptor.withDesign(.rounded)
+        let font = descriptor.map { UIFont(descriptor: $0, size: 22) }
+            ?? UIFont.systemFont(ofSize: 22, weight: .bold)
+        let textWidth = (label as NSString).size(withAttributes: [.font: font]).width
+        let horizontalPadding = (StratixTheme.Library.chipHorizontalPadding + 8) * 2
+        let iconWidth: CGFloat = hasIcon ? 28 : 0
+        let result = ceil(horizontalPadding + iconWidth + textWidth)
+        widthCache.setObject(NSNumber(value: Double(result)), forKey: key)
+        return result
+    }
+}
+
 extension CloudLibraryLibraryScreen {
+    var focusedFilterIndex: Int? {
+        guard case .filter(let id) = focusedTarget else { return nil }
+        return state.filters.firstIndex(where: { $0.id == id })
+    }
+
+    var currentFilterChipWidths: [CGFloat] {
+        state.filters.map { chip in
+            LibraryFilterChipLayout.estimatedWidth(
+                label: chip.label,
+                hasIcon: chip.systemImage != nil
+            )
+        }
+    }
+
+    var visibleFilterChips: [ChipViewState] {
+        let widths = currentFilterChipWidths
+        let range = LibraryFilterChipLayout.visibleRange(
+            focusedIndex: focusedFilterIndex,
+            widths: widths,
+            maxWidth: libraryGridTileSpanWidth
+        )
+        guard !range.isEmpty, state.filters.indices.contains(range.lowerBound) else {
+            return []
+        }
+        let upper = min(range.upperBound, state.filters.count)
+        return Array(state.filters[range.lowerBound..<upper])
+    }
+
+    var hasLeadingOverflowFilterChips: Bool {
+        let range = LibraryFilterChipLayout.visibleRange(
+            focusedIndex: focusedFilterIndex,
+            widths: currentFilterChipWidths,
+            maxWidth: libraryGridTileSpanWidth
+        )
+        return range.lowerBound > 0
+    }
+
+    var hasTrailingOverflowFilterChips: Bool {
+        let widths = currentFilterChipWidths
+        let range = LibraryFilterChipLayout.visibleRange(
+            focusedIndex: focusedFilterIndex,
+            widths: widths,
+            maxWidth: libraryGridTileSpanWidth
+        )
+        guard !range.isEmpty else { return false }
+        var totalWidth: CGFloat = 0
+        for i in range {
+            totalWidth += (totalWidth == 0 ? widths[i] : widths[i] + LibraryFilterChipLayout.spacing)
+        }
+        return range.upperBound < state.filters.count || totalWidth > libraryGridTileSpanWidth
+    }
+
     var defaultGridFocusTileID: String? {
+        if let lastFocusedGridTitleID,
+           let tile = state.gridItems.first(where: { $0.titleID == lastFocusedGridTitleID }) {
+            return tile.id
+        }
+
         if let preferredTitleID,
-           let preferredTileID = scrollTargetID(for: preferredTitleID),
-           tileLookup[preferredTitleID] != nil {
-            return preferredTileID
+           let tile = state.gridItems.first(where: { $0.titleID == preferredTitleID }) {
+            return tile.id
         }
 
         return state.gridItems.first?.id
     }
 
-    /// Green position marker in the letter rail — always tracks the focused grid tile.
-    ///
-    /// Priority:
-    /// 1. Active letter jump (until scroll settles)
-    /// 2. First letter of the focused grid tile
+    /// Position marker in the letter rail — follows scroll, then the focused card once scrolling stops.
     var letterIndexHighlightedLetter: String? {
-        if let letterJumpLetter {
-            return letterJumpLetter
+        CloudLibraryLibraryLetterIndexSupport.highlightedLetter(
+            sections: letterSections,
+            jumpLetter: letterJumpLetter,
+            scrollLetter: scrollPositionLetter,
+            focusedLetter: engineFocusedLetter ?? tileFocusLetter,
+            prefersFocusedLetter: !isLibraryScrolling && hasSettledFocusLetter
+        )
+    }
+
+    var libraryGridRowStride: CGFloat {
+        CloudLibraryLibraryLetterIndexSupport.rowStride(itemWidth: cachedGridItemWidth)
+    }
+
+    func applyLibraryLetterScrollSample(_ sample: CloudLibraryLibraryScreen.LibraryLetterScrollSample) {
+        let moved = abs(sample.offsetY - lastScrollOffsetY) > 0.5
+        lastScrollOffsetY = sample.offsetY
+        guard moved else { return }
+        if !isLibraryScrolling {
+            isLibraryScrolling = true
         }
-        return tileFocusLetter ?? letterSections.first
+        if hasSettledFocusLetter {
+            hasSettledFocusLetter = false
+        }
+        if let letter = sample.letter, scrollPositionLetter != letter {
+            scrollPositionLetter = letter
+        }
+        scheduleLetterIndexIdleSnap()
+    }
+
+    func scheduleLetterIndexIdleSnap() {
+        letterScrollIdleTask?.cancel()
+        letterScrollIdleTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(90))
+            guard !Task.isCancelled else { return }
+            settleLetterIndexToFocusedCard()
+        }
+    }
+
+    func settleLetterIndexToFocusedCard() {
+        letterScrollIdleTask?.cancel()
+        letterScrollIdleTask = Task { @MainActor in
+            if isLibraryScrolling {
+                isLibraryScrolling = false
+            }
+            hasSettledFocusLetter = false
+            try? await Task.sleep(for: .milliseconds(32))
+            guard !Task.isCancelled, !isLibraryScrolling else { return }
+            if let engine = engineFocusedLetter {
+                applySettledFocusLetter(engine)
+            } else if let focused = tileFocusLetter {
+                applySettledFocusLetter(focused)
+            }
+        }
+    }
+
+    func applyEngineFocusedLetter(_ letter: String?) {
+        if engineFocusedLetter != letter {
+            engineFocusedLetter = letter
+        }
+        guard !isLibraryScrolling, let letter else { return }
+        applySettledFocusLetter(letter)
+    }
+
+    func applySettledFocusLetter(_ letter: String) {
+        if !hasSettledFocusLetter {
+            hasSettledFocusLetter = true
+        }
+        if scrollPositionLetter != letter {
+            scrollPositionLetter = letter
+        }
+    }
+
+    func letterForTitleID(_ titleID: TitleID) -> String? {
+        let title = tileLookup[titleID]?.title
+            ?? state.gridItems.first(where: { $0.titleID == titleID })?.title
+        guard let title, !title.isEmpty else { return nil }
+        return CloudLibraryLibraryLetterIndexSupport.indexLetter(for: title)
     }
 
     /// First letter of the currently focused grid tile.
@@ -36,11 +279,8 @@ extension CloudLibraryLibraryScreen {
         } else {
             titleID = lastFocusedGridTitleID ?? preferredTitleID
         }
-        guard let titleID,
-              let item = tileLookup[titleID] else {
-            return nil
-        }
-        return CloudLibraryLibraryLetterIndexSupport.indexLetter(for: item.title)
+        guard let titleID else { return nil }
+        return letterForTitleID(titleID)
     }
 
     /// Returns from the grid to header chrome with one focus-driven scroll.
@@ -190,7 +430,7 @@ extension CloudLibraryLibraryScreen {
         }
         pendingFocusTask = Task { @MainActor in
             withAnimation(nil) {
-                scrollProxy.scrollTo(targetID, anchor: .topLeading)
+                scrollProxy.scrollTo(targetID, anchor: StratixTheme.Library.focusedRowAnchor)
             }
             await Task.yield()
             guard !Task.isCancelled else { return }
@@ -234,13 +474,19 @@ extension CloudLibraryLibraryScreen {
     }
 
     func focusLetterIndex(for letter: String) {
-        guard cachedLetterSectionSet.contains(letter) else { return }
-        letterJumpLetter = nil
-        letterIndexEngaged = true
-        permitsLetterIndexFocus = true
-        MainActorDeferredTask.schedule(task: &pendingFocusTask) {
-            focusedTarget = .letter(letter)
+        let targetLetter: String
+        if cachedLetterSectionSet.contains(letter) {
+            targetLetter = letter
+        } else if let highlighted = letterIndexHighlightedLetter, cachedLetterSectionSet.contains(highlighted) {
+            targetLetter = highlighted
+        } else if let first = cachedLetterSections.first {
+            targetLetter = first
+        } else {
+            return
         }
+        letterJumpLetter = nil
+        pendingFocusTask?.cancel()
+        focusedTarget = .letter(targetLetter)
     }
 
     func jumpToLetter(_ letter: String, scrollProxy: ScrollViewProxy) {
@@ -250,10 +496,11 @@ extension CloudLibraryLibraryScreen {
         }
 
         letterJumpLetter = letter
+        scrollPositionLetter = letter
         pendingFocusTask?.cancel()
         pendingFocusTask = Task { @MainActor in
             withAnimation(nil) {
-                scrollProxy.scrollTo(targetID, anchor: .top)
+                scrollProxy.scrollTo(targetID, anchor: StratixTheme.Library.focusedRowAnchor)
             }
             await Task.yield()
             guard !Task.isCancelled else { return }
@@ -264,34 +511,40 @@ extension CloudLibraryLibraryScreen {
     }
 
     func returnFocusToGridFromLetterIndex(scrollProxy: ScrollViewProxy) {
-        let letter: String?
-        if case .letter(let focusedLetter) = focusedTarget {
-            letter = focusedLetter
-        } else {
-            letter = letterIndexHighlightedLetter
-        }
-
-        if let letter, cachedFirstTitleIDByLetter[letter] != nil {
-            jumpToLetter(letter, scrollProxy: scrollProxy)
+        if let remembered = lastFocusedGridTitleID, tileLookup[remembered] != nil {
+            pendingFocusTask?.cancel()
+            focusedTarget = .tile(remembered)
             return
         }
-
-        requestGridFocus(scrollProxy: scrollProxy)
+        requestGridFocus(scrollProxy: scrollProxy, focusDriven: true)
     }
 
     func updateGridLayout(for width: CGFloat) {
-        let availableWidth = max(width - (gridEdgeFocusInset * 2), gridItemWidth)
-        let newColumnCount = max(Int((availableWidth + gridItemSpacing) / (gridItemWidth + gridItemSpacing)), 1)
-        guard newColumnCount != cachedGridColumnCount else { return }
-        cachedGridColumnCount = newColumnCount
+        let columns = StratixTheme.Library.gridColumnCount
+        let availableWidth = max(width, 1)
+        let itemWidth = floor(
+            (availableWidth - CGFloat(columns - 1) * gridItemSpacing) / CGFloat(columns)
+        )
+        guard columns != cachedGridColumnCount || itemWidth != cachedGridItemWidth else { return }
+        cachedGridColumnCount = columns
+        cachedGridItemWidth = max(itemWidth, 1)
         cachedColumns = Array(
-            repeating: GridItem(.fixed(gridItemWidth), spacing: gridItemSpacing, alignment: .top),
-            count: newColumnCount
+            repeating: GridItem(.fixed(cachedGridItemWidth), spacing: gridItemSpacing, alignment: .top),
+            count: columns
         )
     }
 
     func scrollTargetID(for titleID: TitleID) -> String? {
         tileLookup[titleID]?.id
+    }
+
+    static func nextLibrarySortOption(after label: String) -> LibrarySortOption {
+        let current = LibrarySortOption.allCases.first(where: {
+            label.localizedCaseInsensitiveContains($0.label) || label.localizedCaseInsensitiveContains($0.rawValue)
+        }) ?? .alphabetical
+        let all = LibrarySortOption.allCases
+        guard let index = all.firstIndex(of: current) else { return .alphabetical }
+        return all[(index + 1) % all.count]
     }
 
     enum LibraryHeaderSegment: Hashable {
@@ -355,12 +608,11 @@ extension CloudLibraryLibraryScreen {
             onSelectTab(id)
             focusLibraryHeaderSegment(.tab(id), scrollProxy: scrollProxy)
         case .search:
+            NotificationCenter.default.post(name: .librarySearchResignKeyboard, object: nil)
             if !isLibrarySearchActive {
                 onActivateSearch()
-            } else {
-                focusLibraryHeaderSegment(.searchField, scrollProxy: scrollProxy)
-                NotificationCenter.default.post(name: .librarySearchRequestKeyboard, object: nil)
             }
+            focusLibraryHeaderSegment(.tab("search_tab"), scrollProxy: scrollProxy)
         }
     }
 

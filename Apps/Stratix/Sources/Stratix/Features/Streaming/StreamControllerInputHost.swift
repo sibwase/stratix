@@ -149,7 +149,10 @@ final class StreamControllerInputViewController<Content: View>: GCEventViewContr
     }
 
     private func shouldSwallowMenuPress(_ presses: Set<UIPress>) -> Bool {
-        presses.contains { $0.type == .menu }
+        guard presses.contains(where: { $0.type == .menu }) else { return false }
+        // Forward Menu to SwiftUI while launch/overlay UI owns focus so B can
+        // close the overlay or cancel launch. Swallow it during gameplay.
+        return !allowsControllerUIFocus
     }
 
     /// Xbox controller X maps to `UIPress.playPause` on tvOS. Swallow it so gameplay input

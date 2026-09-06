@@ -5,8 +5,8 @@
 import StratixCore
 
 struct CloudLibrarySceneRouteState {
-    var currentSurfaceID = "home"
-    var selectedSideRailNavID: SideRailNavID = .home
+    var currentSurfaceID = "library"
+    var selectedSideRailNavID: SideRailNavID = .library
     var lastSignature: Int?
 
     static func signature(
@@ -25,7 +25,7 @@ struct CloudLibrarySceneRouteState {
     ) -> Self {
         .init(
             currentSurfaceID: utilityRouteRawValue ?? browseRouteRawValue,
-            selectedSideRailNavID: (CloudLibraryBrowseRoute(rawValue: browseRouteRawValue) ?? .home).sideRailNavID
+            selectedSideRailNavID: (CloudLibraryBrowseRoute(rawValue: browseRouteRawValue) ?? .library).sideRailNavID
         )
     }
 }

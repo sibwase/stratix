@@ -24,7 +24,7 @@ final class CloudLibraryRouteState {
         case defaultHome = "default_home"
     }
 
-    var browseRoute: CloudLibraryBrowseRoute = .home
+    var browseRoute: CloudLibraryBrowseRoute = .library
     var utilityRoute: ShellUtilityRoute?
     var detailPath: [TitleID] = []
     var hasRestoredStoredRoute = false
@@ -50,7 +50,7 @@ final class CloudLibraryRouteState {
         }
 
         guard settingsStore.shell.rememberLastSection else {
-            applyRestoredBrowseRoute(.home, diagnosticsSource: .defaultHome)
+            applyRestoredBrowseRoute(.library, diagnosticsSource: .defaultHome)
             return
         }
         let rememberedRawValue = settingsStore.shell.lastDestinationRawValue
@@ -104,11 +104,11 @@ final class CloudLibraryRouteState {
         detailPath.removeAll()
     }
 
-    /// Returns the shell to the home browse route and clears overlays and detail state.
+    /// Returns the shell to the library browse route and clears overlays and detail state.
     func returnHome() {
         utilityRoute = nil
         detailPath.removeAll()
-        browseRoute = .home
+        browseRoute = .library
     }
 
     /// Applies a restored browse route while clearing any stale overlay or detail state.
@@ -130,12 +130,13 @@ final class CloudLibraryRouteState {
         if rawValue == LibraryTabID.search {
             return prefix == "override" ? .overrideSearch : .rememberedSearch
         }
-        let route = CloudLibraryBrowseRoute(rawValue: rawValue) ?? .home
+        if rawValue == "home" {
+            return prefix == "override" ? .overrideLibrary : .rememberedLibrary
+        }
+        let route = CloudLibraryBrowseRoute(rawValue: rawValue) ?? .library
         switch (prefix, route) {
-        case ("override", .home): return .overrideHome
         case ("override", .library): return .overrideLibrary
         case ("override", .consoles): return .overrideConsoles
-        case ("remembered", .home): return .rememberedHome
         case ("remembered", .library): return .rememberedLibrary
         case ("remembered", .consoles): return .rememberedConsoles
         default: return .defaultHome

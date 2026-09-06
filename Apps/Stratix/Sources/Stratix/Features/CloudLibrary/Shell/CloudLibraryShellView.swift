@@ -62,7 +62,6 @@ struct CloudLibraryShellView<Content: View>: View {
     }
 
     var body: some View {
-        let railInsetLeading = StratixTheme.Shell.sideRailInsetLeading
         let contentLeadingInset = StratixTheme.Shell.contentLeadingInset + contentLeadingAdjustment
 
         ZStack(alignment: .top) {
@@ -99,8 +98,7 @@ struct CloudLibraryShellView<Content: View>: View {
                 collapsedSelectedNavFocusable: collapsedSelectedNavFocusable
             )
             .padding(.top, StratixTheme.Shell.sideRailTopPadding)
-            .padding(.bottom, StratixTheme.Shell.sideRailBottomPadding)
-            .padding(.leading, railInsetLeading)
+            .padding(.leading, StratixTheme.Shell.sideRailLeadingPadding)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -128,9 +126,8 @@ struct CloudLibraryStatusPanel: View {
         let content = statusContent
         if state.kind == .loading {
             content
-                .padding(.horizontal, 44)
-                .padding(.vertical, 34)
-                .frame(maxWidth: 920)
+                .focusable()
+                .gamePassDisableSystemFocusEffect()
         } else {
             GlassCard(
                 cornerRadius: StratixTheme.Radius.xl,
@@ -147,17 +144,25 @@ struct CloudLibraryStatusPanel: View {
     }
 
     private var statusContent: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: state.kind == .loading ? 14 : 18) {
             icon
-            Text(state.title)
-                .font(StratixTypography.rounded(34, weight: .bold, dynamicTypeSize: dynamicTypeSize))
-                .foregroundStyle(StratixTheme.Colors.textPrimary)
+            if state.kind != .loading {
+                Text(state.title)
+                    .font(StratixTypography.rounded(34, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                    .foregroundStyle(StratixTheme.Colors.textPrimary)
+            } else {
+                Text(state.title)
+                    .font(StratixTypography.rounded(22, weight: .semibold, dynamicTypeSize: dynamicTypeSize))
+                    .foregroundStyle(Color.white.opacity(0.72))
+            }
 
-            Text(state.message)
-                .font(StratixTypography.rounded(18, weight: .medium, dynamicTypeSize: dynamicTypeSize))
-                .foregroundStyle(StratixTheme.Colors.textSecondary)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: 760)
+            if state.kind != .loading {
+                Text(state.message)
+                    .font(StratixTypography.rounded(18, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                    .foregroundStyle(StratixTheme.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+                    .frame(maxWidth: 760)
+            }
 
             if let title = state.primaryActionTitle, let onPrimaryAction {
                 Button(action: onPrimaryAction) {
@@ -182,9 +187,9 @@ struct CloudLibraryStatusPanel: View {
         switch state.kind {
         case .loading:
             ProgressView()
-                .controlSize(.large)
-                .tint(StratixTheme.Colors.focusTint)
-                .scaleEffect(1.4)
+                .progressViewStyle(.circular)
+                .controlSize(.regular)
+                .tint(Color.white.opacity(0.85))
         case .error:
             Image(systemName: "exclamationmark.triangle.fill")
                 .font(.system(size: 54))
@@ -201,8 +206,8 @@ struct CloudLibraryStatusPanel: View {
 #Preview("Loading", traits: .fixedLayout(width: 1920, height: 1080)) {
     CloudLibraryShellView(
         sideRail: CloudLibraryPreviewData.sideRail,
-        selectedNavID: .home,
-        heroBackgroundURL: CloudLibraryPreviewData.home.heroBackgroundURL,
+        selectedNavID: .library,
+        heroBackgroundURL: CloudLibraryPreviewData.library.heroBackdropURL,
         onSelectNav: { _ in }
     ) {
         CloudLibraryStatusPanel(state: CloudLibraryPreviewData.statusLoading)
@@ -212,8 +217,8 @@ struct CloudLibraryStatusPanel: View {
 #Preview("Error", traits: .fixedLayout(width: 1920, height: 1080)) {
     CloudLibraryShellView(
         sideRail: CloudLibraryPreviewData.sideRail,
-        selectedNavID: .home,
-        heroBackgroundURL: CloudLibraryPreviewData.home.heroBackgroundURL,
+        selectedNavID: .library,
+        heroBackgroundURL: CloudLibraryPreviewData.library.heroBackdropURL,
         onSelectNav: { _ in }
     ) {
         CloudLibraryStatusPanel(state: CloudLibraryPreviewData.statusError)

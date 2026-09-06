@@ -211,7 +211,7 @@ extension StreamGuideOverlayView {
                 }
                 .padding(28)
             }
-            .scrollIndicators(.hidden)
+            .scrollIndicators(.never)
             .onMoveCommand { direction in
                 if direction == .left {
                     focusSidebar()

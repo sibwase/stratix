@@ -90,7 +90,8 @@ extension CloudLibraryViewModel {
         if resultNeedsRebuild {
             lastSearchProjectionToken = resultProjectionToken
 
-            let trimmedSearchQuery = queryState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let rawSearchQuery = queryState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmedSearchQuery = rawSearchQuery.count >= 2 ? rawSearchQuery : ""
             let resultItems: [MediaTileViewState]
             if trimmedSearchQuery.isEmpty {
                 _ = searchDocumentsIfNeeded(

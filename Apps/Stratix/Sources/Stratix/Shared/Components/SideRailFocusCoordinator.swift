@@ -4,6 +4,29 @@
 
 import SwiftUI
 
+/// TV-app sidebar row chrome: white capsule on focus, no extra scale or glow.
+enum SideRailRowStyle {
+    static func foreground(isFocused: Bool, isSelected: Bool) -> Color {
+        if isFocused {
+            return Color.black
+        }
+        if isSelected {
+            return Color.white
+        }
+        return Color.white.opacity(0.72)
+    }
+
+    static func fill(isFocused: Bool, isSelected: Bool) -> Color {
+        if isFocused {
+            return Color.white
+        }
+        if isSelected {
+            return Color.white.opacity(0.14)
+        }
+        return Color.clear
+    }
+}
+
 /// Focus destinations the side rail can own directly across account, nav, and trailing action rows.
 enum SideRailFocusTarget: Hashable {
     case account
@@ -13,17 +36,22 @@ enum SideRailFocusTarget: Hashable {
 
 /// Shared ordering and focus-entry rules for the side rail so the view layer stays mostly declarative.
 enum SideRailFocusCoordinator {
-    private static let preferredNavOrder: [SideRailNavID] = [.home, .library, .consoles]
+    private static let preferredNavOrder: [SideRailNavID] = [.library, .consoles]
 
     /// Reorders nav items into the canonical shell order even if the source state arrives unsorted.
     static func orderedNavItems(from navItems: [SideRailNavItemViewState]) -> [SideRailNavItemViewState] {
         guard !navItems.isEmpty else { return [] }
         var ordered: [SideRailNavItemViewState] = []
         ordered.reserveCapacity(preferredNavOrder.count)
+        var seen = Set<SideRailNavID>()
         for id in preferredNavOrder {
             if let item = navItems.first(where: { $0.id == id }) {
                 ordered.append(item)
+                seen.insert(id)
             }
+        }
+        for item in navItems where !seen.contains(item.id) {
+            ordered.append(item)
         }
         return ordered
     }
@@ -39,10 +67,18 @@ enum SideRailFocusCoordinator {
         trailingActions: [SideRailActionViewState],
         selectedNavID: SideRailNavID
     ) -> SideRailFocusTarget {
-        _ = activeUtilityRoute
-        _ = trailingActions
-        _ = selectedNavID
-        return .nav(.library)
+        if let activeUtilityRoute {
+            switch activeUtilityRoute {
+            case .profile:
+                return .account
+            case .settings:
+                if trailingActions.contains(where: { $0.id == "settings" }) {
+                    return .action("settings")
+                }
+                return .account
+            }
+        }
+        return .nav(selectedNavID)
     }
 
     /// Limits collapsed-rail focus to the selected nav row when that mode is enabled.
@@ -133,7 +169,12 @@ extension SideRailNavigationView {
         }
 
         guard let target else {
-            onExpansionChanged?(isRailExpanded)
+            // Focus left the rail for content: collapse unless we are still landing entry focus.
+            if isRailExpanded, !didExplicitlyEnterRail {
+                collapseRail()
+            } else {
+                onExpansionChanged?(isRailExpanded)
+            }
             return
         }
 
@@ -159,6 +200,7 @@ extension SideRailNavigationView {
             expandRailAndFocusPreferredTarget()
             return
         }
+
         onExpansionChanged?(false)
     }
 

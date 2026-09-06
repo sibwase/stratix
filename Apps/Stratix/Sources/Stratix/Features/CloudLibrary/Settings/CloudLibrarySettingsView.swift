@@ -63,36 +63,43 @@ struct CloudLibrarySettingsView: View {
 
     var rightPane: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                paneHeader
-                    .padding(.horizontal, 28)
-                    .padding(.top, 22)
-                    .padding(.bottom, 16)
-
-                Rectangle()
-                    .fill(Color.white.opacity(0.08))
-                    .frame(height: 1)
+            VStack(alignment: .leading, spacing: StratixTheme.Library.headerBelowBadgeSpacing) {
+                Color.clear
+                    .frame(height: StratixTheme.SideRail.collapsedBadgeHeight)
 
                 VStack(alignment: .leading, spacing: 18) {
-                    switch selectedPane {
-                    case .stream:
-                        streamPane
-                    case .controller:
-                        controllerPane
-                    case .videoAudio:
-                        videoAudioPane
-                    case .interface:
-                        interfacePane
-                    case .diagnostics:
-                        diagnosticsPane
+                    paneHeader
+                        .padding(.horizontal, 32)
+                        .padding(.top, 0)
+                        .padding(.bottom, 16)
+
+                    Rectangle()
+                        .fill(Color.white.opacity(0.08))
+                        .frame(height: 1)
+
+                    VStack(alignment: .leading, spacing: 18) {
+                        switch selectedPane {
+                        case .stream:
+                            streamPane
+                        case .controller:
+                            controllerPane
+                        case .videoAudio:
+                            videoAudioPane
+                        case .interface:
+                            interfacePane
+                        case .diagnostics:
+                            diagnosticsPane
+                        }
                     }
+                    .padding(.horizontal, 32)
+                    .padding(.vertical, 24)
                 }
-                .padding(28)
             }
+            .padding(.bottom, StratixTheme.Shell.contentBottomPadding)
             .frame(maxWidth: 1510, alignment: .topLeading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.never)
         .environment(\.cloudLibrarySettingsPaneMoveHandler, focusSettingsSidebarOnLeftMove)
     }
 
@@ -118,11 +125,11 @@ struct CloudLibrarySettingsView: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 12) {
                 Image(systemName: selectedPane.systemImage)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(StratixTheme.Colors.focusTint)
 
                 Text(selectedPane.title)
-                    .font(StratixTypography.rounded(30, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                    .font(StratixTypography.rounded(32, weight: .bold, dynamicTypeSize: dynamicTypeSize))
                     .foregroundStyle(StratixTheme.Colors.textPrimary)
 
                 Spacer(minLength: 0)
@@ -134,7 +141,7 @@ struct CloudLibrarySettingsView: View {
             }
 
             Text(selectedPane.subtitle)
-                .font(StratixTypography.rounded(18, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                .font(StratixTypography.rounded(20, weight: .medium, dynamicTypeSize: dynamicTypeSize))
                 .foregroundStyle(StratixTheme.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
 

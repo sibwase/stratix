@@ -5,12 +5,15 @@
 import SwiftUI
 import CoreImage
 import CoreImage.CIFilterBuiltins
+import StratixCore
 import XCloudAPI
 
 /// Shows the Microsoft device-code instructions while the app waits for browser authorization.
 struct DeviceCodeView: View {
+    @Environment(SessionController.self) private var sessionController
     let info: DeviceCodeInfo
     private let qrContext = CIContext()
+    @FocusState private var isCancelFocused: Bool
 
     private var qrURLString: String {
         info.verificationUriComplete ?? info.verificationUri
@@ -42,6 +45,12 @@ struct DeviceCodeView: View {
             )
             .ignoresSafeArea()
         )
+        .onAppear {
+            isCancelFocused = true
+        }
+        .onExitCommand {
+            Task { await sessionController.cancelSignIn() }
+        }
     }
 
     private var qrPanel: some View {
@@ -123,6 +132,36 @@ struct DeviceCodeView: View {
             }
             .padding(.top, 8)
 
+            Button {
+                Task { await sessionController.cancelSignIn() }
+            } label: {
+                FocusAwareView { isFocused in
+                    HStack(spacing: 10) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18, weight: .bold))
+                        Text("Cancel Sign In")
+                            .font(.system(size: 20, weight: .bold, design: .rounded))
+                    }
+                    .foregroundStyle(isFocused ? Color.black : StratixTheme.Colors.textPrimary)
+                    .padding(.horizontal, 18)
+                    .frame(minWidth: 240, minHeight: 56, alignment: .leading)
+                    .background(
+                        Capsule(style: .continuous)
+                            .fill(isFocused ? StratixTheme.Colors.focusTint : Color.white.opacity(0.08))
+                    )
+                    .overlay(
+                        Capsule(style: .continuous)
+                            .stroke(Color.white.opacity(isFocused ? 0.14 : 0.08), lineWidth: 1)
+                    )
+                    .gamePassFocusRing(isFocused: isFocused, cornerRadius: 30)
+                }
+            }
+            .buttonStyle(CloudLibraryTVButtonStyle())
+            .gamePassDisableSystemFocusEffect()
+            .focused($isCancelFocused)
+            .accessibilityIdentifier("auth_cancel_sign_in_button")
+            .padding(.top, 12)
+
             Spacer(minLength: 0)
         }
         .padding(40)
@@ -146,6 +185,8 @@ struct DeviceCodeView: View {
 
 #if DEBUG
 #Preview("Auth - Device Code", traits: .fixedLayout(width: 1920, height: 1080)) {
+    let coordinator = AppCoordinator()
     DeviceCodeView(info: StratixPreviewFixtures.deviceCodeInfo)
+        .environment(coordinator.sessionController)
 }
 #endif

@@ -23,14 +23,6 @@ Features/CloudLibrary/
 │   ├── CloudLibraryDetailHydrationView.swift
 │   └── State/
 │       └── DetailStateHotCache.swift
-├── Home/
-│   ├── CloudLibraryHomeFocusCoordinator.swift
-│   ├── CloudLibraryHomeHeroComponents.swift
-│   ├── CloudLibraryHomeHeroSection.swift
-│   ├── CloudLibraryHomeRailComponents.swift
-│   ├── CloudLibraryHomeRailSection.swift
-│   ├── CloudLibraryHomeScreen.swift
-│   └── HomeRouteRootContainer.swift
 ├── Library/
 │   ├── CloudLibraryLibraryScreenControls.swift
 │   ├── CloudLibraryLibraryScreenFocus.swift

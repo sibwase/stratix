@@ -23,8 +23,7 @@ enum CloudLibraryPreviewData {
         profileImageURL: capturedProfileImageURL,
         profileInitials: "D",
         navItems: [
-            .init(id: .home, title: "Home", systemImage: "house.fill"),
-            .init(id: .library, title: "Library", systemImage: "square.grid.2x2.fill", badgeText: "\(capturedCloudLibraryTotal)"),
+            .init(id: .library, title: "Home", systemImage: "house.fill", badgeText: "\(capturedCloudLibraryTotal)"),
             .init(id: .consoles, title: "Local", systemImage: "tv.fill", badgeText: "\(capturedConsoleTotal)")
         ],
         trailingActions: []
@@ -32,8 +31,6 @@ enum CloudLibraryPreviewData {
 
     static let cloudItems = CloudLibraryHomeScenario.cloudItems
     static let cloudSections = CloudLibraryHomeScenario.cloudSections
-    static let home = CloudLibraryHomeScenario.home
-    static let homeEmpty = CloudLibraryHomeScenario.homeEmpty
     static let library = CloudLibraryHomeScenario.library
     static let libraryEmpty = CloudLibraryHomeScenario.libraryEmpty
     static let detail = CloudLibraryHomeScenario.detail

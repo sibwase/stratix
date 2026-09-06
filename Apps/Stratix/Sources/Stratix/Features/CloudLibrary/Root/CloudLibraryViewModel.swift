@@ -47,7 +47,7 @@ final class CloudLibraryViewModel {
 
     var cachedItemsByTitleID: [TitleID: CloudLibraryItem] = [:]
     var cachedItemsByProductID: [ProductID: CloudLibraryItem] = [:]
-    var cachedHomeTileLookup: [TitleID: CloudLibraryHomeScreen.TileLookupEntry] = [:]
+    var cachedHomeTileLookup: [TitleID: MediaTileViewState] = [:]
     var cachedLibraryTileLookup: [TitleID: MediaTileViewState] = [:]
     var cachedPortraitTilesByTitleID: [TitleID: MediaTileViewState] = [:]
     var cachedSearchTileLookup: [TitleID: MediaTileViewState] = [:]
@@ -71,7 +71,6 @@ final class CloudLibraryViewModel {
         homeRevision: UInt64,
         sceneContentRevision: UInt64
     )?
-    var lastHomeProjectionToken: Int?
     var lastLibraryProjectionToken: Int?
     var lastSearchBrowseProjectionToken: Int?
     var lastSearchProjectionToken: Int?
@@ -165,15 +164,9 @@ final class CloudLibraryViewModel {
         focusState: CloudLibraryFocusState
     ) -> Int {
         var hasher = Hasher()
+        _ = focusState
         hasher.combine(loadState)
         hasher.combine(routeState.browseRoute)
-        if let homeFocused = focusState.focusedTileID(for: .home) {
-            hasher.combine(homeFocused)
-        }
-        if let libraryFocused = focusState.focusedTileID(for: .library) {
-            hasher.combine(libraryFocused)
-        }
-        hasher.combine(lastHomeProjectionToken ?? -1)
         hasher.combine(lastLibraryProjectionToken ?? -1)
         hasher.combine(lastSearchBrowseProjectionToken ?? -1)
         hasher.combine(lastSearchProjectionToken ?? -1)
@@ -242,7 +235,6 @@ final class CloudLibraryViewModel {
         detailHydrationInFlightTitleIDs = []
         preparedIndex = nil
         preparedIndexToken = nil
-        lastHomeProjectionToken = nil
         lastLibraryProjectionToken = nil
         lastSearchBrowseProjectionToken = nil
         lastSearchProjectionToken = nil

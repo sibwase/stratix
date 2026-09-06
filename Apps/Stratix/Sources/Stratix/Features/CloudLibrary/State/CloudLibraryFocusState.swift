@@ -28,8 +28,6 @@ final class CloudLibraryFocusState {
     /// Returns the route-specific hero tile that should drive shell hero/background restoration.
     func settledHeroTileID(for route: CloudLibraryBrowseRoute) -> TitleID? {
         switch route {
-        case .home:
-            settledHomeHeroTileID
         case .library:
             settledLibraryHeroTileID
         case .consoles:
@@ -40,8 +38,6 @@ final class CloudLibraryFocusState {
     /// Stores the settled hero tile for the routes that participate in shell hero restoration.
     func setSettledHeroTileID(_ titleID: TitleID?, for route: CloudLibraryBrowseRoute) {
         switch route {
-        case .home:
-            settledHomeHeroTileID = titleID
         case .library:
             settledLibraryHeroTileID = titleID
         case .consoles:

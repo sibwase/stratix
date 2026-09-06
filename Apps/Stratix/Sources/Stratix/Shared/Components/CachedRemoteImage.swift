@@ -6,29 +6,6 @@ import SwiftUI
 import UIKit
 import StratixCore
 
-@MainActor
-enum RemoteImageDisplayCache {
-    private static let storage: NSCache<NSString, UIImage> = {
-        let cache = NSCache<NSString, UIImage>()
-        cache.countLimit = 72
-        cache.totalCostLimit = 64 * 1_024 * 1_024
-        return cache
-    }()
-
-    static func image(for key: String) -> UIImage? {
-        storage.object(forKey: key as NSString)
-    }
-
-    static func store(_ image: UIImage, for key: String) {
-        storage.setObject(image, forKey: key as NSString, cost: imageCostBytes(image))
-    }
-
-    private static func imageCostBytes(_ image: UIImage) -> Int {
-        guard let cgImage = image.cgImage else { return 0 }
-        return cgImage.bytesPerRow * cgImage.height
-    }
-}
-
 /// Shared SwiftUI image view that bridges view-driven artwork identity to the actor-backed
 /// remote image pipeline and only updates displayed artwork when the cache identity changes.
 struct CachedRemoteImage<Placeholder: View>: View {
@@ -37,6 +14,9 @@ struct CachedRemoteImage<Placeholder: View>: View {
     var priority: ArtworkPriority = .normal
     var maxPixelSize: CGFloat? = nil
     var contentMode: ContentMode = .fill
+    var adjustsImageWhenAncestorFocused: Bool = false
+    var isFocused: Bool = false
+    var cornerRadius: CGFloat = 0
     var onImageLoaded: (() -> Void)? = nil
     let placeholder: () -> Placeholder
     private let cacheIdentity: String
@@ -50,6 +30,9 @@ struct CachedRemoteImage<Placeholder: View>: View {
         priority: ArtworkPriority = .normal,
         maxPixelSize: CGFloat? = nil,
         contentMode: ContentMode = .fill,
+        adjustsImageWhenAncestorFocused: Bool = false,
+        isFocused: Bool = false,
+        cornerRadius: CGFloat = 0,
         onImageLoaded: (() -> Void)? = nil,
         @ViewBuilder placeholder: @escaping () -> Placeholder
     ) {
@@ -58,31 +41,61 @@ struct CachedRemoteImage<Placeholder: View>: View {
         self.priority = priority
         self.maxPixelSize = maxPixelSize
         self.contentMode = contentMode
+        self.adjustsImageWhenAncestorFocused = adjustsImageWhenAncestorFocused
+        self.isFocused = isFocused
+        self.cornerRadius = cornerRadius
         self.onImageLoaded = onImageLoaded
         self.placeholder = placeholder
 
         let identity = Self.makeCacheIdentity(url: url, kind: kind, maxPixelSize: maxPixelSize)
         self.cacheIdentity = identity
-        let cached = RemoteImageDisplayCache.image(for: identity)
-        _image = State(initialValue: cached)
-        _displayKey = State(initialValue: cached == nil ? nil : identity)
+        _image = State(initialValue: nil)
+        _displayKey = State(initialValue: nil)
     }
 
     var body: some View {
         Group {
             if let image {
-                Image(uiImage: image)
-                    .resizable()
-                    .aspectRatio(contentMode: contentMode)
+                if adjustsImageWhenAncestorFocused {
+                    NativeTVFocusPoster(
+                        image: image,
+                        cornerRadius: cornerRadius,
+                        contentMode: contentMode,
+                        isFocused: isFocused
+                    )
+                    .transition(.opacity)
                     .onAppear {
                         onImageLoaded?()
                     }
+                } else {
+                    posterImage(image)
+                        .transition(.opacity)
+                        .onAppear {
+                            onImageLoaded?()
+                        }
+                }
             } else {
                 placeholder()
+                    .transition(.opacity)
             }
         }
+        .animation(.easeOut(duration: 0.3), value: displayKey)
         .task(id: cacheIdentity) {
             await loadImage()
+        }
+    }
+
+    @ViewBuilder
+    private func posterImage(_ image: UIImage) -> some View {
+        let rendered = Image(uiImage: image)
+            .resizable()
+            .aspectRatio(contentMode: contentMode)
+        if cornerRadius > 0 {
+            rendered.clipShape(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            )
+        } else {
+            rendered
         }
     }
 
@@ -104,10 +117,6 @@ struct CachedRemoteImage<Placeholder: View>: View {
         }
         let cacheKey = cacheIdentity
         if displayKey == cacheKey, image != nil {
-            return
-        }
-        if let cached = RemoteImageDisplayCache.image(for: cacheKey) {
-            displayImage(cached, for: cacheKey)
             return
         }
         if let cached = await RemoteImagePipeline.shared.cachedImage(for: cacheKey) {
@@ -142,11 +151,57 @@ struct CachedRemoteImage<Placeholder: View>: View {
 
     @MainActor
     private func displayImage(_ image: UIImage, for cacheKey: String) {
-        let shouldStore = displayKey != cacheKey || self.image !== image
         self.image = image
         displayKey = cacheKey
-        if shouldStore {
-            RemoteImageDisplayCache.store(image, for: cacheKey)
+    }
+}
+
+
+/// Native tvOS poster: `UIImageView.adjustsImageWhenAncestorFocused` provides system
+/// specular lighting that tracks Siri Remote touch and a smooth focus lift.
+private struct NativeTVFocusPoster: UIViewRepresentable {
+    var image: UIImage?
+    var cornerRadius: CGFloat
+    var contentMode: ContentMode = .fill
+    var isFocused: Bool = false
+
+    func makeUIView(context: Context) -> UIImageView {
+        let view = UIImageView()
+        view.adjustsImageWhenAncestorFocused = true
+        view.masksFocusEffectToContents = true
+        view.clipsToBounds = false
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = .clear
+        view.layer.cornerCurve = .continuous
+        view.setContentHuggingPriority(.defaultLow, for: .horizontal)
+        view.setContentHuggingPriority(.defaultLow, for: .vertical)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
+        view.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
+        apply(to: view)
+        return view
+    }
+
+    func updateUIView(_ uiView: UIImageView, context: Context) {
+        apply(to: uiView)
+        // Keep native specular/motion, cancel the system image zoom so details stay sharp.
+        if isFocused, uiView.bounds.width > 1 {
+            let focusedSize = uiView.focusedFrameGuide.layoutFrame.size
+            var scaleX = focusedSize.width / uiView.bounds.width
+            var scaleY = focusedSize.height / uiView.bounds.height
+            if scaleX < 1.02 { scaleX = 1.12 }
+            if scaleY < 1.02 { scaleY = 1.12 }
+            uiView.transform = CGAffineTransform(scaleX: 1 / scaleX, y: 1 / scaleY)
+        } else {
+            uiView.transform = .identity
         }
+    }
+
+    private func apply(to view: UIImageView) {
+        view.image = image
+        view.layer.cornerRadius = cornerRadius
+        view.contentMode = contentMode == .fit ? .scaleAspectFit : .scaleAspectFill
+        view.adjustsImageWhenAncestorFocused = true
+        view.masksFocusEffectToContents = true
+        view.clipsToBounds = false
     }
 }

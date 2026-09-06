@@ -30,18 +30,12 @@ struct CloudLibraryHeroBackgroundState {
     private static func resolvedShellHeroBackgroundURL(
         inputs: CloudLibrarySceneModel.HeroBackgroundInputs
     ) -> URL? {
-        guard inputs.utilityRouteVisible || inputs.route != .home else {
-            return nil
-        }
-
         if let detailHeroBackgroundURL = inputs.detailHeroBackgroundURL {
             return detailHeroBackgroundURL
         }
 
         switch inputs.route {
-        case .home:
-            return inputs.homeFocusedHeroBackgroundURL ?? inputs.homeHeroBackgroundURL
-        case .library:
+        case .home, .library:
             return inputs.libraryFocusedHeroBackgroundURL ?? inputs.libraryHeroBackgroundURL
         case .consoles:
             return nil

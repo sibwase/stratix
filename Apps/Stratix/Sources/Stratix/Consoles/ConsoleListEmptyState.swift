@@ -7,188 +7,113 @@ import SwiftUI
 extension ConsoleListView {
     var emptyState: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 18) {
-                GlassCard(
-                    cornerRadius: 24,
-                    fill: Color.black.opacity(0.34),
-                    stroke: Color.white.opacity(0.10),
-                    shadowOpacity: 0.16
+            VStack(alignment: .leading, spacing: StratixTheme.Library.sectionSpacing) {
+                CloudLibraryPageSectionCard(
+                    title: "No Consoles Found",
+                    subtitle: emptyStatePrimaryMessage
                 ) {
-                    HStack(alignment: .top, spacing: 22) {
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .fill(
-                                    LinearGradient(
-                                        colors: [Color.white.opacity(0.08), Color.white.opacity(0.03)],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                            Image(systemName: "xbox.logo")
-                                .font(.system(size: 40, weight: .semibold))
-                                .foregroundStyle(StratixTheme.Colors.focusTint)
-                        }
-                        .frame(width: 110, height: 110)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                                .stroke(Color.white.opacity(0.10), lineWidth: 1)
-                        )
-
-                        VStack(alignment: .leading, spacing: 10) {
-                            Text("No Consoles Found")
-                                .font(.system(size: 34, weight: .heavy, design: .rounded))
-                                .foregroundStyle(StratixTheme.Colors.textPrimary)
-
-                            Text("We couldn’t find any Xbox consoles ready for remote play on this account.")
-                                .font(.system(size: 17, weight: .medium, design: .rounded))
-                                .foregroundStyle(StratixTheme.Colors.textSecondary)
+                    VStack(alignment: .leading, spacing: 14) {
+                        if let discoveryError = consoleController.lastError {
+                            Text(discoveryError)
+                                .font(StratixTypography.rounded(17, weight: .semibold, dynamicTypeSize: dynamicTypeSize))
+                                .foregroundStyle(Color.orange.opacity(0.95))
                                 .fixedSize(horizontal: false, vertical: true)
-
-                            Text("Turn on your console, enable remote features, and confirm it has internet access before refreshing.")
-                                .font(.system(size: 15, weight: .medium, design: .rounded))
-                                .foregroundStyle(StratixTheme.Colors.textMuted)
-                                .fixedSize(horizontal: false, vertical: true)
-
-                            HStack(spacing: 10) {
-                                ConsoleInfoPill(icon: "tv.fill", text: "Console on")
-                                ConsoleInfoPill(icon: "gearshape.fill", text: "Remote features enabled")
-                                ConsoleInfoPill(icon: "wifi", text: "Network reachable")
-                            }
-                            .padding(.top, 2)
-
-                            Button {
-                                Task { await refreshConsoles() }
-                            } label: {
-                                FocusAwareView { isFocused in
-                                    HStack(spacing: 10) {
-                                        Image(systemName: "arrow.clockwise")
-                                            .font(.system(size: 18, weight: .bold))
-                                        Text("Refresh Consoles")
-                                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                                    }
-                                    .foregroundStyle(isFocused ? Color.black : StratixTheme.Colors.textPrimary)
-                                    .padding(.horizontal, 18)
-                                    .frame(minWidth: 250, minHeight: 58, alignment: .leading)
-                                    .background(
-                                        Capsule(style: .continuous)
-                                            .fill(isFocused ? StratixTheme.Colors.focusTint : Color.white.opacity(0.08))
-                                    )
-                                    .overlay(
-                                        Capsule(style: .continuous)
-                                            .stroke(Color.white.opacity(isFocused ? 0.14 : 0.08), lineWidth: 1)
-                                    )
-                                    .gamePassFocusRing(isFocused: isFocused, cornerRadius: 30)
-                                }
-                            }
-                            .buttonStyle(CloudLibraryTVButtonStyle())
-                            .gamePassDisableSystemFocusEffect()
-                            .focused($focusedTarget, equals: .refresh)
-                            .onMoveCommand { direction in
-                                guard direction == .left else { return }
-                                onRequestSideRailEntry()
-                            }
-                            .padding(.top, 4)
-
-                            Button {
-                                withAnimation(.easeOut(duration: 0.2)) {
-                                    showTroubleshootDetails.toggle()
-                                }
-                            } label: {
-                                FocusAwareView { isFocused in
-                                    HStack(spacing: 10) {
-                                        Image(systemName: "wrench.and.screwdriver.fill")
-                                            .font(.system(size: 16, weight: .bold))
-                                        Text(showTroubleshootDetails ? "Hide Troubleshoot" : "Troubleshoot")
-                                            .font(.system(size: 18, weight: .bold, design: .rounded))
-                                    }
-                                    .foregroundStyle(isFocused ? Color.black : StratixTheme.Colors.textPrimary)
-                                    .padding(.horizontal, 18)
-                                    .frame(minWidth: 220, minHeight: 52, alignment: .leading)
-                                    .background(
-                                        Capsule(style: .continuous)
-                                            .fill(isFocused ? StratixTheme.Colors.focusTint : Color.white.opacity(0.06))
-                                    )
-                                    .overlay(
-                                        Capsule(style: .continuous)
-                                            .stroke(Color.white.opacity(isFocused ? 0.14 : 0.08), lineWidth: 1)
-                                    )
-                                    .gamePassFocusRing(isFocused: isFocused, cornerRadius: 26)
-                                }
-                            }
-                            .buttonStyle(CloudLibraryTVButtonStyle())
-                            .gamePassDisableSystemFocusEffect()
-                            .focused($focusedTarget, equals: .troubleshoot)
-                            .onMoveCommand { direction in
-                                guard direction == .left else { return }
-                                onRequestSideRailEntry()
-                            }
                         }
 
-                        Spacer(minLength: 0)
+                        Text("Turn on your console, enable remote features, and confirm it has internet access before refreshing.")
+                            .font(StratixTypography.rounded(17, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                            .foregroundStyle(StratixTheme.Colors.textMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        HStack(spacing: 10) {
+                            CloudLibraryStatPill(icon: "tv.fill", text: "Console on")
+                            CloudLibraryStatPill(icon: "gearshape.fill", text: "Remote features enabled")
+                            CloudLibraryStatPill(icon: "wifi", text: "Network reachable")
+                        }
                     }
-                    .padding(24)
                 }
-                .frame(maxWidth: 1120, alignment: .leading)
 
                 if showTroubleshootDetails {
-                    GlassCard(
-                        cornerRadius: 20,
-                        fill: Color.white.opacity(0.025),
-                        stroke: Color.white.opacity(0.08),
-                        shadowOpacity: 0.08
-                    ) {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Troubleshoot Discovery")
-                                .font(.system(size: 20, weight: .bold, design: .rounded))
-                                .foregroundStyle(StratixTheme.Colors.textPrimary)
-
-                            consoleChecklistRow(icon: "person.crop.circle.badge.checkmark", text: "Use the same Xbox account on console and this app.")
-                            consoleChecklistRow(icon: "gearshape.2.fill", text: "Enable remote features and instant-on standby in console settings.")
-                            consoleChecklistRow(icon: "wifi.router.fill", text: "Avoid guest/VPN networks while testing remote discovery.")
-                            consoleChecklistRow(icon: "arrow.clockwise.circle.fill", text: "Refresh after each change to validate discovery.")
-                        }
-                        .padding(20)
-                    }
-                    .frame(maxWidth: 1120, alignment: .leading)
+                    troubleshootSection
                 }
 
-                GlassCard(
-                    cornerRadius: 20,
-                    fill: Color.white.opacity(0.025),
-                    stroke: Color.white.opacity(0.08),
-                    shadowOpacity: 0.08
+                CloudLibraryPageSectionCard(
+                    title: "Remote Play Checklist",
+                    subtitle: "Confirm these before the next refresh"
                 ) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("Remote Play Checklist")
-                            .font(.system(size: 20, weight: .bold, design: .rounded))
-                            .foregroundStyle(StratixTheme.Colors.textPrimary)
-
-                        consoleChecklistRow(icon: "checkmark.shield.fill", text: "Sign in with the same Xbox account used on your console.")
-                        consoleChecklistRow(icon: "antenna.radiowaves.left.and.right", text: "Enable remote features in Xbox settings.")
-                        consoleChecklistRow(icon: "moon.zzz.fill", text: "Use Sleep/Instant-On if you want wake-from-idle support.")
-                        consoleChecklistRow(icon: "network", text: "Make sure the console stays connected to the internet.")
+                        CloudLibraryStatLine(icon: "checkmark.shield.fill", text: "Sign in with the same Xbox account used on your console.")
+                        CloudLibraryStatLine(icon: "antenna.radiowaves.left.and.right", text: "Enable remote features in Xbox settings.")
+                        CloudLibraryStatLine(icon: "moon.zzz.fill", text: "Use Sleep/Instant-On if you want wake-from-idle support.")
+                        CloudLibraryStatLine(icon: "network", text: "Make sure the console stays connected to the internet.")
                     }
-                    .padding(20)
                 }
-                .frame(maxWidth: 1120, alignment: .leading)
             }
+            .frame(maxWidth: 1120, alignment: .leading)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.top, 8)
             .padding(.bottom, 18)
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.never)
+    }
+
+    var troubleshootSection: some View {
+        CloudLibraryPageSectionCard(
+            title: "Troubleshoot Discovery",
+            subtitle: "Work through these if refresh still returns an empty list"
+        ) {
+            VStack(alignment: .leading, spacing: 12) {
+                CloudLibraryStatLine(icon: "person.crop.circle.badge.checkmark", text: "Use the same Xbox account on console and this app.")
+                CloudLibraryStatLine(icon: "gearshape.2.fill", text: "Enable remote features and instant-on standby in console settings.")
+                CloudLibraryStatLine(icon: "wifi.router.fill", text: "Avoid guest/VPN networks while testing remote discovery.")
+                CloudLibraryStatLine(icon: "arrow.clockwise.circle.fill", text: "Refresh after each change to validate discovery.")
+            }
+        }
     }
 }
 
-private func consoleChecklistRow(icon: String, text: String) -> some View {
-    HStack(alignment: .top, spacing: 10) {
-        Image(systemName: icon)
-            .font(.system(size: 14, weight: .bold))
-            .foregroundStyle(StratixTheme.Colors.focusTint)
-            .frame(width: 18)
-        Text(text)
-            .font(.system(size: 14, weight: .medium, design: .rounded))
-            .foregroundStyle(StratixTheme.Colors.textSecondary)
-            .fixedSize(horizontal: false, vertical: true)
+extension ConsoleListView {
+    var emptyStatePrimaryMessage: String {
+        Self.emptyStatePrimaryMessage(
+            discoveryError: consoleController.lastError,
+            presenceState: profileController.currentUserPresence?.state,
+            lastSeenDeviceType: profileController.currentUserPresence?.lastSeen?.deviceType
+        )
+    }
+
+    /// Pure messaging helper so empty-state copy stays testable without mounting SwiftUI.
+    static func emptyStatePrimaryMessage(
+        discoveryError: String?,
+        presenceState: String?,
+        lastSeenDeviceType: String?
+    ) -> String {
+        if discoveryError != nil {
+            return "Console discovery failed. Check your network connection and sign-in state, then refresh."
+        }
+        if let presenceState,
+           presenceState.caseInsensitiveCompare("Offline") == .orderedSame {
+            if let lastSeenDeviceType, !lastSeenDeviceType.isEmpty {
+                return "Your \(displayName(forDeviceType: lastSeenDeviceType)) appears offline. Remote play discovery only lists consoles that are reachable right now."
+            }
+            return "Your Xbox appears offline. Remote play discovery only lists consoles that are reachable right now."
+        }
+        return "We couldn’t find any Xbox consoles ready for remote play on this account."
+    }
+
+    static func displayName(forDeviceType deviceType: String) -> String {
+        switch deviceType.lowercased() {
+        case "scarlett", "xboxseriesx":
+            return "Xbox Series X"
+        case "lockhart", "xboxseriess":
+            return "Xbox Series S"
+        case "xboxonex":
+            return "Xbox One X"
+        case "xboxones":
+            return "Xbox One S"
+        case "xboxone", "durango":
+            return "Xbox One"
+        default:
+            return deviceType
+        }
     }
 }

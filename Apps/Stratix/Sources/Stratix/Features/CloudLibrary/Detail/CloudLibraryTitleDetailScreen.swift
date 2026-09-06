@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import StratixCore
 
 struct CloudLibraryTitleDetailScreen: View, Equatable {
     struct GalleryPresentation: Identifiable {
@@ -27,6 +28,7 @@ struct CloudLibraryTitleDetailScreen: View, Equatable {
     @State var lastFocusedDetailPanelID: String?
     @State var readiness = CloudLibraryTitleDetailReadinessState()
     @State var readinessTimeoutTask: Task<Void, Never>?
+    @State var metacriticRating: MetacriticRating?
     @FocusState var focusedGalleryIndex: Int?
     @FocusState var focusedDetailPanelID: String?
     @State var pendingFocusTask: Task<Void, Never>?
@@ -71,6 +73,7 @@ struct CloudLibraryTitleDetailScreen: View, Equatable {
         .task(id: state.id) {
             await prefetchTrailerThumbnails()
             startInitialMediaReadinessGate()
+            metacriticRating = await MetacriticRatingService.shared.fetchRating(for: state.title)
         }
         .onDisappear {
             readinessTimeoutTask?.cancel()
@@ -96,18 +99,12 @@ struct CloudLibraryTitleDetailScreen: View, Equatable {
                 if !state.gallery.isEmpty || state.isHydrating {
                     gallerySection
                 }
-
-                if !state.detailPanels.isEmpty {
-                    detailPanelsSection
-                }
             }
-            .padding(.horizontal, usesOuterPadding ? StratixTheme.Layout.outerPadding : 0)
-            .padding(.top, usesOuterPadding ? StratixTheme.Detail.contentTopPadding : 0)
             .padding(.bottom, StratixTheme.Detail.contentBottomPadding)
             .gamePassOuterFrame()
         }
         .accessibilityIdentifier("route_detail_root")
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.never)
     }
 
     func requestGalleryFocus() {

@@ -292,6 +292,7 @@ private struct StreamLaunchOverlayLayout<LeadingAction: View>: View {
 /// Displays the temporary overlay shown while a stream session is being prepared.
 struct StreamPreparingOverlay: View {
     let overlayInfo: StreamOverlayInfo
+    var failureMessage: String? = nil
     let onCancel: () -> Void
 
     /// Renders the pre-session preparation message and cancel affordance.
@@ -300,9 +301,9 @@ struct StreamPreparingOverlay: View {
             StreamLaunchOverlayLayout(
                 gameTitle: overlayInfo.title,
                 gameSubtitle: overlayInfo.subtitle,
-                statusTitle: "Preparing Stream",
-                progress: 0.08,
-                summary: "Loading stream details and reserving a session.",
+                statusTitle: failureMessage == nil ? "Preparing Stream" : "Couldn't Start Stream",
+                progress: failureMessage == nil ? 0.08 : 0,
+                summary: failureMessage.map(Self.userFacingSummary) ?? "Loading stream details and reserving a session.",
                 leadingAction: {
                     StreamLaunchCancelButton(onCancel: onCancel)
                 }
@@ -310,6 +311,14 @@ struct StreamPreparingOverlay: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .focusSection()
+    }
+
+    private static func userFacingSummary(_ message: String) -> String {
+        if message.localizedCaseInsensitiveContains("TLS") ||
+            message.localizedCaseInsensitiveContains("secure connection") {
+            return "Microsoft login could not complete a secure connection. Check Wi‑Fi, VPN, or IPv6, then try again."
+        }
+        return message
     }
 }
 

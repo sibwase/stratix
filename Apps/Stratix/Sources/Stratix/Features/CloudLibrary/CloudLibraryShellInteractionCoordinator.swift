@@ -38,12 +38,8 @@ struct CloudLibraryShellInteractionCoordinator {
     ) async {
         guard routeState.utilityRoute == nil else { return }
         guard stateSnapshot.item(titleID: titleID) != nil else { return }
-        await prewarmDetailState(titleID)
         viewModel.detailStateCache.touch(titleID)
         focusState.setFocusedTileID(titleID, for: routeState.browseRoute)
-        if routeState.browseRoute.isHome {
-            focusState.setSettledHeroTileID(titleID, for: .home)
-        }
         focusState.isSideRailExpanded = false
         if routeState.browseRoute == .library, queryState.wrappedValue.isLibrarySearchActive {
             queryState.wrappedValue.isLibrarySearchActive = false
@@ -55,6 +51,7 @@ struct CloudLibraryShellInteractionCoordinator {
             reason: "detail_open"
         )
         routeState.pushDetail(titleID)
+        await prewarmDetailState(titleID)
     }
 
     /// Switches the active browse route and clears route-local state that should not survive the transition.
@@ -76,6 +73,7 @@ struct CloudLibraryShellInteractionCoordinator {
                 queryState.wrappedValue.searchText = ""
             }
         }
+        focusState.isSideRailExpanded = false
         focusState.requestTopContentFocus(for: targetRoute)
     }
 
@@ -122,22 +120,12 @@ struct CloudLibraryShellInteractionCoordinator {
         settingsStore: SettingsStore,
         queryState: Binding<LibraryQueryState>
     ) {
-        if routeState.utilityRoute == nil,
-           routeState.detailPath.isEmpty,
-           routeState.browseRoute == .library,
-           queryState.wrappedValue.isLibrarySearchActive {
-            let trimmedQuery = queryState.wrappedValue.searchText
-                .trimmingCharacters(in: .whitespacesAndNewlines)
-            if !trimmedQuery.isEmpty {
-                queryState.wrappedValue.searchText = ""
-                return
-            }
-            queryState.wrappedValue.isLibrarySearchActive = false
-            focusState.requestTopContentFocus(for: .library)
-            return
-        }
-
-        switch backActionPolicy.resolve(routeState: routeState, focusState: focusState) {
+        switch backActionPolicy.resolve(
+            routeState: routeState,
+            focusState: focusState,
+            isLibrarySearchActive: queryState.wrappedValue.isLibrarySearchActive,
+            librarySearchText: queryState.wrappedValue.searchText
+        ) {
         case .closeUtilityRoute:
             guard let utilityRoute = routeState.utilityRoute else { return }
             routeState.closeUtilityRoute()
@@ -154,16 +142,21 @@ struct CloudLibraryShellInteractionCoordinator {
                queryState.wrappedValue.searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                 focusState.requestTopContentFocus(for: .library)
             }
+        case .clearLibrarySearch:
+            queryState.wrappedValue.searchText = ""
+        case .exitLibrarySearch:
+            queryState.wrappedValue.isLibrarySearchActive = false
+            focusState.requestTopContentFocus(for: .library)
         case .returnBrowseHome:
             let fromRoute = routeState.browseRoute.rawValue
             queryState.wrappedValue.scopedCategory = nil
-            routeState.setBrowseRoute(.home)
-            routeState.persistLastDestination(.home, settingsStore: settingsStore)
+            routeState.setBrowseRoute(.library)
+            routeState.persistLastDestination(.library, settingsStore: settingsStore)
             focusState.isSideRailExpanded = false
-            focusState.requestTopContentFocus(for: .home)
+            focusState.requestTopContentFocus(for: .library)
             NavigationPerformanceTracker.recordRouteChange(
                 from: fromRoute,
-                to: "home",
+                to: "library",
                 reason: "back_home"
             )
         case .enterSideRail:
@@ -217,7 +210,7 @@ struct CloudLibraryShellInteractionCoordinator {
         viewModel: CloudLibraryViewModel
     ) {
         sceneModel.applyStatusMutation(
-            isHomeRoute: routeState.browseRoute.isHome,
+            isHomeRoute: false,
             loadState: loadState,
             sections: stateSnapshot.sections,
             hasCompletedInitialHomeMerchandising: stateSnapshot.hasCompletedInitialHomeMerchandising,
@@ -244,12 +237,13 @@ struct CloudLibraryShellInteractionCoordinator {
         routeState: CloudLibraryRouteState,
         focusState: CloudLibraryFocusState
     ) {
+        _ = focusState
         viewModel.rebuildHeroBackgroundContext(
             browseRouteRawValue: routeState.browseRoute.rawValue,
             utilityRouteVisible: routeState.utilityRoute != nil,
             detailTitleID: routeState.detailPath.last,
-            homeFocusedTitleID: focusState.settledHeroTileID(for: .home),
-            libraryFocusedTitleID: focusState.settledHeroTileID(for: .library)
+            homeFocusedTitleID: nil,
+            libraryFocusedTitleID: nil
         )
     }
 

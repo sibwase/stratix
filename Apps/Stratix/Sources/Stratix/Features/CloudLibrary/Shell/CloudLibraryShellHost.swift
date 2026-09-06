@@ -40,6 +40,7 @@ struct CloudLibraryShellHost: View {
     let productDetail: @MainActor (ProductID) -> CloudLibraryProductDetail?
     let achievementSnapshot: @MainActor (TitleID) -> TitleAchievementSnapshot?
     let achievementErrorText: @MainActor (TitleID) -> String?
+    var removeFromMRU: (@MainActor (TitleID) -> Void)? = nil
     @State private var pendingAsyncActions: [PendingAsyncAction] = []
     @State private var pendingAsyncActionSequence = 0
 
@@ -60,6 +61,7 @@ struct CloudLibraryShellHost: View {
                 handleExitCommand()
             }
             .onPlayPauseCommand {
+                guard !isStreamPresentationActive else { return }
                 handleSettingsShortcut()
             }
     }
@@ -175,22 +177,14 @@ struct CloudLibraryShellHost: View {
     }
 
     private var contentLeadingAdjustment: CGFloat {
-        if !routeState.detailPath.isEmpty {
-            return 0
-        }
-        return layoutPolicy.shellContentLeadingAdjustment(
+        layoutPolicy.shellContentLeadingAdjustment(
             browseRoute: routeState.browseRoute,
             utilityRoute: routeState.utilityRoute
         )
     }
 
-    private var shouldConsumeBackEvent: Bool {
-        guard !isStreamPresentationActive else { return false }
-        return backActionPolicy.resolve(routeState: routeState, focusState: focusState) != .noOp
-    }
-
     private var shouldAttachExitCommand: Bool {
-        isStreamPresentationActive || shouldConsumeBackEvent
+        true
     }
 
     private var shellPresentationTaskID: Int {
@@ -219,38 +213,8 @@ struct CloudLibraryShellHost: View {
         CloudLibraryBrowseRouteActions(
             refreshCloudLibrary: { enqueue(.refreshCloudLibrary) },
             requestSideRailEntry: requestSideRailEntry,
-            homeSelectRailItem: { item in
-                switch item {
-                case .title(let titleItem):
-                    switch titleItem.action {
-                    case .openDetail:
-                        enqueue(.openDetail(titleItem.tile.titleID))
-                    case .launchStream(let source):
-                        launchCloudStream(titleItem.tile.titleID, source)
-                    }
-                case .showAll(let card):
-                    queryState.wrappedValue.selectedTabID = LibraryTabID.fullLibrary
-                    queryState.wrappedValue.scopedCategory = makeScopedCategory(
-                        alias: card.alias,
-                        label: card.label
-                    )
-                    queryState.wrappedValue.activeFilterIDs.removeAll()
-                    shellInteractionCoordinator.selectPrimaryRoute(
-                        .library,
-                        routeState: routeState,
-                        focusState: focusState,
-                        settingsStore: settingsStore,
-                        queryState: queryState
-                    )
-                }
-            },
-            homeSelectCarouselPlay: { item in
-                launchCloudStream(item.titleID, "home_carousel_play")
-            },
-            homeSelectCarouselDetails: { item in enqueue(.openDetail(item.titleID)) },
-            homeFocusTileID: { focusState.setFocusedTileID($0, for: .home) },
-            homeSettledTileID: { focusState.setSettledHeroTileID($0, for: .home) },
             librarySelectTile: { tile in enqueue(.openDetail(tile.titleID)) },
+            libraryPlayTile: { tile in launchCloudStream(tile.titleID, tile.title) },
             libraryFocusTileID: { focusState.setFocusedTileID($0, for: .library) },
             librarySettledTileID: { focusState.setSettledHeroTileID($0, for: .library) },
             librarySelectTab: { tabID in
@@ -276,17 +240,10 @@ struct CloudLibraryShellHost: View {
                 }
                 queryState.wrappedValue.activeFilterIDs.removeAll()
             },
-            librarySelectSort: {
+            librarySelectSort: { option in
                 focusState.setFocusedTileID(nil, for: .library)
                 focusState.setSettledHeroTileID(nil, for: .library)
-                switch queryState.wrappedValue.sortOption {
-                case .alphabetical:
-                    queryState.wrappedValue.sortOption = .publisher
-                case .publisher:
-                    queryState.wrappedValue.sortOption = .recentlyPlayed
-                case .recentlyPlayed:
-                    queryState.wrappedValue.sortOption = .alphabetical
-                }
+                queryState.wrappedValue.sortOption = option
             },
             libraryClearFilters: {
                 queryState.wrappedValue.scopedCategory = nil
@@ -298,7 +255,10 @@ struct CloudLibraryShellHost: View {
                 NotificationCenter.default.post(name: .librarySearchResignKeyboard, object: nil)
             },
             searchSelectTile: { tile in enqueue(.openDetail(tile.titleID)) },
-            searchFocusTileID: { focusState.setFocusedTileID($0, for: .library) }
+            searchFocusTileID: { focusState.setFocusedTileID($0, for: .library) },
+            libraryRemoveTileFromMRU: { tile in
+                removeFromMRU?(tile.titleID)
+            }
         )
     }
 
@@ -384,9 +344,10 @@ struct CloudLibraryShellHost: View {
     }
 
     func handleExitCommand() {
-        // Consume Menu/Back for the shell while streaming so NavigationStack cannot pop detail.
+        // Always consume Menu/Back in the authenticated shell. Letting it fall through
+        // suspends the app to Apple TV Home whenever focus is on the rail or otherwise
+        // not on a tile — including many remote/gamepad combinations.
         guard !isStreamPresentationActive else { return }
-        guard shouldConsumeBackEvent else { return }
         handleBack()
     }
 

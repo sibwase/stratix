@@ -42,18 +42,6 @@ enum CloudLibraryHomeScenario {
         ]
     )
 
-    static let home = CloudLibraryDataSource.homeState(
-        sections: cloudSections,
-        merchandising: homeMerchandising,
-        showsContinueBadge: true
-    )
-
-    static let homeEmpty = CloudLibraryDataSource.homeState(
-        sections: [],
-        merchandising: nil,
-        showsContinueBadge: true
-    )
-
     static let library = CloudLibraryDataSource.libraryState(
         sections: cloudSections,
         merchandising: homeMerchandising,

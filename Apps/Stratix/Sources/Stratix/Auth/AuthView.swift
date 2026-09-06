@@ -11,6 +11,7 @@ struct AuthView: View {
     @FocusState private var isSignInFocused: Bool
     @State private var focusSettler = FocusSettleDebouncer()
     @State private var pendingFocusTask: Task<Void, Never>?
+    @State private var isSignInInFlight = false
 
     /// Builds the signed-out landing screen, including the focused sign-in CTA and auth errors.
     var body: some View {
@@ -53,21 +54,28 @@ struct AuthView: View {
                     }
 
                     Button(action: {
-                        Task { await sessionController.beginSignIn() }
+                        guard !isSignInInFlight else { return }
+                        isSignInInFlight = true
+                        Task {
+                            await sessionController.beginSignIn()
+                            isSignInInFlight = false
+                        }
                     }) {
                         FocusAwareView { isFocused in
                             CloudLibraryActionButton(
                                 action: .init(
                                     id: "sign-in",
-                                    title: "Sign In With Microsoft",
+                                    title: isSignInInFlight ? "Starting Sign In…" : "Sign In With Microsoft",
                                     systemImage: "person.crop.circle.badge.checkmark",
                                     style: .primary
                                 ),
                                 isFocused: isFocused
                             )
                             .gamePassFocusRing(isFocused: isFocused, cornerRadius: 24)
+                            .opacity(isSignInInFlight ? 0.72 : 1)
                         }
                     }
+                    .disabled(isSignInInFlight)
                     .focused($isSignInFocused)
                     .buttonStyle(CloudLibraryTVButtonStyle())
                     .gamePassDisableSystemFocusEffect()

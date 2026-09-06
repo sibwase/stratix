@@ -37,8 +37,18 @@ struct CloudLibraryDetailPrewarmCoordinator {
         )
         let initialSignature = detailInputSignature(for: initialSnapshot)
 
+        if viewModel.detailStateCache.peek(titleID) == nil {
+            let initialDetailState = CloudLibraryDataSource.detailState(from: initialSnapshot)
+            viewModel.detailStateCache.insert(
+                state: initialDetailState,
+                for: titleID,
+                inputSignature: initialSignature
+            )
+        }
+
         if let entry = viewModel.detailStateCache.peek(titleID),
-           entry.inputSignature == initialSignature {
+           entry.inputSignature == initialSignature,
+           productDetail(item.typedProductID) != nil {
             viewModel.detailStateCache.touch(titleID)
             return
         }

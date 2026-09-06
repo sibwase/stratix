@@ -13,7 +13,7 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
     let onSelectLetter: (String) -> Void
     var onMoveFromLetterIndex: ((MoveCommandDirection) -> Void)? = nil
     var isFocusEnabled: Bool = true
-    var letterIndexEngaged: Bool = false
+    let namespace: Namespace.ID
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -23,8 +23,7 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
             let slotHeight = proxy.size.height / CGFloat(sectionCount)
             let inactiveSize = min(max(slotHeight * 0.70, 15), 21)
             let activeSize = min(max(slotHeight * 0.88, 19), 30)
-
-            VStack(spacing: 0) {
+            let rail = VStack(spacing: 0) {
                 ForEach(sections, id: \.self) { letter in
                     LetterIndexRow(
                         letter: letter,
@@ -36,7 +35,9 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
                         dynamicTypeSize: dynamicTypeSize,
                         onSelect: { onSelectLetter(letter) },
                         onMove: { direction in
-                            handleMoveCommand(from: letter, direction: direction)
+                            if direction == .left {
+                                onMoveFromLetterIndex?(.left)
+                            }
                         }
                     )
                     .focused(focusedTarget, equals: letterFocusValue(letter))
@@ -45,41 +46,23 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
                     .accessibilityAddTraits(letter == positionLetter ? .isSelected : [])
                 }
             }
+            .animation(.easeOut(duration: 0.12), value: positionLetter)
             .frame(maxHeight: .infinity, alignment: .center)
+
+            if isFocusEnabled {
+                rail
+                    .focusScope(namespace)
+                    .focusSection()
+            } else {
+                rail
+            }
         }
         .frame(width: StratixTheme.Library.letterIndexWidth)
-        .padding(.vertical, StratixTheme.Library.letterIndexVerticalInset)
-        .focusSection()
-        .gamePassDisableSystemFocusEffect()
         .accessibilityIdentifier("library_letter_index")
     }
 
     private func showsRailFocus(for letter: String) -> Bool {
-        letterIndexEngaged && focusedTarget.wrappedValue == letterFocusValue(letter)
-    }
-
-    private func handleMoveCommand(from letter: String, direction: MoveCommandDirection) {
-        switch direction {
-        case .up:
-            moveLetterFocus(from: letter, offset: -1)
-        case .down:
-            moveLetterFocus(from: letter, offset: 1)
-        case .left:
-            onMoveFromLetterIndex?(.left)
-        default:
-            break
-        }
-    }
-
-    private func moveLetterFocus(from letter: String, offset: Int) {
-        guard let index = sectionIndexByLetter[letter] else { return }
-        let nextIndex = index + offset
-        guard sections.indices.contains(nextIndex) else { return }
-        var transaction = Transaction(animation: nil)
-        transaction.disablesAnimations = true
-        withTransaction(transaction) {
-            focusedTarget.wrappedValue = letterFocusValue(sections[nextIndex])
-        }
+        focusedTarget.wrappedValue == letterFocusValue(letter)
     }
 }
 
@@ -96,34 +79,38 @@ private struct LetterIndexRow: View {
 
     var body: some View {
         Button(action: onSelect) {
+            let active = showsRailFocus
             Text(letter)
                 .font(
                     StratixTypography.rounded(
-                        isPositionMarker ? activeSize : inactiveSize,
-                        weight: isPositionMarker ? .bold : .semibold,
+                        active ? activeSize : (isPositionMarker ? activeSize * 0.95 : inactiveSize),
+                        weight: active ? .heavy : (isPositionMarker ? .bold : .semibold),
                         dynamicTypeSize: dynamicTypeSize
                     )
                 )
                 .foregroundStyle(
-                    isPositionMarker
-                        ? StratixTheme.Colors.focusTint
-                        : StratixTheme.Colors.textMuted.opacity(0.58)
+                    active
+                        ? Color.white
+                        : (isPositionMarker ? StratixTheme.Colors.focusTint : Color.white.opacity(0.45))
                 )
-                .scaleEffect(isPositionMarker ? 1.10 : 1.0)
+                .scaleEffect(active ? 1.30 : (isPositionMarker ? 1.10 : 1.0))
+                .shadow(
+                    color: active
+                        ? Color.white.opacity(0.65)
+                        : (isPositionMarker ? StratixTheme.Colors.focusTint.opacity(0.45) : Color.clear),
+                    radius: active ? 8 : 4,
+                    x: 0,
+                    y: 0
+                )
                 .frame(maxWidth: .infinity, minHeight: slotHeight, maxHeight: slotHeight)
-                .background(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.white.opacity(showsRailFocus ? 0.10 : 0.0))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .stroke(Color.white.opacity(showsRailFocus ? 0.22 : 0.0), lineWidth: 1)
-                )
+                .animation(.spring(response: 0.18, dampingFraction: 0.72), value: active)
         }
         .buttonStyle(CloudLibraryTVButtonStyle())
         .gamePassDisableSystemFocusEffect()
         .onMoveCommand { direction in
-            onMove?(direction)
+            if direction == .left {
+                onMove?(.left)
+            }
         }
     }
 }
@@ -136,4 +123,83 @@ enum CloudLibraryLibraryLetterIndexSupport {
         return letter.first?.isLetter == true ? letter : "#"
     }
 
+    static func highlightedLetter(
+        sections: [String],
+        jumpLetter: String?,
+        scrollLetter: String?,
+        focusedLetter: String?,
+        prefersFocusedLetter: Bool = false
+    ) -> String? {
+        if let jumpLetter, sections.contains(jumpLetter) {
+            return jumpLetter
+        }
+        if prefersFocusedLetter, let focusedLetter, sections.contains(focusedLetter) {
+            return focusedLetter
+        }
+        if let scrollLetter, sections.contains(scrollLetter) {
+            return scrollLetter
+        }
+        if let focusedLetter, sections.contains(focusedLetter) {
+            return focusedLetter
+        }
+        return sections.first
+    }
+
+    static func isLiveScrollPhase(_ phase: ScrollPhase) -> Bool {
+        phase != .idle
+    }
+
+    static func rowStride(
+        itemWidth: CGFloat,
+        titleSpacing: CGFloat = StratixTheme.Home.tileTitleSpacing,
+        titleBlockHeight: CGFloat = StratixTheme.Home.tileTitleBlockHeight,
+        itemSpacing: CGFloat = StratixTheme.Library.gridItemSpacing,
+        tileAspect: CGFloat = StratixTheme.Layout.tileAspect
+    ) -> CGFloat {
+        let artworkHeight = (itemWidth * tileAspect).rounded()
+        return artworkHeight + titleSpacing + titleBlockHeight + itemSpacing
+    }
+
+    static func letter(
+        visibleMidY: CGFloat,
+        headerHeight: CGFloat,
+        rowStride: CGFloat,
+        columnCount: Int,
+        sectionLetters: [String]
+    ) -> String? {
+        letter(
+            visibleMinY: visibleMidY,
+            visibleMaxY: visibleMidY,
+            scrollDelta: 0,
+            headerHeight: headerHeight,
+            rowStride: rowStride,
+            columnCount: columnCount,
+            sectionLetters: sectionLetters
+        )
+    }
+
+    static func letter(
+        visibleMinY: CGFloat,
+        visibleMaxY: CGFloat,
+        scrollDelta: CGFloat,
+        headerHeight: CGFloat,
+        rowStride: CGFloat,
+        columnCount: Int,
+        sectionLetters: [String]
+    ) -> String? {
+        guard !sectionLetters.isEmpty else { return nil }
+        guard rowStride > 0, columnCount > 0 else { return sectionLetters.first }
+        let sampleY: CGFloat
+        if scrollDelta > 1 {
+            sampleY = visibleMaxY - min(rowStride * 0.45, max(0, visibleMaxY - visibleMinY) * 0.22)
+        } else if scrollDelta < -1 {
+            sampleY = visibleMinY + min(rowStride * 0.45, max(0, visibleMaxY - visibleMinY) * 0.22)
+        } else {
+            sampleY = (visibleMinY + visibleMaxY) / 2
+        }
+        let yInGrid = sampleY - headerHeight
+        let row = max(0, Int(floor(yInGrid / rowStride)))
+        let index = min(sectionLetters.count - 1, row * columnCount)
+        return sectionLetters[index]
+    }
 }

@@ -14,6 +14,9 @@ final class StratixAppDelegate: NSObject, UIApplicationDelegate {
         _: UIApplication,
         didFinishLaunchingWithOptions _: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
+        MainActor.assumeIsolated {
+            StratixScrollChromePolicy.install()
+        }
         return true
     }
 
@@ -31,5 +34,21 @@ final class StratixAppDelegate: NSObject, UIApplicationDelegate {
             let refreshed = await coordinator.performBackgroundAppRefresh()
             completionHandler(refreshed ? .newData : .noData)
         }
+    }
+}
+
+/// Hides system scroll chrome through appearance and SwiftUI environment only.
+/// Method swizzling on `UIView`/`UIScrollView` deadlocked library hydration on tvOS.
+@MainActor
+enum StratixScrollChromePolicy {
+    private static var didInstall = false
+
+    static func install() {
+        guard !didInstall else { return }
+        didInstall = true
+
+        UIScrollView.appearance().showsVerticalScrollIndicator = false
+        UIScrollView.appearance().showsHorizontalScrollIndicator = false
+        UIScrollView.appearance().indexDisplayMode = .alwaysHidden
     }
 }

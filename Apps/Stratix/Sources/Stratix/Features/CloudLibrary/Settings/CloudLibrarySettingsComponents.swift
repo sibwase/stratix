@@ -35,17 +35,17 @@ private struct CloudLibrarySettingsRowBackground: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
-                RoundedRectangle(cornerRadius: StratixTheme.Radius.md)
+                RoundedRectangle(cornerRadius: StratixTheme.Radius.lg, style: .continuous)
                     .fill(
                         LinearGradient(
-                            colors: [Color.white.opacity(0.04), Color.white.opacity(0.025)],
+                            colors: [Color.white.opacity(0.045), Color.white.opacity(0.025)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
             }
             .overlay(
-                RoundedRectangle(cornerRadius: StratixTheme.Radius.md)
+                RoundedRectangle(cornerRadius: StratixTheme.Radius.lg, style: .continuous)
                     .stroke(Color.white.opacity(0.08), lineWidth: 1)
             )
     }
@@ -64,24 +64,44 @@ private struct CloudLibrarySettingsValueLabel: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
+    private var foregroundColor: Color {
+        isFocused ? Color.black : StratixTheme.Colors.textPrimary
+    }
+
+    private var backgroundFill: Color {
+        isFocused ? Color.white : Color.white.opacity(0.08)
+    }
+
+    private var strokeColor: Color {
+        isFocused ? Color.white.opacity(0.98) : Color.white.opacity(0.12)
+    }
+
     var body: some View {
         Text(text)
             .font(StratixTypography.rounded(20, weight: .bold, dynamicTypeSize: dynamicTypeSize))
-            .foregroundStyle(isFocused ? Color.black.opacity(0.82) : StratixTheme.Colors.textPrimary)
+            .foregroundStyle(foregroundColor)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)
             .padding(.horizontal, 18)
             .padding(.vertical, 11)
             .background(
                 Capsule(style: .continuous)
-                    .fill(isFocused ? StratixTheme.Colors.focusTint : Color.white.opacity(0.08))
+                    .fill(backgroundFill)
             )
             .overlay(
                 Capsule(style: .continuous)
-                    .stroke(Color.white.opacity(isFocused ? 0.18 : 0.12), lineWidth: 1)
+                    .stroke(strokeColor, lineWidth: isFocused ? 2 : 1)
             )
-            .scaleEffect(isFocused ? 1.04 : 1.0)
-            .animation(.easeOut(duration: 0.12), value: isFocused)
+            .shadow(
+                color: Color.white.opacity(isFocused ? 0.20 : 0.0),
+                radius: isFocused ? 10 : 0
+            )
+            .shadow(
+                color: Color.black.opacity(isFocused ? 0.40 : 0.0),
+                radius: isFocused ? 14 : 0,
+                y: isFocused ? 6 : 0
+            )
+            .animation(.easeOut(duration: 0.14), value: isFocused)
             .gamePassDisableSystemFocusEffect()
     }
 }
@@ -108,37 +128,114 @@ struct CloudLibraryPageSectionCard<Content: View>: View {
     let subtitle: String?
     let content: Content
 
-    init(title: String, subtitle: String? = nil, @ViewBuilder content: () -> Content) {
+    init(
+        title: String,
+        subtitle: String? = nil,
+        @ViewBuilder content: () -> Content
+    ) {
         self.title = title
         self.subtitle = subtitle
         self.content = content()
     }
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
     var body: some View {
-        GlassCard(
-            cornerRadius: StratixTheme.Radius.xl,
-            fill: Color.white.opacity(0.04),
-            stroke: Color.white.opacity(0.10),
-            shadowOpacity: 0.14
-        ) {
-            VStack(alignment: .leading, spacing: 16) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(title)
-                        .font(.title3.bold())
-                        .foregroundStyle(StratixTheme.Colors.textPrimary)
-
-                    if let subtitle, !subtitle.isEmpty {
-                        Text(subtitle)
-                            .font(.subheadline)
-                            .foregroundStyle(StratixTheme.Colors.textSecondary)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title)
+                    .font(StratixTypography.rounded(25, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                    .foregroundStyle(StratixTheme.Colors.textPrimary)
+                if let subtitle, !subtitle.isEmpty {
+                    Text(subtitle)
+                        .font(StratixTypography.rounded(17, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(StratixTheme.Colors.textSecondary)
                 }
-
-                content
             }
-            .padding(22)
+
+            content
         }
+        .padding(.horizontal, 22)
+        .padding(.vertical, 20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: StratixTheme.Radius.xl, style: .continuous)
+                .fill(Color.white.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: StratixTheme.Radius.xl, style: .continuous)
+                .stroke(Color.white.opacity(0.09), lineWidth: 1)
+        )
+    }
+}
+
+struct CloudLibrarySettingsSegmentOption: View {
+    let title: String
+    let subtitle: String?
+    let isSelected: Bool
+    let action: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        Button(action: action) {
+            FocusAwareView { isFocused in
+                HStack(spacing: 12) {
+                    Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
+                        .font(StratixTypography.system(21, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(isSelected ? (isFocused ? Color.black : Color.white) : Color.white.opacity(0.50))
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(title)
+                            .font(StratixTypography.rounded(20, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                            .foregroundStyle(isSelected ? (isFocused ? Color.black : Color.white) : Color.white)
+                        if let subtitle, !subtitle.isEmpty {
+                            Text(subtitle)
+                                .font(StratixTypography.rounded(16, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                                .foregroundStyle(isSelected ? (isFocused ? Color.black.opacity(0.80) : Color.white.opacity(0.70)) : Color.white.opacity(0.60))
+                        }
+                    }
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 16)
+                .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(backgroundFill(isFocused: isFocused))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .stroke(borderColor(isFocused: isFocused), lineWidth: isFocused ? 2 : 1)
+                )
+                .scaleEffect(isFocused ? 1.04 : 1.0)
+                .shadow(
+                    color: Color.white.opacity(isFocused ? 0.18 : 0.0),
+                    radius: isFocused ? 10 : 0
+                )
+                .shadow(
+                    color: Color.black.opacity(isFocused ? 0.40 : 0.0),
+                    radius: isFocused ? 14 : 0,
+                    y: isFocused ? 6 : 0
+                )
+                .animation(.easeOut(duration: 0.14), value: isFocused)
+            }
+        }
+        .buttonStyle(CloudLibraryTVButtonStyle())
+        .gamePassDisableSystemFocusEffect()
+        .accessibilityValue(Text(isSelected ? "selected" : "not_selected"))
+    }
+
+    private func backgroundFill(isFocused: Bool) -> Color {
+        if isFocused {
+            return isSelected ? Color.white : Color.white.opacity(0.20)
+        }
+        return isSelected ? Color.white.opacity(0.24) : Color.white.opacity(0.06)
+    }
+
+    private func borderColor(isFocused: Bool) -> Color {
+        if isFocused {
+            return Color.white.opacity(0.98)
+        }
+        return isSelected ? Color.white.opacity(0.24) : Color.white.opacity(0.10)
     }
 }
 
@@ -147,6 +244,7 @@ struct CloudLibrarySidebarButton: View {
     let subtitle: String?
     let systemImage: String
     let isSelected: Bool
+    var onMoveLeft: (() -> Void)? = nil
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -157,22 +255,22 @@ struct CloudLibrarySidebarButton: View {
                 HStack(spacing: 12) {
                     RoundedRectangle(cornerRadius: 12)
                         .fill(iconBackground(isFocused: isFocused))
-                        .frame(width: 34, height: 34)
+                        .frame(width: 36, height: 36)
                         .overlay(
                             Image(systemName: systemImage)
-                                .font(.system(size: 15, weight: .bold))
+                                .font(.system(size: 16, weight: .bold))
                                 .foregroundStyle(isSelected ? Color.black.opacity(0.82) : StratixTheme.Colors.textSecondary)
                         )
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(title)
-                            .font(StratixTypography.rounded(19, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                            .font(StratixTypography.rounded(20, weight: .bold, dynamicTypeSize: dynamicTypeSize))
                             .foregroundStyle(isSelected ? Color.black : StratixTheme.Colors.textPrimary)
                             .lineLimit(1)
 
                         if let subtitle, !subtitle.isEmpty {
                             Text(subtitle)
-                                .font(StratixTypography.rounded(15, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                                .font(StratixTypography.rounded(16, weight: .medium, dynamicTypeSize: dynamicTypeSize))
                                 .foregroundStyle(isSelected ? Color.black.opacity(0.72) : StratixTheme.Colors.textMuted)
                                 .lineLimit(2)
                         }
@@ -182,26 +280,30 @@ struct CloudLibrarySidebarButton: View {
 
                     if isSelected {
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 15, weight: .bold))
+                            .font(.system(size: 16, weight: .bold))
                             .foregroundStyle(Color.black.opacity(0.75))
                     }
                 }
-                .padding(.horizontal, 14)
+                .padding(.horizontal, 16)
                 .padding(.vertical, 12)
-                .frame(maxWidth: .infinity, minHeight: subtitle == nil ? 58 : 70, alignment: .leading)
+                .frame(maxWidth: .infinity, minHeight: subtitle == nil ? 62 : 74, alignment: .leading)
                 .background(
-                    RoundedRectangle(cornerRadius: 18)
+                    RoundedRectangle(cornerRadius: StratixTheme.Radius.lg, style: .continuous)
                         .fill(backgroundFill(isFocused: isFocused))
                 )
                 .overlay(
-                    RoundedRectangle(cornerRadius: 18)
+                    RoundedRectangle(cornerRadius: StratixTheme.Radius.lg, style: .continuous)
                         .stroke(borderColor(isFocused: isFocused), lineWidth: 1)
                 )
-                .gamePassFocusRing(isFocused: isFocused, cornerRadius: 18)
+                .gamePassFocusRing(isFocused: isFocused, cornerRadius: StratixTheme.Radius.lg)
             }
         }
         .buttonStyle(CloudLibraryTVButtonStyle())
         .gamePassDisableSystemFocusEffect()
+        .onMoveCommand { direction in
+            guard direction == .left else { return }
+            onMoveLeft?()
+        }
         .accessibilityValue(Text(isSelected ? "selected" : "not_selected"))
     }
 
@@ -232,6 +334,12 @@ struct CloudLibrarySettingsActionButton: View {
     let systemImage: String
     var destructive = false
     var accessibilityIdentifier: String? = nil
+    var minHeight: CGFloat = 58
+    var fontSize: CGFloat = 20
+    var fontWeight: Font.Weight = .bold
+    var iconSize: CGFloat = 21
+    var horizontalPadding: CGFloat = 20
+    var onMoveLeft: (() -> Void)? = nil
     let action: () -> Void
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -239,35 +347,53 @@ struct CloudLibrarySettingsActionButton: View {
     var body: some View {
         Button(action: action) {
             FocusAwareView { isFocused in
-                Label(title, systemImage: systemImage)
-                    .font(StratixTypography.rounded(19, weight: .bold, dynamicTypeSize: dynamicTypeSize))
-                    .foregroundStyle(foreground(isFocused: isFocused))
-                    .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
-                    .padding(.horizontal, 16)
-                    .background(Capsule().fill(backgroundFill(isFocused: isFocused)))
-                    .overlay(Capsule().stroke(borderColor(isFocused: isFocused), lineWidth: 1))
-                    .gamePassFocusRing(isFocused: isFocused, cornerRadius: 24)
+                HStack(spacing: 8) {
+                    Image(systemName: systemImage)
+                        .font(.system(size: iconSize, weight: fontWeight))
+                    Text(title)
+                        .font(StratixTypography.rounded(fontSize, weight: fontWeight, dynamicTypeSize: dynamicTypeSize))
+                        .lineLimit(1)
+                }
+                .foregroundStyle(foreground(isFocused: isFocused))
+                .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .leading)
+                .padding(.horizontal, horizontalPadding)
+                .background(Capsule().fill(backgroundFill(isFocused: isFocused)))
+                .overlay(Capsule().stroke(borderColor(isFocused: isFocused), lineWidth: isFocused ? 2 : 1))
+                .scaleEffect(isFocused ? 1.04 : 1.0)
+                .shadow(
+                    color: Color.white.opacity(isFocused ? 0.18 : 0.0),
+                    radius: isFocused ? 10 : 0
+                )
+                .shadow(
+                    color: Color.black.opacity(isFocused ? 0.40 : 0.0),
+                    radius: isFocused ? 14 : 0,
+                    y: isFocused ? 6 : 0
+                )
+                .animation(.easeOut(duration: 0.14), value: isFocused)
             }
         }
         .buttonStyle(CloudLibraryTVButtonStyle())
         .gamePassDisableSystemFocusEffect()
-        .cloudLibrarySettingsPaneMoveCommand()
+        .onMoveCommand { direction in
+            guard direction == .left else { return }
+            onMoveLeft?()
+        }
         .accessibilityIdentifier(accessibilityIdentifier ?? "")
     }
 
     private func foreground(isFocused: Bool) -> Color {
         if isFocused {
-            return .black
+            return destructive ? Color.red : .black
         }
         return destructive ? Color.red.opacity(0.92) : StratixTheme.Colors.textPrimary
     }
 
     private func backgroundFill(isFocused: Bool) -> Color {
-        isFocused ? StratixTheme.Colors.focusTint : Color.white.opacity(0.06)
+        isFocused ? Color.white : Color.white.opacity(0.06)
     }
 
     private func borderColor(isFocused: Bool) -> Color {
-        Color.white.opacity(isFocused ? 0.16 : 0.10)
+        isFocused ? Color.white.opacity(0.98) : Color.white.opacity(0.10)
     }
 }
 
@@ -281,9 +407,9 @@ struct CloudLibraryStatPill: View {
             Image(systemName: icon)
             Text(text)
         }
-        .font(StratixTypography.rounded(16, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+        .font(StratixTypography.rounded(18, weight: .bold, dynamicTypeSize: dynamicTypeSize))
         .foregroundStyle(StratixTheme.Colors.textSecondary)
-        .padding(.horizontal, 12)
+        .padding(.horizontal, 14)
         .padding(.vertical, 8)
         .background(Capsule().fill(Color.white.opacity(0.05)))
         .overlay(Capsule().stroke(Color.white.opacity(0.08), lineWidth: 1))
@@ -298,12 +424,12 @@ struct CloudLibraryStatLine: View {
     var body: some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 16, weight: .bold))
+                .font(.system(size: 18, weight: .bold))
                 .foregroundStyle(StratixTheme.Colors.focusTint)
-                .frame(width: 20)
+                .frame(width: 22)
 
             Text(text)
-                .font(StratixTypography.rounded(18, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                .font(StratixTypography.rounded(20, weight: .medium, dynamicTypeSize: dynamicTypeSize))
                 .foregroundStyle(StratixTheme.Colors.textSecondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -321,12 +447,12 @@ struct CloudLibraryToggleRow: View {
         HStack(alignment: .center, spacing: 14) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(StratixTypography.rounded(19, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                    .font(StratixTypography.rounded(21, weight: .bold, dynamicTypeSize: dynamicTypeSize))
                     .foregroundStyle(StratixTheme.Colors.textPrimary)
 
                 if let subtitle, !subtitle.isEmpty {
                     Text(subtitle)
-                        .font(StratixTypography.rounded(16, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                        .font(StratixTypography.rounded(17, weight: .medium, dynamicTypeSize: dynamicTypeSize))
                         .foregroundStyle(StratixTheme.Colors.textMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }

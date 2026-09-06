@@ -74,27 +74,25 @@ struct MetadataChip: View {
     let chip: ChipViewState
 
     var body: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 9) {
             if let systemImage = chip.systemImage {
                 Image(systemName: systemImage)
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 15, weight: .bold))
             }
             Text(chip.label)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
         }
-        .foregroundStyle(chip.style == .accent ? StratixTheme.Colors.focusTint : StratixTheme.Colors.textPrimary)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
+        .foregroundStyle(Color.white.opacity(chip.style == .accent ? 0.96 : 0.85))
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
         .background(
             Capsule(style: .continuous)
-                .fill(chip.style == .accent ? Color.black.opacity(0.3) : Color.white.opacity(0.08))
+                .fill(Color.white.opacity(chip.style == .accent ? 0.16 : 0.08))
         )
         .overlay(
             Capsule(style: .continuous)
                 .stroke(
-                    chip.style == .accent
-                    ? StratixTheme.Colors.focusTint.opacity(0.35)
-                    : Color.white.opacity(0.1),
+                    Color.white.opacity(chip.style == .accent ? 0.28 : 0.12),
                     lineWidth: 1
                 )
         )
@@ -124,71 +122,48 @@ struct CloudLibraryActionButton: View {
     let isFocused: Bool
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 12) {
             if let icon = action.systemImage {
                 Image(systemName: icon)
-                    .font(.system(size: 18, weight: .bold))
+                    .font(.system(size: 22, weight: .bold))
             }
             Text(action.title)
-                .font(.system(size: 22, weight: .bold, design: .rounded))
+                .font(.system(size: 24, weight: .bold, design: .rounded))
         }
         .foregroundStyle(foreground)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 16)
+        .padding(.horizontal, 32)
+        .padding(.vertical, 18)
         .background(
             Capsule(style: .continuous)
                 .fill(backgroundFill)
         )
         .overlay(
             Capsule(style: .continuous)
-                .stroke(borderColor, lineWidth: 1)
+                .stroke(borderColor, lineWidth: isFocused ? 2.5 : 1)
         )
-        .overlay(
-            Capsule(style: .continuous)
-                .stroke(
-                    Color.white.opacity(isFocused ? 0.55 : 0.0),
-                    lineWidth: isFocused ? 2 : 0
-                )
+        .shadow(
+            color: Color.white.opacity(isFocused ? 0.22 : 0.0),
+            radius: isFocused ? 14 : 0
         )
-        .shadow(color: shadowColor, radius: 14, y: 8)
+        .shadow(
+            color: Color.black.opacity(isFocused ? 0.50 : 0.16),
+            radius: isFocused ? 20 : 6,
+            y: isFocused ? 8 : 3
+        )
+        .zIndex(isFocused ? 10 : 0)
+        .animation(.easeOut(duration: 0.14), value: isFocused)
     }
 
     private var foreground: Color {
-        switch action.style {
-        case .primary: return Color.white.opacity(0.96)
-        case .secondary, .ghost: return StratixTheme.Colors.textPrimary
-        }
+        Color.white
     }
 
     private var backgroundFill: Color {
-        switch action.style {
-        case .primary:
-            return StratixTheme.Colors.focusTint.opacity(isFocused ? 0.36 : 0.24)
-        case .secondary:
-            return Color.white.opacity(isFocused ? 0.14 : 0.10)
-        case .ghost:
-            return Color.black.opacity(0.22)
-        }
+        Color.white.opacity(isFocused ? 0.16 : 0.08)
     }
 
     private var borderColor: Color {
-        switch action.style {
-        case .primary:
-            return Color.white.opacity(isFocused ? 0.28 : 0.16)
-        case .secondary:
-            return Color.white.opacity(isFocused ? 0.55 : 0.14)
-        case .ghost:
-            return Color.white.opacity(isFocused ? 0.34 : 0.22)
-        }
-    }
-
-    private var shadowColor: Color {
-        switch action.style {
-        case .primary:
-            return .black.opacity(isFocused ? 0.30 : 0.18)
-        case .secondary, .ghost:
-            return .black.opacity(isFocused ? 0.22 : 0.08)
-        }
+        Color.white.opacity(isFocused ? 0.65 : 0.16)
     }
 }
 
@@ -219,9 +194,8 @@ struct ActionButtonBar: View {
                         )
                     }
                 }
-                .padding(.vertical, 6)
-                .padding(.horizontal, 6)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity, alignment: .center)
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -236,10 +210,10 @@ struct ActionButtonBar: View {
                             )
                         }
                     }
-                    .padding(.vertical, 6)
-                    .padding(.horizontal, 10)
+                    .padding(.vertical, 4)
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .scrollIndicators(.never)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
         }
         .focusSection()
@@ -290,7 +264,7 @@ private struct ActionButtonBarItem: View {
 #if DEBUG
 #Preview("ChipGroupView", traits: .fixedLayout(width: 1200, height: 280)) {
     ZStack {
-        CloudLibraryAmbientBackground(imageURL: CloudLibraryPreviewData.home.heroBackgroundURL)
+        CloudLibraryAmbientBackground(imageURL: CloudLibraryPreviewData.library.heroBackdropURL)
         VStack(alignment: .leading, spacing: 16) {
             ChipGroupView(chips: CloudLibraryPreviewData.detail.capabilityChips)
             ActionButtonBar(

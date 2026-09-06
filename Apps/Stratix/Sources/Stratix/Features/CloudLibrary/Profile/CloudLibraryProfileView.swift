@@ -4,6 +4,7 @@
 
 import Foundation
 import SwiftUI
+import StratixCore
 
 struct CloudLibraryProfileView: View {
     enum Action: Hashable {
@@ -43,111 +44,99 @@ struct CloudLibraryProfileView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 22) {
-                profileHeaderCard
-                quickActionsCard
-                friendsCard
+            VStack(alignment: .leading, spacing: StratixTheme.Library.headerBelowBadgeSpacing) {
+                Color.clear
+                    .frame(height: StratixTheme.SideRail.collapsedBadgeHeight)
+
+                Text("Account")
+                    .font(StratixTypography.rounded(50, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                    .foregroundStyle(Color.white)
+
+                VStack(alignment: .leading, spacing: 120) {
+                    HStack(alignment: .top, spacing: 48) {
+                        accountHeaderSection
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                        shellStatusSection
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                    }
+
+                    HStack(alignment: .top, spacing: 48) {
+                        quickActionsSection
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                        friendsSection
+                            .frame(maxWidth: .infinity, alignment: .topLeading)
+                    }
+                }
+                .padding(.top, 14)
             }
-            .padding(.top, StratixTheme.Shell.contentTopPadding)
-            .padding(.horizontal, StratixTheme.Layout.outerPadding)
-            .padding(.bottom, 24)
+            .padding(.bottom, StratixTheme.Shell.contentBottomPadding)
             .frame(maxWidth: 1720, alignment: .leading)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.never)
         .accessibilityIdentifier("route_profile_root")
         .onAppear {
             onRefreshProfileMetadata()
         }
     }
 
-    private var profileHeaderCard: some View {
-        GlassCard(
-            cornerRadius: StratixTheme.Radius.xl,
-            fill: Color.white.opacity(0.04),
-            stroke: Color.white.opacity(0.10),
-            shadowOpacity: 0.14
-        ) {
-            HStack(alignment: .top, spacing: 24) {
-                VStack(alignment: .leading, spacing: 16) {
-                    profileSectionHeader(
-                        title: "Profile",
-                        subtitle: "Your Xbox account and shell summary"
-                    )
+    private var accountHeaderSection: some View {
+        HStack(alignment: .top, spacing: 22) {
+            profileAvatar
+                .frame(width: 96, height: 96)
 
-                    HStack(alignment: .top, spacing: 18) {
-                        profileAvatar
-                            .frame(width: 96, height: 96)
+            VStack(alignment: .leading, spacing: 10) {
+                HStack(alignment: .center, spacing: 12) {
+                    Text(displayName)
+                        .font(StratixTypography.rounded(34, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(StratixTheme.Colors.textPrimary)
+                        .lineLimit(1)
 
-                        VStack(alignment: .leading, spacing: 10) {
-                            HStack(alignment: .center, spacing: 10) {
-                                Text(displayName)
-                                    .font(StratixTypography.rounded(32, weight: .bold, dynamicTypeSize: dynamicTypeSize))
-                                    .foregroundStyle(StratixTheme.Colors.textPrimary)
-                                    .lineLimit(1)
+                    Text(profileStatus)
+                        .font(StratixTypography.rounded(15, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(profileStatusBadgeTextColor)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(profileStatusBadgeFill))
+                }
 
-                                Text(profileStatus)
-                                    .font(StratixTypography.rounded(12, weight: .bold, dynamicTypeSize: dynamicTypeSize))
-                                    .foregroundStyle(profileStatusBadgeTextColor)
-                                    .padding(.horizontal, 10)
-                                    .padding(.vertical, 5)
-                                    .background(Capsule().fill(profileStatusBadgeFill))
-                            }
+                if let secondaryName, !secondaryName.isEmpty {
+                    Text(secondaryName)
+                        .font(StratixTypography.rounded(18, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(StratixTheme.Colors.textSecondary)
+                }
 
-                            if let secondaryName, !secondaryName.isEmpty {
-                                Text(secondaryName)
-                                    .font(StratixTypography.rounded(15, weight: .medium, dynamicTypeSize: dynamicTypeSize))
-                                    .foregroundStyle(StratixTheme.Colors.textSecondary)
-                            }
+                if !profileStatusDetail.isEmpty {
+                    Text(profileStatusDetail)
+                        .font(StratixTypography.rounded(19, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(StratixTheme.Colors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
-                            if !profileStatusDetail.isEmpty {
-                                Text(profileStatusDetail)
-                                    .font(StratixTypography.rounded(17, weight: .medium, dynamicTypeSize: dynamicTypeSize))
-                                    .foregroundStyle(StratixTheme.Colors.textSecondary)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
+                if !profileDetail.isEmpty {
+                    Text(profileDetail)
+                        .font(StratixTypography.rounded(16, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(StratixTheme.Colors.textMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
-                            if !profileDetail.isEmpty {
-                                Text(profileDetail)
-                                    .font(StratixTypography.rounded(14, weight: .medium, dynamicTypeSize: dynamicTypeSize))
-                                    .foregroundStyle(StratixTheme.Colors.textMuted)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-
-                            HStack(spacing: 10) {
-                                ForEach(Array(summaryPills.indices), id: \.self) { index in
-                                    summaryPills[index]
-                                }
-                            }
-                        }
+                HStack(spacing: 10) {
+                    ForEach(Array(summaryPills.indices), id: \.self) { index in
+                        summaryPills[index]
                     }
                 }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
-
-                VStack(alignment: .leading, spacing: 16) {
-                    profileSectionHeader(
-                        title: "Shell Status",
-                        subtitle: "What this shell knows right now"
-                    )
-
-                    shellStatusLines
-                }
-                .frame(maxWidth: .infinity, alignment: .topLeading)
+                .padding(.top, 4)
             }
-            .padding(22)
         }
     }
 
-    private func profileSectionHeader(title: String, subtitle: String) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.title3.bold())
+    private var shellStatusSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Shell Status")
+                .font(StratixTypography.rounded(24, weight: .bold, dynamicTypeSize: dynamicTypeSize))
                 .foregroundStyle(StratixTheme.Colors.textPrimary)
 
-            Text(subtitle)
-                .font(.subheadline)
-                .foregroundStyle(StratixTheme.Colors.textSecondary)
-                .fixedSize(horizontal: false, vertical: true)
+            shellStatusLines
         }
     }
 
@@ -163,15 +152,47 @@ struct CloudLibraryProfileView: View {
         }
     }
 
-    private var quickActionsCard: some View {
-        CloudLibraryPageSectionCard(title: "Quick Actions", subtitle: "Jump to the most useful shell destinations and account tasks") {
+    private var friendsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Friends")
+                .font(StratixTypography.rounded(24, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                .foregroundStyle(StratixTheme.Colors.textPrimary)
+
+            friendsStatusLines
+        }
+    }
+
+    private var friendsStatusLines: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            CloudLibraryStatLine(
+                icon: "person.2.fill",
+                text: friendsCount == 1 ? "1 friend profile loaded" : "\(friendsCount) friend profiles loaded"
+            )
+
+            if let friendsRefreshText, !friendsRefreshText.isEmpty {
+                CloudLibraryStatLine(icon: "clock.fill", text: friendsRefreshText)
+            }
+
+            if let friendsErrorText, !friendsErrorText.isEmpty {
+                CloudLibraryStatLine(icon: "exclamationmark.triangle.fill", text: friendsErrorText)
+            }
+        }
+    }
+
+    private var quickActionsSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Text("Quick Actions")
+                .font(StratixTypography.rounded(24, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                .foregroundStyle(StratixTheme.Colors.textPrimary)
+
             LazyVGrid(
                 columns: [
-                    GridItem(.flexible(), spacing: 14, alignment: .leading),
-                    GridItem(.flexible(), spacing: 14, alignment: .leading)
+                    GridItem(.flexible(), spacing: 16, alignment: .leading),
+                    GridItem(.flexible(), spacing: 16, alignment: .leading),
+                    GridItem(.flexible(), spacing: 16, alignment: .leading)
                 ],
                 alignment: .leading,
-                spacing: 14
+                spacing: 16
             ) {
                 quickActionButton(
                     title: "Settings",
@@ -191,20 +212,19 @@ struct CloudLibraryProfileView: View {
                     title: "Refresh Consoles",
                     systemImage: "tv.badge.wifi",
                     focusTarget: .refreshConsoles,
-                    wantsRailEntryOnLeft: true,
                     action: onRefreshConsoles
                 )
                 quickActionButton(
                     title: "Refresh Profile",
                     systemImage: "arrow.clockwise",
                     focusTarget: .refreshProfile,
+                    wantsRailEntryOnLeft: true,
                     action: onRefreshProfileData
                 )
                 quickActionButton(
                     title: "Refresh Friends",
                     systemImage: "person.2.badge.gearshape.fill",
                     focusTarget: .refreshFriends,
-                    wantsRailEntryOnLeft: true,
                     action: onRefreshFriends
                 )
                 quickActionButton(
@@ -216,32 +236,6 @@ struct CloudLibraryProfileView: View {
                     action: onSignOut
                 )
             }
-        }
-    }
-
-    private var friendsCard: some View {
-        HStack(alignment: .top, spacing: 18) {
-            CloudLibraryPageSectionCard(title: "Friends", subtitle: "Presence refresh and social summary") {
-                VStack(alignment: .leading, spacing: 12) {
-                    CloudLibraryStatLine(
-                        icon: "person.2.fill",
-                        text: friendsCount == 1 ? "1 friend profile loaded" : "\(friendsCount) friend profiles loaded"
-                    )
-
-                    if let friendsRefreshText, !friendsRefreshText.isEmpty {
-                        CloudLibraryStatLine(icon: "clock.fill", text: friendsRefreshText)
-                    }
-
-                    if let friendsErrorText, !friendsErrorText.isEmpty {
-                        CloudLibraryStatLine(icon: "exclamationmark.triangle.fill", text: friendsErrorText)
-                    }
-                }
-            }
-            .frame(maxWidth: .infinity, alignment: .topLeading)
-
-            Color.clear
-                .frame(maxWidth: .infinity)
-                .accessibilityHidden(true)
         }
     }
 
@@ -260,20 +254,18 @@ struct CloudLibraryProfileView: View {
     }
 
     private var summaryPills: [CloudLibraryStatPill] {
-        [
-            CloudLibraryStatPill(icon: "cloud.fill", text: "\(cloudLibraryCount) cloud titles"),
-            CloudLibraryStatPill(icon: "star.fill", text: gamerscorePillLabel)
-        ]
+        var pills: [CloudLibraryStatPill] = []
+        if let gamerscore = sanitized(gamerscore) {
+            pills.append(CloudLibraryStatPill(icon: "gamecontroller.fill", text: "\(gamerscore) G"))
+        }
+        pills.append(CloudLibraryStatPill(icon: "cloud.fill", text: "\(cloudLibraryCount) titles"))
+        pills.append(CloudLibraryStatPill(icon: "tv.fill", text: "\(consoleCount) consoles"))
+        return pills
     }
 
-    private var gamerscorePillLabel: String {
-        guard let gamerscore = sanitized(gamerscore) else {
-            return "— G"
-        }
-        if gamerscore.hasSuffix("G") {
-            return gamerscore
-        }
-        return "\(gamerscore)G"
+    private var friendsRefreshText: String? {
+        guard let friendsLastUpdatedAt else { return nil }
+        return "Friends refreshed \(friendsLastUpdatedAt.formatted(date: .omitted, time: .shortened))"
     }
 
     @ViewBuilder
@@ -306,26 +298,19 @@ struct CloudLibraryProfileView: View {
                 )
 
             Text(profileInitials.isEmpty ? "P" : profileInitials)
-                .font(StratixTypography.rounded(30, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                .font(StratixTypography.rounded(36, weight: .bold, dynamicTypeSize: dynamicTypeSize))
                 .foregroundStyle(Color.black.opacity(0.82))
         }
-        .overlay(Circle().stroke(Color.white.opacity(0.16), lineWidth: 1))
-    }
-
-    private var friendsRefreshText: String? {
-        guard let friendsLastUpdatedAt else { return nil }
-        let formatter = RelativeDateTimeFormatter()
-        formatter.unitsStyle = .full
-        return "Friends refreshed \(formatter.localizedString(for: friendsLastUpdatedAt, relativeTo: Date()))"
+        .overlay(Circle().stroke(Color.white.opacity(0.20), lineWidth: 1))
     }
 
     private var profileStatusBadgeFill: Color {
         let lower = profileStatus.lowercased()
         if lower.contains("offline") {
-            return Color.white.opacity(0.10)
+            return Color.white.opacity(0.12)
         }
         if lower.contains("busy") || lower.contains("away") {
-            return Color.orange.opacity(0.22)
+            return Color.orange.opacity(0.25)
         }
         return StratixTheme.Colors.focusTint
     }
@@ -352,14 +337,11 @@ struct CloudLibraryProfileView: View {
             systemImage: systemImage,
             destructive: destructive,
             accessibilityIdentifier: accessibilityIdentifier,
+            onMoveLeft: wantsRailEntryOnLeft ? onRequestSideRailEntry : nil,
             action: action
         )
         .focused($focusedAction, equals: focusTarget)
         .modifier(DefaultProfileFocusModifier(focusedAction: $focusedAction, focusTarget: focusTarget))
-        .onMoveCommand { direction in
-            guard wantsRailEntryOnLeft, direction == .left else { return }
-            onRequestSideRailEntry()
-        }
     }
 
     private func sanitized(_ value: String?) -> String? {
@@ -382,24 +364,3 @@ private struct DefaultProfileFocusModifier: ViewModifier {
         }
     }
 }
-
-#if DEBUG
-#Preview("CloudLibraryProfileView", traits: .fixedLayout(width: 1920, height: 1080)) {
-    CloudLibraryProfileView(
-        profileName: "stratix-preview",
-        profileStatus: "Online",
-        profileStatusDetail: "Playing Forza Horizon 5",
-        profileDetail: "Balanced latency • H.264 • Low latency • Stats on",
-        profileImageURL: nil,
-        profileInitials: "S",
-        gameDisplayName: "Stratix Preview",
-        gamertag: "stratix-preview",
-        gamerscore: "88,420",
-        cloudLibraryCount: 248,
-        consoleCount: 2,
-        friendsCount: 44,
-        friendsLastUpdatedAt: Date().addingTimeInterval(-180),
-        friendsErrorText: nil
-    )
-}
-#endif

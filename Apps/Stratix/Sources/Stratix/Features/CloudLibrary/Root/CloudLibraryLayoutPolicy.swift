@@ -43,7 +43,7 @@ struct CloudLibraryLayoutPolicy {
         utilityRoute: ShellUtilityRoute?,
         value: CGFloat
     ) -> CGFloat {
-        guard utilityRoute == nil, browseRoute != .home, browseRoute != .consoles else {
+        guard utilityRoute == nil, browseRoute != .consoles else {
             return 0
         }
         return value

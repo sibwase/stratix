@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import StratixCore
 import StratixModels
 import StreamingCore
 
@@ -58,6 +59,7 @@ struct StreamOverlayDetailsPanel: View {
                 Color.clear
             }
             .buttonStyle(.plain)
+            .focusable(false)
             .accessibilityHidden(true)
             .accessibilityLabel("Close overlay")
         }
@@ -105,6 +107,7 @@ struct StreamOverlayDetailsPanel: View {
                             }
                         }
                     }
+                    .scrollIndicators(.never)
                 }
             }
 
@@ -177,15 +180,8 @@ struct StreamOverlayDetailsPanel: View {
     /// Renders the artwork block or its gradient fallback.
     var overlayArtwork: some View {
         if let imageURL = overlayState.overlayInfo.imageURL {
-            AsyncImage(url: imageURL) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .scaledToFill()
-                default:
-                    artworkFallback
-                }
+            CachedRemoteImage(url: imageURL, kind: .hero, priority: .high, maxPixelSize: 720) {
+                artworkFallback
             }
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             .overlay(

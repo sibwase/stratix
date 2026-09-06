@@ -17,80 +17,8 @@ enum ShellUITestHarnessFixtures {
     static let consoleCount = 2
     static let friendsCount = 3
 
-    static var homeState: CloudLibraryHomeViewState {
-        let base = CloudLibraryPreviewData.home
-        let hasContinueBadge = base.sections.contains { section in
-            section.items.contains { item in
-                if case .title(let titleItem) = item {
-                    return titleItem.tile.badgeText != nil
-                }
-                return false
-            }
-        }
-        let firstSection = base.sections.first
-        let firstTitleItem = firstSection?.items.compactMap { item -> CloudLibraryHomeTitleRailItemViewState? in
-            if case .title(let titleItem) = item {
-                return titleItem
-            }
-            return nil
-        }.first
-        guard !hasContinueBadge,
-              let firstSection,
-              let firstTitleItem else {
-            return base
-        }
-
-        let patchedFirstItem = MediaTileViewState(
-            id: firstTitleItem.tile.id,
-            titleID: firstTitleItem.tile.titleID,
-            title: firstTitleItem.tile.title,
-            subtitle: firstTitleItem.tile.subtitle,
-            caption: nil,
-            artworkURL: firstTitleItem.tile.artworkURL,
-            badgeText: "Resume in cloud",
-            aspect: firstTitleItem.tile.aspect
-        )
-        var patchedSections = base.sections
-        patchedSections[0] = CloudLibraryRailSectionViewState(
-            id: firstSection.id,
-            alias: firstSection.alias,
-            title: firstSection.title,
-            subtitle: firstSection.subtitle,
-            items: [
-                .title(
-                    CloudLibraryHomeTitleRailItemViewState(
-                        id: firstTitleItem.id,
-                        tile: patchedFirstItem,
-                        action: firstTitleItem.action
-                    )
-                )
-            ] + Array(firstSection.items.dropFirst())
-        )
-        return CloudLibraryHomeViewState(
-            heroBackgroundURL: base.heroBackgroundURL,
-            carouselItems: base.carouselItems,
-            sections: patchedSections
-        )
-    }
-
     static var libraryState: CloudLibraryLibraryViewState {
         CloudLibraryPreviewData.library
-    }
-
-    static var homeTileLookup: [TitleID: CloudLibraryHomeScreen.TileLookupEntry] {
-        var lookup: [TitleID: CloudLibraryHomeScreen.TileLookupEntry] = [:]
-        for section in homeState.sections {
-            for item in section.items {
-                if case .title(let titleItem) = item {
-                    lookup[titleItem.tile.titleID] = .init(
-                        sectionID: section.id,
-                        tile: titleItem.tile,
-                        titleID: titleItem.tile.titleID
-                    )
-                }
-            }
-        }
-        return lookup
     }
 
     static var libraryTileLookup: [TitleID: MediaTileViewState] {

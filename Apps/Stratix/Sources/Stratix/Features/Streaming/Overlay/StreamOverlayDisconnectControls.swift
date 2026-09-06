@@ -20,20 +20,16 @@ extension StreamOverlayDetailsPanel {
 
     /// Renders the disconnect affordance and attaches test-only focus when needed.
     var disconnectRow: some View {
-        Group {
-            if overlayState.focusTarget != nil {
-                Button(action: onDisconnect) {
-                    disconnectButtonLabel
-                }
-                .buttonStyle(.plain)
-                .focused($focusedTarget, equals: StreamOverlayState.FocusTarget.disconnect)
-            } else {
-                Button(action: onDisconnect) {
-                    disconnectButtonLabel
-                }
-                .buttonStyle(.plain)
+        Button(action: onDisconnect) {
+            FocusAwareView { isFocused in
+                disconnectButtonLabel
+                    .gamePassFocusRing(isFocused: isFocused, cornerRadius: 20)
             }
         }
+        .buttonStyle(CloudLibraryTVButtonStyle())
+        .gamePassDisableSystemFocusEffect()
+        .focused($focusedTarget, equals: StreamOverlayState.FocusTarget.disconnect)
+        .defaultFocus($focusedTarget, StreamOverlayState.FocusTarget.disconnect)
         .accessibilityIdentifier("stream_disconnect_button")
     }
 

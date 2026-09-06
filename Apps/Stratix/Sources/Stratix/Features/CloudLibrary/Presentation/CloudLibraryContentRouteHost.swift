@@ -36,14 +36,6 @@ struct CloudLibraryContentRouteHost: View {
                     )
                 }
         }
-        .modifier(
-            CloudLibrarySearchableModifier(
-                isEnabled: utilityRoute == nil
-                    && browsePresentation.browseRoute == .library
-                    && isLibrarySearchActive,
-                text: searchText
-            )
-        )
     }
 
     @ViewBuilder
@@ -109,24 +101,6 @@ struct CloudLibraryContentRouteHost: View {
                 isSideRailExpanded: isSideRailExpanded,
                 onExportPreviewDump: utilityActions.exportPreviewDump
             )
-        }
-    }
-}
-
-private struct CloudLibrarySearchableModifier: ViewModifier {
-    let isEnabled: Bool
-    let text: Binding<String>
-
-    func body(content: Content) -> some View {
-        if isEnabled {
-            content
-                .searchable(text: text, prompt: "Browse by title")
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background {
-                    CloudLibrarySearchFieldLeadingAlignment(activatesKeyboard: true)
-                }
-        } else {
-            content
         }
     }
 }

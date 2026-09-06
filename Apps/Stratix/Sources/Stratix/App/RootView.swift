@@ -18,6 +18,8 @@ struct RootView: View {
     /// Mounts the root surface and forwards active-scene transitions into the app coordinator outside UI-test harness modes.
     var body: some View {
         rootContent
+        .scrollIndicators(.never)
+        .scrollEdgeEffectHidden()
         .onChange(of: scenePhase) { _, phase in
             guard shouldHandleActiveScenePhase, phase == .active else { return }
             Task {

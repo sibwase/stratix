@@ -84,18 +84,24 @@ enum StratixTheme {
 
     enum Layout {
         static let maxContentWidth: CGFloat = .greatestFiniteMagnitude
+        /// Horizontal inset from the screen edge used by the Apple TV app on 1080p.
+        static let screenEdgeInset: CGFloat = 80
         static let outerPadding: CGFloat = 0
-        static let sideRailTopInset: CGFloat = 75
+        static let sideRailTopInset: CGFloat = 40
         static let heroHeight: CGFloat = 650
         static let tileWidth: CGFloat = 236
-        static let tileHeight: CGFloat = 324
+        /// Xbox box art is 2:3; keep the card in that ratio so posters are not cropped.
+        static let tileHeight: CGFloat = 354
+        /// Portrait poster aspect used when the library grid scales tiles to fill six columns.
+        static var tileAspect: CGFloat { tileHeight / tileWidth }
     }
 
     enum Shell {
-        static let contentTopPadding: CGFloat = 12
+        static let contentTopPadding: CGFloat = 40
         static let contentBottomPadding: CGFloat = 18
-        static let sideRailTopPadding: CGFloat = 10
-        static let profileAccountClusterHeight: CGFloat = 52
+        static let sideRailTopPadding: CGFloat = 40
+        static let sideRailLeadingPadding: CGFloat = 24
+        static let profileAccountClusterHeight: CGFloat = 48
         /// Fine-tunes profile avatar vertical alignment below the sort-button row center.
         static let profileAccountSortAlignmentExtraInset: CGFloat = 17
         /// Aligns the profile avatar center with the library sort-button row center.
@@ -108,64 +114,99 @@ enum StratixTheme {
         }()
         static let sideRailBottomPadding: CGFloat = 12
         static let sideRailInsetLeading: CGFloat = 0
-        static let sideRailCollapsedPanelWidth: CGFloat = 88
-        static let sideRailExpandedPanelWidth: CGFloat = 88
+        static let sideRailCollapsedPanelWidth: CGFloat = 90
+        static let sideRailExpandedPanelWidth: CGFloat = 340
         static let contentGap: CGFloat = 0
         static let contentLeadingInset: CGFloat = 0
-        static let browseRouteLeadingInset: CGFloat = SideRail.panelCollapsedWidth
+        static let browseRouteLeadingInset: CGFloat = Layout.screenEdgeInset
+        static let browseRouteTrailingInset: CGFloat = Layout.screenEdgeInset
     }
 
     enum SideRail {
         static let railCollapsedWidth: CGFloat = 72
-        static let railExpandedWidth: CGFloat = 72
-        static let panelCollapsedWidth: CGFloat = 88
-        static let panelExpandedWidth: CGFloat = 88
-        static let iconSize: CGFloat = 24
-        static let selectedIconSize: CGFloat = 30
-        static let labelSize: CGFloat = 34
-        static let rowHeight: CGFloat = 58
-        static let verticalPadding: CGFloat = 18
-        static let horizontalPadding: CGFloat = 10
-        static let rowSpacing: CGFloat = 8
+        static let railExpandedWidth: CGFloat = 280
+        static let panelCollapsedWidth: CGFloat = 90
+        static let panelExpandedWidth: CGFloat = 300
+        static let iconSize: CGFloat = 22
+        static let selectedIconSize: CGFloat = 22
+        static let labelSize: CGFloat = 22
+        static let rowHeight: CGFloat = 48
+        static let rowCornerRadius: CGFloat = 14
+        static let expandedCornerRadius: CGFloat = 26
+        static let collapsedCornerRadius: CGFloat = 36
+        static let collapsedBadgeIconFrame: CGFloat = 30
+        static let collapsedBadgeVerticalPadding: CGFloat = 14
+        static var collapsedBadgeHeight: CGFloat {
+            collapsedBadgeVerticalPadding * 2 + collapsedBadgeIconFrame
+        }
+        static let verticalPadding: CGFloat = 12
+        static let horizontalPadding: CGFloat = 12
+        static let rowSpacing: CGFloat = 12
+        static let expandAnimation = Animation.spring(response: 0.34, dampingFraction: 0.88)
+        static let rowFocusAnimation = Animation.easeInOut(duration: 0.22)
     }
 
     enum Home {
-        static let sectionSpacing: CGFloat = 44
-        static let tileFocusScale: CGFloat = 1.12
-        static let tileFocusBreathing: CGFloat = 18
-        static let railEdgeFocusInset: CGFloat = 0
-        static let railHorizontalPadding: CGFloat = 92
-        static let railTopPadding: CGFloat = 0
-        static let sectionHeaderHorizontalPadding: CGFloat = 132
-        static let heroArtworkLeadingBleed: CGFloat = -188
-        static let heroArtworkTrailingBleed: CGFloat = -24
-        static let heroContentLeading: CGFloat = 136
-        static let heroContentTrailing: CGFloat = 136
-        static let heroContentVertical: CGFloat = 336
-        static let heroActionTopPadding: CGFloat = 8
-        static let heroContentMaxWidth: CGFloat = 760
-        static let heroDescriptionMaxWidth: CGFloat = 620
-        static let heroMetadataHeight: CGFloat = 44
-        static let heroDescriptionHeight: CGFloat = 120
-        static let heroDotsBottomInset: CGFloat = 88
-        static let heroRailOverlap: CGFloat = 116
-        static let railTileWidth: CGFloat = 248
-        static let railTileHeight: CGFloat = 340
+        static let tileFocusScale: CGFloat = 0.96
+        static let tileUnfocusedScale: CGFloat = 0.912
+        static var tileFocusAppliedScale: CGFloat { tileFocusScale }
+        /// Gap between poster and title.
+        static let tileTitleSpacing: CGFloat = 20
+        /// Extra poster-to-title gap while focused, so highlight/shadow does not close the space.
+        static let tileTitleFocusSpacing: CGFloat = 18
+        /// Fixed title/subtitle block under a portrait tile so rows keep a stable stride.
+        static let tileTitleBlockHeight: CGFloat = 86
     }
 
     enum Library {
         /// Vertical center of the tab/sort header row measured from the library content top edge.
         static let headerControlsRowCenterY: CGFloat = 66
+        /// Space under the section chip, relative to chip height.
+        static var headerBelowBadgeSpacing: CGFloat { SideRail.collapsedBadgeHeight / 6 }
+        /// Library tabs sit below the collapsed section chip, not on the same row.
+        static var contentTopPaddingBelowBadge: CGFloat {
+            StratixTheme.Shell.sideRailTopPadding + SideRail.collapsedBadgeHeight + headerBelowBadgeSpacing
+        }
         /// Compacts the header after removing the shoulder-tab hint row above tabs.
         static let headerTopCompaction: CGFloat = 22
         /// Hides the navigation-stack search field once the library content scrolls past the header.
         static let searchChromeHideContentOffset: CGFloat = 28
         static let sectionSpacing: CGFloat = 24
-        static let gridItemWidth: CGFloat = 252
-        static let gridItemSpacing: CGFloat = 22
-        static let gridEdgeFocusInset: CGFloat = 16
-        static let letterIndexWidth: CGFloat = 40
-        static let letterIndexVerticalInset: CGFloat = 8
+        static let gridColumnCount: Int = 6
+        static let gridItemWidth: CGFloat = 236
+        static let gridItemSpacing: CGFloat = 32
+        /// Screen-edge inset already matches Apple TV; do not add a second library gutter.
+        static let gridEdgeFocusInset: CGFloat = 0
+        /// Letter index sits in the trailing screen inset; do not add a second gutter.
+        static let trailingChromeGutter: CGFloat = 0
+        /// Vertical scroll anchor for focused rows below the first; first row stays pinned to the header.
+        static let focusedRowAnchor = UnitPoint(x: 0, y: 0.5)
+        /// Matches the collapsed side-rail chip so library titles share its vertical band.
+        static let headerControlsRowHeight: CGFloat = 58
+        static let headerFilterRowHeight: CGFloat = 52
+        static let headerStackSpacing: CGFloat = 18
+        /// Extra bottom inset so the last grid rows can sit on the vertical center line.
+        static let gridVerticalCenterInset: CGFloat = 220
+        static let letterIndexWidth: CGFloat = 28
+        /// Matches the collapsed section-chip inset from the screen edge.
+        static var letterIndexVerticalInset: CGFloat { StratixTheme.Shell.sideRailTopPadding }
+        static let letterIndexTrailingInset: CGFloat = 8
+        /// Letter rail lives in the trailing screen gutter, not inside the grid.
+        static let letterIndexReservedWidth: CGFloat = 0
+        /// Trailing gutter equals the leading inset. The rail starts at that gutter's midpoint.
+        static var letterIndexOverlayOffset: CGFloat {
+            letterIndexWidth + Layout.screenEdgeInset / 2
+        }
+        /// D-pad row moves in the library grid.
+        static let focusScrollAnimation = Animation.easeOut(duration: 0.32)
+        /// Tabs + filter chips used until the live header reports its height.
+        static var estimatedHeaderHeight: CGFloat {
+            SideRail.collapsedBadgeHeight
+                + headerBelowBadgeSpacing
+                + headerControlsRowHeight
+                + headerStackSpacing
+                + headerFilterRowHeight
+        }
         static let chipHorizontalPadding: CGFloat = 14
         static let chipVerticalPadding: CGFloat = 10
     }
@@ -175,13 +216,13 @@ enum StratixTheme {
         static let heroPosterWidth: CGFloat = 338
         static let heroPosterHeight: CGFloat = 507
         static let contentSectionSpacing: CGFloat = 28
-        static let contentTopPadding: CGFloat = 36
+        static let contentTopPadding: CGFloat = Shell.contentTopPadding
         static let contentBottomPadding: CGFloat = 40
-        static let heroSideInset: CGFloat = 25
-        static let heroInnerPadding: CGFloat = 24
-        static let heroInterItemSpacing: CGFloat = 20
-        static let contentHorizontalInset: CGFloat = heroSideInset + heroInnerPadding
-        static let browseAlignedLeadingInset: CGFloat = Shell.browseRouteLeadingInset + contentHorizontalInset
+        static let heroSideInset: CGFloat = 0
+        static let heroInnerPadding: CGFloat = Layout.screenEdgeInset
+        static let heroInterItemSpacing: CGFloat = 28
+        static let contentHorizontalInset: CGFloat = 0
+        static let browseAlignedLeadingInset: CGFloat = Layout.screenEdgeInset
     }
 
     enum Colors {

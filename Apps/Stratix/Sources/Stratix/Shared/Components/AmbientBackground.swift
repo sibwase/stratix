@@ -5,91 +5,73 @@
 import SwiftUI
 import StratixCore
 
-/// Shared gradient stack that preserves foreground readability over hero or artwork-backed backgrounds.
-struct BackdropGradientOverlay: View {
+/// Standard dark ambient background with smooth blurred gradient accents across all screens.
+struct CloudLibraryAmbientBackground: View {
+    var imageURL: URL? = nil
+
     var body: some View {
         ZStack {
+            // Base deep dark gradient
             LinearGradient(
-                colors: [Color.clear, Color.black.opacity(0.18), Color.black.opacity(0.55)],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            LinearGradient(
-                colors: [StratixTheme.Colors.bgTop.opacity(0.95), .clear, .clear],
+                colors: [
+                    Color(red: 0.05, green: 0.08, blue: 0.11),
+                    Color(red: 0.02, green: 0.03, blue: 0.05)
+                ],
                 startPoint: .topLeading,
                 endPoint: .bottomTrailing
             )
+
+            // Blurred ambient gradient lights
+            ZStack {
+                // Subtle emerald glow in top-right
+                RadialGradient(
+                    colors: [
+                        Color(red: 0.10, green: 0.35, blue: 0.22).opacity(0.40),
+                        Color.clear
+                    ],
+                    center: .topTrailing,
+                    startRadius: 80,
+                    endRadius: 750
+                )
+
+                // Soft teal / cyan glow in bottom-left
+                RadialGradient(
+                    colors: [
+                        Color(red: 0.08, green: 0.28, blue: 0.38).opacity(0.32),
+                        Color.clear
+                    ],
+                    center: .bottomLeading,
+                    startRadius: 100,
+                    endRadius: 850
+                )
+
+                // Deep indigo accent in center-top
+                RadialGradient(
+                    colors: [
+                        Color(red: 0.12, green: 0.16, blue: 0.30).opacity(0.35),
+                        Color.clear
+                    ],
+                    center: .top,
+                    startRadius: 50,
+                    endRadius: 650
+                )
+            }
+            .blur(radius: 60)
+
+            // Vignette and contrast gradient overlays
             LinearGradient(
-                colors: [Color.clear, Color.clear, StratixTheme.Colors.bgBottom.opacity(0.95)],
+                colors: [
+                    Color.black.opacity(0.12),
+                    Color.clear,
+                    Color.black.opacity(0.50)
+                ],
                 startPoint: .top,
                 endPoint: .bottom
             )
         }
-    }
-}
-
-/// Full-screen shell background that blends gradients with optional remote hero artwork and
-/// adapts contrast/blur when high-visibility focus is enabled.
-struct CloudLibraryAmbientBackground: View {
-    let imageURL: URL?
-    @Environment(SettingsStore.self) private var settingsStore
-
-    var body: some View {
-        let highVisibilityFocus = settingsStore.accessibility.highVisibilityFocus
-        GeometryReader { proxy in
-            ZStack {
-                LinearGradient(
-                    colors: [StratixTheme.Colors.bgTop, StratixTheme.Colors.bgBottom],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-
-                Group {
-                    if let imageURL {
-                        CachedRemoteImage(
-                            url: imageURL,
-                            kind: .hero,
-                            priority: .low,
-                            maxPixelSize: 1_920
-                        ) {
-                            accentBackground
-                        }
-                        .scaledToFill()
-                        .saturation(highVisibilityFocus ? 0.82 : 0.95)
-                        .blur(radius: highVisibilityFocus ? 8 : 16)
-                        .opacity(highVisibilityFocus ? 0.30 : 0.55)
-                    } else {
-                        accentBackground
-                    }
-                }
-                .frame(width: proxy.size.width, height: proxy.size.height)
-                .clipped()
-
-                BackdropGradientOverlay()
-            }
-            .frame(width: proxy.size.width, height: proxy.size.height)
-            .clipped()
-        }
+        .drawingGroup()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .ignoresSafeArea()
-    }
-
-    /// Fallback accent treatment used when no remote artwork is available or while hero imagery loads.
-    private var accentBackground: some View {
-        ZStack {
-            RadialGradient(
-                colors: [StratixTheme.Colors.accent.opacity(0.22), .clear],
-                center: .topTrailing,
-                startRadius: 120,
-                endRadius: 820
-            )
-            RadialGradient(
-                colors: [Color.cyan.opacity(0.14), .clear],
-                center: .bottomLeading,
-                startRadius: 120,
-                endRadius: 900
-            )
-        }
     }
 }
 
@@ -99,13 +81,3 @@ extension View {
         frame(maxWidth: .infinity, alignment: .leading)
     }
 }
-
-#if DEBUG
-#Preview("StratixTheme", traits: .fixedLayout(width: 1920, height: 1080)) {
-    ZStack {
-        CloudLibraryAmbientBackground(imageURL: nil)
-        BackdropGradientOverlay()
-    }
-    .environment(SettingsStore())
-}
-#endif

@@ -7,7 +7,6 @@ import StratixModels
 
 /// Identifies the primary side-rail destinations that map onto browse routes.
 enum SideRailNavID: String, CaseIterable, Identifiable, Hashable, Sendable {
-    case home
     case library
     case consoles
 
@@ -184,7 +183,6 @@ enum MediaTileAspect: String, Hashable, Sendable {
 /// Preserves media-tile presentation variants where the same model is rendered in different shells.
 enum MediaTilePresentation: String, Hashable, Sendable {
     case standard
-    case artworkOnly
 }
 
 /// Represents the shared media-tile payload used across home, library, and search.

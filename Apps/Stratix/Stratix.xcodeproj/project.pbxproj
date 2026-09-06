@@ -15,7 +15,6 @@
 		1A9300000000000000000001 /* CloudLibraryDataSourceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A9200000000000000000001 /* CloudLibraryDataSourceTests.swift */; };
 		1A9300000000000000000002 /* CloudLibraryLayoutPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A9200000000000000000002 /* CloudLibraryLayoutPolicyTests.swift */; };
 		1A9300000000000000000003 /* ShellCheckpointStreamUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A9200000000000000000003 /* ShellCheckpointStreamUITests.swift */; };
-		1C365A778987F57C7A4508A0 /* CloudLibraryHomeFocusCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 134EFFB5349BA177C62394E1 /* CloudLibraryHomeFocusCoordinatorTests.swift */; };
 		241C9AB6F293FB14F2CE9236 /* CloudLibrarySettingsVideoAudioPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = C23CB0AF4B8EB4CB55728009 /* CloudLibrarySettingsVideoAudioPane.swift */; };
 		3388096E54BA8F6CE6DCF0D7 /* ConsoleListFocusCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4345865DAA16EC6B800E47D /* ConsoleListFocusCoordinatorTests.swift */; };
 		38DFAE16DCDF1442ED356818 /* CloudLibrarySettingsSidebar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 61B6E4EA50BE46ED07D648CC /* CloudLibrarySettingsSidebar.swift */; };
@@ -32,7 +31,6 @@
 		680338806F8CB4F6009E2B7F /* LaunchPerformanceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAA10031943356C0F1BBAD79 /* LaunchPerformanceTests.swift */; };
 		7828D0624FE0DDB4E2EC13A3 /* PerformanceTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17BDA56E9B4DA19D8AC1F57 /* PerformanceTestSupport.swift */; };
 		7828D0624FE0DDB4E2EC13A4 /* PerformanceTestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A17BDA56E9B4DA19D8AC1F57 /* PerformanceTestSupport.swift */; };
-		8832E636848D100F611230B3 /* CloudLibraryHomeFocusCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F03E2D30991FBE460D81696C /* CloudLibraryHomeFocusCoordinator.swift */; };
 		98ECAF3ED6F8A0925ED33E31 /* CloudLibrarySceneStatusState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D4DE7B861E7E3B401140ED2 /* CloudLibrarySceneStatusState.swift */; };
 		9A00E26133614CE254499CA3 /* SideRailAccountCluster.swift in Sources */ = {isa = PBXBuildFile; fileRef = C56C9523CB9121F7CBF05C1E /* SideRailAccountCluster.swift */; };
 		A1B2C3D4E5F60718293A92 /* CloudLibraryActionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A93 /* CloudLibraryActionCoordinator.swift */; };
@@ -44,7 +42,6 @@
 		A2D100000000000000000002 /* StratixAppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D200000000000000000002 /* StratixAppDelegate.swift */; };
 		A2D100000000000000000003 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D200000000000000000003 /* RootView.swift */; };
 		A2D100000000000000000004 /* CloudLibraryViewCacheMaintenance.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D200000000000000000004 /* CloudLibraryViewCacheMaintenance.swift */; };
-		A2D100000000000000000005 /* CloudLibraryDataSourceHomeProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D200000000000000000005 /* CloudLibraryDataSourceHomeProjection.swift */; };
 		A2D100000000000000000006 /* CloudLibraryDataSourceDetailState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D200000000000000000006 /* CloudLibraryDataSourceDetailState.swift */; };
 		A2D100000000000000000007 /* CloudLibraryDataSourceSearchResults.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2D200000000000000000007 /* CloudLibraryDataSourceSearchResults.swift */; };
 		A2D100000000000000000008 /* CloudLibraryUITestHarnessView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000053 /* CloudLibraryUITestHarnessView.swift */; };
@@ -64,13 +61,13 @@
 		A30000000000000000000021 /* AsyncAlgorithms in Frameworks */ = {isa = PBXBuildFile; productRef = A30000000000000000000023 /* AsyncAlgorithms */; };
 		A30000000000000000000028 /* CloudLibraryCatalogFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000025 /* CloudLibraryCatalogFixtures.swift */; };
 		A30000000000000000000029 /* CloudLibraryHomeScenario.swift in Sources */ = {isa = PBXBuildFile; fileRef = A30000000000000000000027 /* CloudLibraryHomeScenario.swift */; };
-		A8D7F1073DD0448CE9C5B7B0 /* CloudLibraryHomeRailSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58593824A953DB29901177B5 /* CloudLibraryHomeRailSection.swift */; };
 		A96B719B598FC9336E85A838 /* ConsoleCardView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3D8233DC9DCA885115896F9D /* ConsoleCardView.swift */; };
 		AA0001000000000000000001 /* StratixApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000001 /* StratixApp.swift */; };
 		AA0001000000000000000002 /* AuthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000002 /* AuthView.swift */; };
 		AA0001000000000000000003 /* DeviceCodeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000003 /* DeviceCodeView.swift */; };
 		AA0001000000000000000004 /* AuthenticatedShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000004 /* AuthenticatedShellView.swift */; };
 		AA0001000000000000000005 /* ConsoleListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000005 /* ConsoleListView.swift */; };
+		C0N50LEF1XTURE500000002 /* ConsoleListFixtures.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0N50LEF1XTURE500000001 /* ConsoleListFixtures.swift */; };
 		AA0001000000000000000007 /* StreamView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000007 /* StreamView.swift */; };
 		AA0001000000000000000009 /* WebRTCClientImpl.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000009 /* WebRTCClientImpl.swift */; };
 		AA0001000000000000000010 /* StratixModels in Frameworks */ = {isa = PBXBuildFile; productRef = AA0009000000000000000001 /* StratixModels */; };
@@ -83,7 +80,6 @@
 		AA0001000000000000000018 /* WebRTC.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000014 /* WebRTC.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		AA0001000000000000000019 /* CloudLibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000015 /* CloudLibraryView.swift */; };
 		AA0001000000000000000020 /* CloudLibraryShellView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000016 /* CloudLibraryShellView.swift */; };
-		AA0001000000000000000021 /* CloudLibraryHomeScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000017 /* CloudLibraryHomeScreen.swift */; };
 		AA0001000000000000000022 /* CloudLibraryLibraryScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000018 /* CloudLibraryLibraryScreen.swift */; };
 		AA0001000000000000000024 /* GlassCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000020 /* GlassCard.swift */; };
 		AA0001000000000000000025 /* MediaTileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002000000000000000021 /* MediaTileView.swift */; };
@@ -138,7 +134,6 @@
 		C1F000000000000000000003 /* StratixAppExitHandlingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1F100000000000000000003 /* StratixAppExitHandlingTests.swift */; };
 		C2A6F0A91A7D4F25B1C9F101 /* StoredAuthShellRestorePerformanceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C2A6F0A91A7D4F25B1C9F100 /* StoredAuthShellRestorePerformanceUITests.swift */; };
 		C440E010E8AC87C303079CD8 /* CloudLibrarySettingsBindings.swift in Sources */ = {isa = PBXBuildFile; fileRef = FDD888169C0334F1EB5F0362 /* CloudLibrarySettingsBindings.swift */; };
-		C61010000000000000000003 /* CloudLibraryViewModelHomeProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61020000000000000000003 /* CloudLibraryViewModelHomeProjection.swift */; };
 		C61010000000000000000004 /* CloudLibraryViewModelLibraryProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61020000000000000000004 /* CloudLibraryViewModelLibraryProjection.swift */; };
 		C61010000000000000000005 /* CloudLibraryViewModelSearchProjection.swift in Sources */ = {isa = PBXBuildFile; fileRef = C61020000000000000000005 /* CloudLibraryViewModelSearchProjection.swift */; };
 		C62010000000000000000004 /* CloudLibrarySceneModelMutationTracking.swift in Sources */ = {isa = PBXBuildFile; fileRef = C62020000000000000000004 /* CloudLibrarySceneModelMutationTracking.swift */; };
@@ -148,7 +143,6 @@
 		C7D100000000000000000003 /* CloudLibraryShellInteractionCoordinatorTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C7D200000000000000000003 /* CloudLibraryShellInteractionCoordinatorTests.swift */; };
 		C8A100000000000000000001 /* AuthenticatedShellDynamicTypeSmokeTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A100000000000000000004 /* AuthenticatedShellDynamicTypeSmokeTests.swift */; };
 		C8A100000000000000000005 /* AuthenticatedShellPresenceStatusTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C8A100000000000000000006 /* AuthenticatedShellPresenceStatusTests.swift */; };
-		CBC6BD78396E10A53E6ED62B /* CloudLibraryHomeHeroSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93067D5B02A271F6B7CBCA06 /* CloudLibraryHomeHeroSection.swift */; };
 		D4F100000000000000000001 /* CloudLibraryLibraryScreenHeader.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000001 /* CloudLibraryLibraryScreenHeader.swift */; };
 		D4F100000000000000000002 /* CloudLibraryLibraryScreenFocus.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000002 /* CloudLibraryLibraryScreenFocus.swift */; };
 		D4F100000000000000000003 /* CloudLibraryLibraryScreenControls.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4F200000000000000000003 /* CloudLibraryLibraryScreenControls.swift */; };
@@ -176,8 +170,6 @@
 		E12781C32F78A7CF005548D0 /* GuideOverlayComposition.swift in Sources */ = {isa = PBXBuildFile; fileRef = E12781C22F78A7CF005548D0 /* GuideOverlayComposition.swift */; };
 		E147F6F42F63A92400B960D0 /* NavigationPerformanceTracker.swift in Sources */ = {isa = PBXBuildFile; fileRef = E147F6F32F63A92400B960D0 /* NavigationPerformanceTracker.swift */; };
 		E1652D9A2F65F66700A78E11 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = E1652D992F65F66700A78E11 /* Assets.xcassets */; };
-		E50000000000000000000001 /* CloudLibraryHomeHeroComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E50000000000000000000011 /* CloudLibraryHomeHeroComponents.swift */; };
-		E50000000000000000000002 /* CloudLibraryHomeRailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = E50000000000000000000012 /* CloudLibraryHomeRailComponents.swift */; };
 		E60000000000000000000001 /* StreamCompactStatsHUD.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60000000000000000000011 /* StreamCompactStatsHUD.swift */; };
 		E60000000000000000000002 /* StreamControllerInputHost.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60000000000000000000012 /* StreamControllerInputHost.swift */; };
 		E60000000000000000000003 /* StreamPresentationFocusCapture.swift in Sources */ = {isa = PBXBuildFile; fileRef = E60000000000000000000014 /* StreamPresentationFocusCapture.swift */; };
@@ -231,6 +223,7 @@
 		F4B100000000000000000009 /* CloudLibraryShellHostTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B200000000000000000009 /* CloudLibraryShellHostTests.swift */; };
 		F4B10000000000000000000A /* CloudLibraryShellHostActionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B20000000000000000000A /* CloudLibraryShellHostActionTests.swift */; };
 		F4B10000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B20000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift */; };
+		F4B10000000000000000000C /* CloudLibraryLibraryLetterIndexSupportTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4B20000000000000000000C /* CloudLibraryLibraryLetterIndexSupportTests.swift */; };
 		F6D29E9C36404A85E7043A11 /* CloudLibrarySettingsStreamPane.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA7A3527B80A2A185E52474 /* CloudLibrarySettingsStreamPane.swift */; };
 		FC2D1BA53F0C7135A62C8681 /* ShellPerformanceUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1DBB86F639E8A633FD39F3B4 /* ShellPerformanceUITests.swift */; };
 /* End PBXBuildFile section */
@@ -298,7 +291,6 @@
 		051C93C62A55272162B40BEB /* CloudLibrarySettingsPaneTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsPaneTests.swift; sourceTree = "<group>"; };
 		07F4721D522B8B7F0108DF33 /* RouteSwitchPerformanceTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = RouteSwitchPerformanceTests.swift; sourceTree = "<group>"; };
 		0D4DE7B861E7E3B401140ED2 /* CloudLibrarySceneStatusState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySceneStatusState.swift; sourceTree = "<group>"; };
-		134EFFB5349BA177C62394E1 /* CloudLibraryHomeFocusCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeFocusCoordinatorTests.swift; sourceTree = "<group>"; };
 		157CA9EDC0762B5961E30965 /* CloudLibrarySettingsControllerPane.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsControllerPane.swift; sourceTree = "<group>"; };
 		16A6BC80EE7E175DA37D32DC /* CloudLibrarySceneStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySceneStateTests.swift; sourceTree = "<group>"; };
 		17D3F1CF50395D721302B879 /* SideRailActionList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SideRailActionList.swift; sourceTree = "<group>"; };
@@ -319,11 +311,9 @@
 		4A2D9F9F4B00000000000004 /* GamePassTitleDetailScreenStateTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = GamePassTitleDetailScreenStateTests.swift; sourceTree = "<group>"; };
 		4E11BBAEC597A5535EA76EDB /* SideRailFocusCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SideRailFocusCoordinator.swift; sourceTree = "<group>"; };
 		5708B9A6A9C66CD7282198D8 /* SideRailNavList.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SideRailNavList.swift; sourceTree = "<group>"; };
-		58593824A953DB29901177B5 /* CloudLibraryHomeRailSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeRailSection.swift; sourceTree = "<group>"; };
 		61B6E4EA50BE46ED07D648CC /* CloudLibrarySettingsSidebar.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsSidebar.swift; sourceTree = "<group>"; };
 		6A3CE2CBB90B20A39809963D /* StreamDebugLogging.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamDebugLogging.swift; sourceTree = "<group>"; };
 		6F89883C42EA91599179C90A /* StratixPerformanceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StratixPerformanceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		93067D5B02A271F6B7CBCA06 /* CloudLibraryHomeHeroSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeHeroSection.swift; sourceTree = "<group>"; };
 		98FEE4EF5691E33AEF87556F /* CloudLibrarySettingsInterfacePane.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsInterfacePane.swift; sourceTree = "<group>"; };
 		A17BDA56E9B4DA19D8AC1F57 /* PerformanceTestSupport.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = PerformanceTestSupport.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A93 /* CloudLibraryActionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryActionCoordinator.swift; sourceTree = "<group>"; };
@@ -334,7 +324,6 @@
 		A2D200000000000000000002 /* StratixAppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StratixAppDelegate.swift; sourceTree = "<group>"; };
 		A2D200000000000000000003 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A2D200000000000000000004 /* CloudLibraryViewCacheMaintenance.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryViewCacheMaintenance.swift; sourceTree = "<group>"; };
-		A2D200000000000000000005 /* CloudLibraryDataSourceHomeProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryDataSourceHomeProjection.swift; sourceTree = "<group>"; };
 		A2D200000000000000000006 /* CloudLibraryDataSourceDetailState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryDataSourceDetailState.swift; sourceTree = "<group>"; };
 		A2D200000000000000000007 /* CloudLibraryDataSourceSearchResults.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryDataSourceSearchResults.swift; sourceTree = "<group>"; };
 		A2D200000000000000000008 /* ShellUITestHarnessView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShellUITestHarnessView.swift; sourceTree = "<group>"; };
@@ -358,6 +347,7 @@
 		AA0002000000000000000003 /* DeviceCodeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceCodeView.swift; sourceTree = "<group>"; };
 		AA0002000000000000000004 /* AuthenticatedShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticatedShellView.swift; sourceTree = "<group>"; };
 		AA0002000000000000000005 /* ConsoleListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConsoleListView.swift; sourceTree = "<group>"; };
+		C0N50LEF1XTURE500000001 /* ConsoleListFixtures.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConsoleListFixtures.swift; sourceTree = "<group>"; };
 		AA0002000000000000000007 /* StreamView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamView.swift; sourceTree = "<group>"; };
 		AA0002000000000000000009 /* WebRTCClientImpl.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCClientImpl.swift; sourceTree = "<group>"; };
 		AA0002000000000000000010 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -367,7 +357,6 @@
 		AA0002000000000000000014 /* WebRTC.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = WebRTC.xcframework; path = ../../ThirdParty/WebRTC/WebRTC.xcframework; sourceTree = "<group>"; };
 		AA0002000000000000000015 /* CloudLibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryView.swift; sourceTree = "<group>"; };
 		AA0002000000000000000016 /* CloudLibraryShellView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellView.swift; sourceTree = "<group>"; };
-		AA0002000000000000000017 /* CloudLibraryHomeScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeScreen.swift; sourceTree = "<group>"; };
 		AA0002000000000000000018 /* CloudLibraryLibraryScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryLibraryScreen.swift; sourceTree = "<group>"; };
 		AA0002000000000000000020 /* GlassCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassCard.swift; sourceTree = "<group>"; };
 		AA0002000000000000000021 /* MediaTileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MediaTileView.swift; sourceTree = "<group>"; };
@@ -425,7 +414,6 @@
 		C2A6F0A91A7D4F25B1C9F100 /* StoredAuthShellRestorePerformanceUITests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = StoredAuthShellRestorePerformanceUITests.swift; sourceTree = "<group>"; };
 		C4345865DAA16EC6B800E47D /* ConsoleListFocusCoordinatorTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ConsoleListFocusCoordinatorTests.swift; sourceTree = "<group>"; };
 		C56C9523CB9121F7CBF05C1E /* SideRailAccountCluster.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SideRailAccountCluster.swift; sourceTree = "<group>"; };
-		C61020000000000000000003 /* CloudLibraryViewModelHomeProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryViewModelHomeProjection.swift; sourceTree = "<group>"; };
 		C61020000000000000000004 /* CloudLibraryViewModelLibraryProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryViewModelLibraryProjection.swift; sourceTree = "<group>"; };
 		C61020000000000000000005 /* CloudLibraryViewModelSearchProjection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryViewModelSearchProjection.swift; sourceTree = "<group>"; };
 		C62020000000000000000004 /* CloudLibrarySceneModelMutationTracking.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibrarySceneModelMutationTracking.swift; sourceTree = "<group>"; };
@@ -464,12 +452,9 @@
 		E147F6F32F63A92400B960D0 /* NavigationPerformanceTracker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigationPerformanceTracker.swift; sourceTree = "<group>"; };
 		E1652D992F65F66700A78E11 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		E18B2A712F6D060100E1B1CB /* Stratix.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Stratix.xctestplan; sourceTree = "<group>"; };
-		E50000000000000000000011 /* CloudLibraryHomeHeroComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeHeroComponents.swift; sourceTree = "<group>"; };
-		E50000000000000000000012 /* CloudLibraryHomeRailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeRailComponents.swift; sourceTree = "<group>"; };
 		E60000000000000000000011 /* StreamCompactStatsHUD.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamCompactStatsHUD.swift; sourceTree = "<group>"; };
 		E60000000000000000000012 /* StreamControllerInputHost.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamControllerInputHost.swift; sourceTree = "<group>"; };
 		E60000000000000000000014 /* StreamPresentationFocusCapture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StreamPresentationFocusCapture.swift; sourceTree = "<group>"; };
-		F03E2D30991FBE460D81696C /* CloudLibraryHomeFocusCoordinator.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryHomeFocusCoordinator.swift; sourceTree = "<group>"; };
 		F0A1B2C3D4E5F60718293A41 /* WebRTCClientStateSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCClientStateSupport.swift; sourceTree = "<group>"; };
 		F0A1B2C3D4E5F60718293A43 /* WebRTCClientImplTVOSAudioBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCClientImplTVOSAudioBootstrap.swift; sourceTree = "<group>"; };
 		F0A1B2C3D4E5F60718293A47 /* WebRTCClientImplDataChannelDelegateProxy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCClientImplDataChannelDelegateProxy.swift; sourceTree = "<group>"; };
@@ -519,6 +504,7 @@
 		F4B200000000000000000009 /* CloudLibraryShellHostTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellHostTests.swift; sourceTree = "<group>"; };
 		F4B20000000000000000000A /* CloudLibraryShellHostActionTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryShellHostActionTests.swift; sourceTree = "<group>"; };
 		F4B20000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryDetailPathBindingPolicyTests.swift; sourceTree = "<group>"; };
+		F4B20000000000000000000C /* CloudLibraryLibraryLetterIndexSupportTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibraryLibraryLetterIndexSupportTests.swift; sourceTree = "<group>"; };
 		FDD888169C0334F1EB5F0362 /* CloudLibrarySettingsBindings.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CloudLibrarySettingsBindings.swift; sourceTree = "<group>"; };
 		FEB9DBA0F1D68DF25F27062A /* StratixTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = StratixTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -620,6 +606,7 @@
 				F4B200000000000000000005 /* CloudLibraryFocusStateTests.swift */,
 				F4B200000000000000000006 /* CloudLibraryBackActionPolicyTests.swift */,
 				F4B20000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift */,
+				F4B20000000000000000000C /* CloudLibraryLibraryLetterIndexSupportTests.swift */,
 				F4B20000000000000000000A /* CloudLibraryShellHostActionTests.swift */,
 				F4B200000000000000000008 /* CloudLibraryRoutePresentationBuilderTests.swift */,
 				F4B200000000000000000009 /* CloudLibraryShellHostTests.swift */,
@@ -629,7 +616,6 @@
 				B3E200000000000000000002 /* CloudLibraryActionCoordinatorTests.swift */,
 				B3F200000000000000000002 /* CloudLibraryViewModelSceneMutationTests.swift */,
 				16A6BC80EE7E175DA37D32DC /* CloudLibrarySceneStateTests.swift */,
-				134EFFB5349BA177C62394E1 /* CloudLibraryHomeFocusCoordinatorTests.swift */,
 				051C93C62A55272162B40BEB /* CloudLibrarySettingsPaneTests.swift */,
 				4A2D9F9F4B00000000000004 /* GamePassTitleDetailScreenStateTests.swift */,
 				1A9200000000000000000001 /* CloudLibraryDataSourceTests.swift */,
@@ -790,7 +776,6 @@
 			isa = PBXGroup;
 			children = (
 				A2D200000000000000000012 /* CloudLibraryDataSourceLibraryIndex.swift */,
-				A2D200000000000000000005 /* CloudLibraryDataSourceHomeProjection.swift */,
 				A2D200000000000000000006 /* CloudLibraryDataSourceDetailState.swift */,
 				A2D200000000000000000007 /* CloudLibraryDataSourceSearchResults.swift */,
 			);
@@ -1020,6 +1005,7 @@
 			isa = PBXGroup;
 			children = (
 				AA0002000000000000000005 /* ConsoleListView.swift */,
+				C0N50LEF1XTURE500000001 /* ConsoleListFixtures.swift */,
 				A596C5002ED815D2439FDFA3 /* ConsoleListFocusCoordinator.swift */,
 				CE551A8F08C7BD82548E59B0 /* ConsoleListEmptyState.swift */,
 				2D1035C73AE30752482EBC14 /* ConsoleGridSection.swift */,
@@ -1062,12 +1048,6 @@
 		E123EE322F7DBCF900DA591E /* Home */ = {
 			isa = PBXGroup;
 			children = (
-				AA0002000000000000000017 /* CloudLibraryHomeScreen.swift */,
-				E50000000000000000000011 /* CloudLibraryHomeHeroComponents.swift */,
-				E50000000000000000000012 /* CloudLibraryHomeRailComponents.swift */,
-				F03E2D30991FBE460D81696C /* CloudLibraryHomeFocusCoordinator.swift */,
-				93067D5B02A271F6B7CBCA06 /* CloudLibraryHomeHeroSection.swift */,
-				58593824A953DB29901177B5 /* CloudLibraryHomeRailSection.swift */,
 			);
 			path = Home;
 			sourceTree = "<group>";
@@ -1122,7 +1102,6 @@
 				A2D200000000000000000004 /* CloudLibraryViewCacheMaintenance.swift */,
 				AA0002000000000000000050 /* CloudLibraryViewModel.swift */,
 				A2D200000000000000000011 /* CloudLibraryViewModelDetailCache.swift */,
-				C61020000000000000000003 /* CloudLibraryViewModelHomeProjection.swift */,
 				C61020000000000000000004 /* CloudLibraryViewModelLibraryProjection.swift */,
 				B3F200000000000000000001 /* CloudLibraryViewModelSceneMutation.swift */,
 				C61020000000000000000005 /* CloudLibraryViewModelSearchProjection.swift */,
@@ -1507,6 +1486,7 @@
 				F4B100000000000000000005 /* CloudLibraryFocusStateTests.swift in Sources */,
 				F4B100000000000000000006 /* CloudLibraryBackActionPolicyTests.swift in Sources */,
 				F4B10000000000000000000B /* CloudLibraryDetailPathBindingPolicyTests.swift in Sources */,
+				F4B10000000000000000000C /* CloudLibraryLibraryLetterIndexSupportTests.swift in Sources */,
 				F4B10000000000000000000A /* CloudLibraryShellHostActionTests.swift in Sources */,
 				F4B100000000000000000008 /* CloudLibraryRoutePresentationBuilderTests.swift in Sources */,
 				F4B100000000000000000009 /* CloudLibraryShellHostTests.swift in Sources */,
@@ -1529,7 +1509,6 @@
 				4A2D9F9F4B00000000000003 /* GamePassTitleDetailScreenStateTests.swift in Sources */,
 				1A9300000000000000000001 /* CloudLibraryDataSourceTests.swift in Sources */,
 				1A9300000000000000000002 /* CloudLibraryLayoutPolicyTests.swift in Sources */,
-				1C365A778987F57C7A4508A0 /* CloudLibraryHomeFocusCoordinatorTests.swift in Sources */,
 				3388096E54BA8F6CE6DCF0D7 /* ConsoleListFocusCoordinatorTests.swift in Sources */,
 				A30000000000000000000018 /* ConsoleListStreamLaunchTests.swift in Sources */,
 				49B2A32EE930937BB5827FA7 /* SideRailFocusCoordinatorTests.swift in Sources */,
@@ -1552,7 +1531,6 @@
 				A2D100000000000000000004 /* CloudLibraryViewCacheMaintenance.swift in Sources */,
 				AA0001000000000000000050 /* CloudLibraryViewModel.swift in Sources */,
 				A2D100000000000000000012 /* CloudLibraryViewModelDetailCache.swift in Sources */,
-				C61010000000000000000003 /* CloudLibraryViewModelHomeProjection.swift in Sources */,
 				C61010000000000000000004 /* CloudLibraryViewModelLibraryProjection.swift in Sources */,
 				C61010000000000000000005 /* CloudLibraryViewModelSearchProjection.swift in Sources */,
 				B3F100000000000000000001 /* CloudLibraryViewModelSceneMutation.swift in Sources */,
@@ -1567,9 +1545,6 @@
 				AA0001000000000000000069 /* CloudLibrarySceneInputs.swift in Sources */,
 				AA0001000000000000000057 /* CloudLibraryConsolesView.swift in Sources */,
 				AA0001000000000000000020 /* CloudLibraryShellView.swift in Sources */,
-				AA0001000000000000000021 /* CloudLibraryHomeScreen.swift in Sources */,
-				E50000000000000000000001 /* CloudLibraryHomeHeroComponents.swift in Sources */,
-				E50000000000000000000002 /* CloudLibraryHomeRailComponents.swift in Sources */,
 				A1B2C3D4E5F60718293A92 /* CloudLibraryActionCoordinator.swift in Sources */,
 				E12781B02F78896E005548D0 /* StreamOverlayComposition.swift in Sources */,
 				E12781B62F788971005548D0 /* StreamReconnectStatusBanner.swift in Sources */,
@@ -1584,6 +1559,7 @@
 				E12781BD2F789CDC005548D0 /* GuidePaneSections.swift in Sources */,
 				AA0001000000000000000004 /* AuthenticatedShellView.swift in Sources */,
 				AA0001000000000000000005 /* ConsoleListView.swift in Sources */,
+				C0N50LEF1XTURE500000002 /* ConsoleListFixtures.swift in Sources */,
 				AA0001000000000000000039 /* StreamOverlay.swift in Sources */,
 				AA0001000000000000000062 /* SampleBufferDisplayRenderer.swift in Sources */,
 				F0A1B2C3D4E5F60718293A76 /* SampleBufferDisplayRendererLifecycle.swift in Sources */,
@@ -1669,16 +1645,12 @@
 				AA0001000000000000000043 /* CloudLibraryStatusViews.swift in Sources */,
 				AA0001000000000000000045 /* CloudLibrary/CloudLibraryDataSource.swift in Sources */,
 				A2D100000000000000000013 /* CloudLibraryDataSourceLibraryIndex.swift in Sources */,
-				A2D100000000000000000005 /* CloudLibraryDataSourceHomeProjection.swift in Sources */,
 				A2D100000000000000000006 /* CloudLibraryDataSourceDetailState.swift in Sources */,
 				A2D100000000000000000007 /* CloudLibraryDataSourceSearchResults.swift in Sources */,
 				AA0001000000000000000052 /* FocusSettleDebouncer.swift in Sources */,
 				98ECAF3ED6F8A0925ED33E31 /* CloudLibrarySceneStatusState.swift in Sources */,
 				4C7DA624D3D27855B790A00B /* CloudLibrarySceneRouteState.swift in Sources */,
 				1833C5AEB96363A7DDB661D2 /* CloudLibraryHeroBackgroundState.swift in Sources */,
-				8832E636848D100F611230B3 /* CloudLibraryHomeFocusCoordinator.swift in Sources */,
-				CBC6BD78396E10A53E6ED62B /* CloudLibraryHomeHeroSection.swift in Sources */,
-				A8D7F1073DD0448CE9C5B7B0 /* CloudLibraryHomeRailSection.swift in Sources */,
 				55B057C75E003E312D059C51 /* ConsoleListFocusCoordinator.swift in Sources */,
 				C7781C8BA57F324ABCD4D0DA /* ConsoleListEmptyState.swift in Sources */,
 				A275673B099A5FBD349D6FFA /* ConsoleGridSection.swift in Sources */,
@@ -1794,7 +1766,7 @@
 				TARGETED_DEVICE_FAMILY = 3;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stratix.app/Stratix";
 				TEST_TARGET_NAME = Stratix;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
+				TVOS_DEPLOYMENT_TARGET = 26.6;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Release;
@@ -2265,7 +2237,7 @@
 				TARGETED_DEVICE_FAMILY = 3;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stratix.app/Stratix";
 				TEST_TARGET_NAME = Stratix;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
+				TVOS_DEPLOYMENT_TARGET = 26.6;
 				VALIDATE_PRODUCT = YES;
 			};
 			name = Profile;
@@ -2336,7 +2308,7 @@
 				TARGETED_DEVICE_FAMILY = 3;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Stratix.app/Stratix";
 				TEST_TARGET_NAME = Stratix;
-				TVOS_DEPLOYMENT_TARGET = 26.0;
+				TVOS_DEPLOYMENT_TARGET = 26.6;
 			};
 			name = Debug;
 		};

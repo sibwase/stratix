@@ -36,6 +36,19 @@
 	<string>Stratix connects to your Xbox on the local network for xHome streaming.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>Stratix uses audio access for game streaming voice and WebRTC media initialization.</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.sibwase.stratix.appletv</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>stratix</string>
+			</array>
+		</dict>
+	</array>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>

@@ -79,7 +79,7 @@ enum CloudLibraryDataSource {
             title: item.name,
             subtitle: item.publisherName,
             caption: nil,
-            artworkURL: item.artURL ?? item.posterImageURL ?? item.heroImageURL,
+            artworkURL: item.posterImageURL ?? item.artURL ?? item.heroImageURL,
             badgeText: item.isInMRU && showsContinueBadge ? "Resume in cloud" : nil,
             aspect: aspect
         )
@@ -113,9 +113,10 @@ enum CloudLibraryDataSource {
                 .first(where: { $0.context.alias == scopedCategory.alias })?
                 .context ?? scopedCategory
         }
-        let trimmedSearchQuery = queryState.isLibrarySearchActive
+        let rawSearchQuery = queryState.isLibrarySearchActive
             ? queryState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             : ""
+        let trimmedSearchQuery = rawSearchQuery.count >= 2 ? rawSearchQuery : ""
         let selectedTabItems = trimmedSearchQuery.isEmpty
             ? selectedItemsForCurrentTab(
                 index: index,

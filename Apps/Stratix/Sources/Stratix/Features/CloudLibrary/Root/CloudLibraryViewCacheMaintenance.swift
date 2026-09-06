@@ -88,10 +88,6 @@ extension CloudLibraryView {
         vm.detailStateCache.prune(validTitleIDs: validTitleIDs)
         vm.detailHydrationInFlightTitleIDs = vm.detailHydrationInFlightTitleIDs.intersection(validTitleIDs)
         focusState.setSettledHeroTileID(
-            focusState.settledHeroTileID(for: CloudLibraryBrowseRoute.home).flatMap { validTitleIDs.contains($0) ? $0 : nil },
-            for: CloudLibraryBrowseRoute.home
-        )
-        focusState.setSettledHeroTileID(
             focusState.settledHeroTileID(for: CloudLibraryBrowseRoute.library).flatMap { validTitleIDs.contains($0) ? $0 : nil },
             for: CloudLibraryBrowseRoute.library
         )

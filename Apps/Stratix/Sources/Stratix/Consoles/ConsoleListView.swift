@@ -9,7 +9,9 @@ import XCloudAPI
 /// Renders the available remote-play consoles and owns the console-to-stream modal transition.
 struct ConsoleListView: View {
     @Environment(ConsoleController.self) var consoleController
+    @Environment(ProfileController.self) var profileController
     @Environment(StreamController.self) var streamController
+    @Environment(\.dynamicTypeSize) var dynamicTypeSize
     var onRequestSideRailEntry: () -> Void = {}
     @State var showingStream = false
     @State var selectedConsole: RemoteConsole?
@@ -38,27 +40,29 @@ struct ConsoleListView: View {
 
     /// Mounts the console shell and presents the stream surface when a console launch is active.
     var body: some View {
-        rootContent
-            .opacity(shellVisibility.opacity)
-            .allowsHitTesting(shellVisibility.allowsHitTesting)
-            .accessibilityHidden(shellVisibility.isAccessibilityHidden)
-            .fullScreenCover(isPresented: $showingStream, onDismiss: handleStreamDismissed) {
-                if let console = selectedConsole {
-                    StreamControllerInputHost(
-                        allowsControllerUIFocus: streamController.allowsStreamControllerUIFocus,
-                        onOverlayToggle: {
-                            streamController.requestOverlayToggle()
-                        }
-                    ) {
-                        StreamView(context: .home(console: console))
+        ZStack {
+            rootContent
+                .opacity(shellVisibility.opacity)
+                .allowsHitTesting(shellVisibility.allowsHitTesting)
+                .accessibilityHidden(shellVisibility.isAccessibilityHidden)
+        }
+        .fullScreenCover(isPresented: $showingStream, onDismiss: handleStreamDismissed) {
+            if let console = selectedConsole {
+                StreamControllerInputHost(
+                    allowsControllerUIFocus: streamController.allowsStreamControllerUIFocus,
+                    onOverlayToggle: {
+                        streamController.requestOverlayToggle()
                     }
-                    .ignoresSafeArea()
-                    .interactiveDismissDisabled(true)
-                    .onExitCommand {
-                        // Prevent controller back/menu from dismissing the stream modal.
-                    }
+                ) {
+                    StreamView(context: .home(console: console))
+                }
+                .ignoresSafeArea()
+                .interactiveDismissDisabled(true)
+                .onExitCommand {
+                    // Prevent controller back/menu from dismissing the stream modal.
                 }
             }
+        }
     }
 
     private var shellVisibility: RootShellVisibility {
@@ -84,17 +88,22 @@ struct ConsoleListView: View {
 
     /// Builds the console route body, including refresh and focus-restoration behavior.
     private var rootContent: some View {
-        VStack(alignment: .leading, spacing: 22) {
+        VStack(alignment: .leading, spacing: StratixTheme.Library.headerBelowBadgeSpacing) {
+            Color.clear
+                .frame(height: StratixTheme.SideRail.collapsedBadgeHeight)
+
             header
 
             contentSection
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
         }
-        .padding(.top, 28)
-        .padding(.horizontal, StratixTheme.Layout.outerPadding)
-        .padding(.bottom, 22)
+        .padding(.bottom, StratixTheme.Shell.contentBottomPadding)
         .accessibilityIdentifier("route_consoles_root")
-        .task { await refreshConsoles() }
+        .task {
+            // Presence informs empty-state copy; discovery remains independent.
+            await profileController.loadCurrentUserPresence(force: true)
+            await refreshConsoles()
+        }
         .onAppear {
             updateIndexedConsolesCache()
             requestPrimaryFocus()
@@ -138,18 +147,56 @@ struct ConsoleListView: View {
     }
 
     private var header: some View {
-        HStack(alignment: .bottom, spacing: 18) {
-            VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: StratixTheme.Library.headerStackSpacing) {
+            HStack(alignment: .center, spacing: 14) {
                 Text("My Consoles")
-                    .font(.system(size: 40, weight: .heavy, design: .rounded))
-                    .foregroundStyle(StratixTheme.Colors.textPrimary)
+                    .font(StratixTypography.rounded(48, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                    .foregroundStyle(Color.white)
+                    .lineLimit(1)
 
-                Text(headerSubtitle)
-                    .font(.system(size: 18, weight: .medium, design: .rounded))
-                    .foregroundStyle(StratixTheme.Colors.textSecondary)
-                    .lineLimit(2)
+                Spacer(minLength: 24)
+
+                HStack(alignment: .center, spacing: 14) {
+                    refreshConsolesButton
+                    troubleshootButton
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: StratixTheme.Library.headerControlsRowHeight, alignment: .leading)
+
+            Text(headerSubtitle)
+                .font(StratixTypography.rounded(18, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                .foregroundStyle(StratixTheme.Colors.textSecondary)
+                .lineLimit(2)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .focusSection()
+    }
+
+    var refreshConsolesButton: some View {
+        SortButton(title: "Refresh Consoles", icon: "arrow.clockwise") {
+            Task { await refreshConsoles() }
+        }
+        .fixedSize(horizontal: true, vertical: false)
+        .focused($focusedTarget, equals: .refresh)
+        .accessibilityIdentifier("consoles_refresh_button")
+        .onMoveCommand { direction in
+            guard direction == .left else { return }
+            onRequestSideRailEntry()
+        }
+    }
+
+    var troubleshootButton: some View {
+        SortButton(
+            title: showTroubleshootDetails ? "Hide Troubleshoot" : "Troubleshoot",
+            icon: "wrench.and.screwdriver.fill"
+        ) {
+            withAnimation(.easeOut(duration: 0.2)) {
+                showTroubleshootDetails.toggle()
             }
         }
+        .fixedSize(horizontal: true, vertical: false)
+        .focused($focusedTarget, equals: .troubleshoot)
+        .accessibilityIdentifier("consoles_troubleshoot_button")
     }
 
     var consoleIDs: [String] {
@@ -169,12 +216,17 @@ struct ConsoleListView: View {
 
     /// Refreshes the console inventory before the consoles route becomes interactive.
     func refreshConsoles() async {
+        if StratixLaunchMode.isMockConsolesUITestModeEnabled {
+            consoleController.replaceConsolesForHarness(ConsoleListFixtures.mockConsoles)
+            return
+        }
         await consoleController.refresh()
     }
     // MARK: - Stream launch
 
     /// Starts the modal home-stream launch flow for the selected console.
     func launchHomeStream(_ console: RemoteConsole) {
+        guard !showingStream else { return }
         Task { @MainActor in
             selectedConsole = await Self.prepareHomeStreamLaunch(
                 console: console,
@@ -239,6 +291,7 @@ struct ConsoleListView: View {
         CloudLibraryAmbientBackground(imageURL: nil)
         ConsoleListView()
             .environment(coordinator.consoleController)
+            .environment(coordinator.profileController)
             .environment(coordinator.streamController)
             .environment(coordinator.libraryController)
             .environment(coordinator.settingsStore)

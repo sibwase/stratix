@@ -27,8 +27,8 @@ struct LibraryFilterChipButton: View {
                 .background(
                     Capsule(style: .continuous).fill(
                         chip.isSelected || chip.style == .accent
-                        ? StratixTheme.Colors.focusTint
-                        : Color.white.opacity(isFocused ? 0.14 : 0.07)
+                            ? Color.white
+                            : Color.white.opacity(isFocused ? 0.14 : 0.07)
                     )
                 )
                 .overlay(
@@ -40,8 +40,20 @@ struct LibraryFilterChipButton: View {
                             lineWidth: isFocused ? 2 : 1
                         )
                 )
+                .shadow(
+                    color: Color.white.opacity(isFocused ? 0.18 : 0.0),
+                    radius: isFocused ? 10 : 0
+                )
+                .shadow(
+                    color: Color.black.opacity(isFocused ? 0.40 : 0.08),
+                    radius: isFocused ? 14 : 4,
+                    y: isFocused ? 6 : 2
+                )
+                .zIndex(isFocused ? 10 : 0)
+                .animation(.easeOut(duration: 0.14), value: isFocused)
             }
         }
+        .fixedSize(horizontal: true, vertical: false)
         .buttonStyle(CloudLibraryTVButtonStyle())
         .gamePassDisableSystemFocusEffect()
     }
@@ -58,26 +70,48 @@ struct LibraryTabButton: View {
     var body: some View {
         Button(action: onSelect) {
             FocusAwareView { isFocused in
-                HStack(spacing: 10) {
-                    Text(title)
-                    if let systemImage {
-                        Image(systemName: systemImage)
+                ZStack {
+                    // Sizing guide reserves the exact bold width so sibling views (like query text) never jitter during focus transitions
+                    HStack(spacing: 10) {
+                        Text(title)
+                        if let systemImage {
+                            Image(systemName: systemImage)
+                        }
                     }
-                }
-                .font(
-                    StratixTypography.rounded(
-                        50,
-                        weight: isSelected || isFocused ? .bold : .medium,
-                        dynamicTypeSize: dynamicTypeSize
+                    .font(
+                        StratixTypography.rounded(
+                            48,
+                            weight: .bold,
+                            dynamicTypeSize: dynamicTypeSize
+                        )
                     )
-                )
-                .foregroundStyle(
-                    isSelected
-                        ? StratixTheme.Colors.focusTint.opacity(0.9)
-                        : Color.white.opacity(isFocused ? 0.96 : 0.78)
-                )
+                    .opacity(0)
+
+                    // Visible button content with full original font styling, weight change, and scale effect
+                    HStack(spacing: 10) {
+                        Text(title)
+                        if let systemImage {
+                            Image(systemName: systemImage)
+                        }
+                    }
+                    .font(
+                        StratixTypography.rounded(
+                            48,
+                            weight: isSelected || isFocused ? .bold : .semibold,
+                            dynamicTypeSize: dynamicTypeSize
+                        )
+                    )
+                    .foregroundStyle(
+                        isSelected
+                            ? Color.white
+                            : (isFocused ? Color.white.opacity(0.68) : Color.white.opacity(0.38))
+                    )
+                    .scaleEffect(isFocused ? 1.04 : 1.0)
+                }
                 .lineLimit(1)
-                .padding(.horizontal, 14)
+                .fixedSize(horizontal: true, vertical: false)
+                .layoutPriority(2)
+                .padding(.horizontal, 0)
                 .padding(.vertical, 6)
                 .animation(.easeOut(duration: 0.14), value: isFocused)
             }
@@ -87,28 +121,11 @@ struct LibraryTabButton: View {
     }
 }
 
-struct LibraryInlineSearchControl: View {
-    let isActive: Bool
-    let onActivate: () -> Void
-    var focusedTarget: FocusState<CloudLibraryLibraryScreen.LibraryFocusTarget?>.Binding
-
-    var body: some View {
-        LibraryTabButton(
-            title: "Search",
-            systemImage: "magnifyingglass",
-            isSelected: isActive,
-            onSelect: onActivate
-        )
-        .animation(nil, value: isActive)
-        .focused(focusedTarget, equals: .searchField)
-        .accessibilityIdentifier(isActive ? "route_search_root" : "library_tab_search")
-    }
-}
-
 struct SortButton: View {
     let title: String
     var icon: String = "arrow.up.arrow.down"
     let onSelect: () -> Void
+    var menuOptions: [(id: String, title: String, action: () -> Void)] = []
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
@@ -124,10 +141,12 @@ struct SortButton: View {
                 .foregroundStyle(StratixTheme.Colors.textPrimary)
                 .padding(.horizontal, 22)
                 .padding(.vertical, 14)
-                .background(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .fill(Color.white.opacity(isFocused ? 0.14 : 0.07))
-                )
+                .background {
+                    stratixGlassSurface(
+                        cornerRadius: 14,
+                        fill: Color.white.opacity(isFocused ? 0.14 : 0.07)
+                    )
+                }
                 .overlay(
                     RoundedRectangle(cornerRadius: 14, style: .continuous)
                         .stroke(Color.white.opacity(0.12), lineWidth: 1)
@@ -137,5 +156,23 @@ struct SortButton: View {
         }
         .buttonStyle(CloudLibraryTVButtonStyle())
         .gamePassDisableSystemFocusEffect()
+        .modifier(SortButtonContextMenuModifier(menuOptions: menuOptions))
+    }
+}
+
+private struct SortButtonContextMenuModifier: ViewModifier {
+    let menuOptions: [(id: String, title: String, action: () -> Void)]
+
+    @ViewBuilder
+    func body(content: Content) -> some View {
+        if menuOptions.isEmpty {
+            content
+        } else {
+            content.contextMenu {
+                ForEach(menuOptions, id: \.id) { option in
+                    Button(option.title, action: option.action)
+                }
+            }
+        }
     }
 }

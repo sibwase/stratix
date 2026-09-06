@@ -130,9 +130,20 @@ extension CloudLibraryDataSource {
         )
         let legalText = legalLines.isEmpty ? nil : legalLines.joined(separator: "\n")
 
-        let descriptionText = richDetail?.longDescription
-            ?? richDetail?.shortDescription
-            ?? item.shortDescription
+        let rawDescription = (richDetail?.shortDescription?.isEmpty == false ? richDetail?.shortDescription : nil)
+            ?? (item.shortDescription?.isEmpty == false ? item.shortDescription : nil)
+            ?? richDetail?.longDescription
+
+        let descriptionText: String? = {
+            guard let text = rawDescription?.trimmingCharacters(in: .whitespacesAndNewlines), !text.isEmpty else {
+                return nil
+            }
+            if let firstParagraph = text.components(separatedBy: "\n\n").first?.trimmingCharacters(in: .whitespacesAndNewlines),
+               !firstParagraph.isEmpty, firstParagraph.count > 30 {
+                return firstParagraph
+            }
+            return text
+        }()
 
         let baseBadgeText = item.isInMRU ? "Continue playing" : "Cloud enabled"
         let trailerCountForBadge = max(trailers.count, canonicalTrailerMedia.count)
@@ -142,20 +153,17 @@ extension CloudLibraryDataSource {
             return "\(baseBadgeText) • \(trailerCountForBadge) \(suffix)"
         }()
 
-        var detailPanels: [OverlayPanelViewState] = [
-            .init(
-                id: "about",
-                title: "About",
-                body: descriptionText ?? "Additional metadata is still loading for this title."
-            )
-        ]
+        var detailPanels: [OverlayPanelViewState] = []
 
-        if !attributeNames.isEmpty {
+        let fullDescription = (richDetail?.longDescription?.isEmpty == false ? richDetail?.longDescription : nil)
+            ?? (richDetail?.shortDescription?.isEmpty == false ? richDetail?.shortDescription : nil)
+            ?? (item.shortDescription?.isEmpty == false ? item.shortDescription : nil)
+        if let fullDescription, !fullDescription.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             detailPanels.append(
                 .init(
-                    id: "capabilities",
-                    title: "Capabilities",
-                    body: attributeNames.joined(separator: ", ")
+                    id: "description",
+                    title: "",
+                    body: fullDescription.trimmingCharacters(in: .whitespacesAndNewlines)
                 )
             )
         }
@@ -169,79 +177,6 @@ extension CloudLibraryDataSource {
                 )
             )
         }
-
-        if let achievementSnapshot {
-            var lines: [String] = []
-            lines.append("Unlocked \(achievementSnapshot.summary.unlockedAchievements) / \(achievementSnapshot.summary.totalAchievements) achievements (\(achievementSnapshot.summary.unlockPercent)%)")
-            if let unlockedScore = achievementSnapshot.summary.unlockedGamerscore,
-               let totalScore = achievementSnapshot.summary.totalGamerscore {
-                lines.append("Gamerscore: \(unlockedScore) / \(totalScore)")
-            }
-            if !achievementSnapshot.achievements.isEmpty {
-                let highlights = achievementSnapshot.achievements.prefix(3).map { item in
-                    if item.unlocked {
-                        return "Unlocked: \(item.name)"
-                    }
-                    if let percent = item.percentComplete {
-                        return "\(item.name) (\(percent)%)"
-                    }
-                    return item.name
-                }
-                lines.append(contentsOf: highlights)
-            }
-            detailPanels.append(
-                .init(
-                    id: "achievements",
-                    title: "Achievements",
-                    body: lines.joined(separator: "\n")
-                )
-            )
-        } else if let achievementErrorText, !achievementErrorText.isEmpty {
-            detailPanels.append(
-                .init(
-                    id: "achievements",
-                    title: "Achievements",
-                    body: achievementErrorText
-                )
-            )
-        }
-
-        if !trailers.isEmpty {
-            let trailerTitles = trailers.prefix(10).map(\.title)
-            detailPanels.append(
-                .init(
-                    id: "trailers",
-                    title: "Trailers",
-                    body: trailerTitles.joined(separator: "\n")
-                )
-            )
-        }
-
-        let metadataLines = [
-            richDetail?.developerName.flatMap { value in
-                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-                return trimmed.isEmpty ? nil : "Developer: \(trimmed)"
-            },
-            publisher.flatMap { value in
-                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-                return trimmed.isEmpty ? nil : "Publisher: \(trimmed)"
-            },
-            richDetail?.releaseDate.flatMap { value in
-                let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
-                return trimmed.isEmpty ? nil : "Release: \(trimmed)"
-            },
-            "Title ID: \(item.titleId)",
-            "Product ID: \(item.productId)"
-        ]
-            .compactMap { $0 }
-
-        detailPanels.append(
-            .init(
-                id: "catalog",
-                title: "Catalog",
-                body: metadataLines.joined(separator: "\n")
-            )
-        )
 
         let screenshotURLs: [URL] = {
             let canonicalScreenshotURLs = uniqueURLs(canonicalScreenshotMedia.map { Optional($0.url) })

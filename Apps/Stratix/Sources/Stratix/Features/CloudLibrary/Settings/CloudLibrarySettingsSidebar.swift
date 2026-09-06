@@ -6,88 +6,93 @@ import SwiftUI
 
 extension CloudLibrarySettingsView {
     var sidebar: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            headerCard
+        VStack(alignment: .leading, spacing: StratixTheme.Library.headerBelowBadgeSpacing) {
+            Color.clear
+                .frame(height: StratixTheme.SideRail.collapsedBadgeHeight)
 
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Settings")
-                    .font(StratixTypography.rounded(16, weight: .bold, dynamicTypeSize: dynamicTypeSize))
-                    .foregroundStyle(StratixTheme.Colors.textMuted)
-                    .textCase(.uppercase)
+            VStack(alignment: .leading, spacing: 16) {
+                headerCard
 
-                ForEach(CloudLibrarySettingsPane.visibleCases(isAdvanced: isAdvancedMode)) { pane in
-                    CloudLibrarySidebarButton(
-                        title: pane.title,
-                        subtitle: pane.subtitle,
-                        systemImage: pane.systemImage,
-                        isSelected: selectedPane == pane
-                    ) {
-                        selectedPane = pane
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Settings")
+                        .font(StratixTypography.rounded(18, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(StratixTheme.Colors.textMuted)
+                        .textCase(.uppercase)
+
+                    ForEach(CloudLibrarySettingsPane.visibleCases(isAdvanced: isAdvancedMode)) { pane in
+                        CloudLibrarySidebarButton(
+                            title: pane.title,
+                            subtitle: pane.subtitle,
+                            systemImage: pane.systemImage,
+                            isSelected: selectedPane == pane,
+                            onMoveLeft: requestShellSideRailEntry
+                        ) {
+                            selectedPane = pane
+                        }
+                        .focused($focusedPane, equals: pane)
+                        .defaultFocus($focusedPane, pane)
                     }
-                    .focused($focusedPane, equals: pane)
-                    .defaultFocus($focusedPane, pane)
-                    .onMoveCommand(perform: requestSideRailEntryOnLeft)
                 }
+
+                Spacer(minLength: 0)
+
+                CloudLibrarySettingsActionButton(
+                    title: isAdvancedMode ? "Switch to Basic" : "Switch to Advanced",
+                    systemImage: isAdvancedMode ? "sparkles" : "slider.horizontal.3",
+                    onMoveLeft: requestShellSideRailEntry
+                ) {
+                    isAdvancedMode.toggle()
+                }
+
+                CloudLibrarySettingsActionButton(
+                    title: previewExportTitle,
+                    systemImage: "square.and.arrow.up",
+                    onMoveLeft: requestShellSideRailEntry
+                ) {
+                    startPreviewExport()
+                }
+
+                if let exportFeedback, !exportFeedback.isEmpty {
+                    Text(exportFeedback)
+                        .font(StratixTypography.rounded(16, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                        .foregroundStyle(StratixTheme.Colors.textMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                CloudLibrarySettingsActionButton(
+                    title: "Sign Out",
+                    systemImage: "rectangle.portrait.and.arrow.right",
+                    destructive: true,
+                    onMoveLeft: requestShellSideRailEntry,
+                    action: onSignOut
+                )
             }
-
-            Spacer(minLength: 0)
-
-            CloudLibrarySettingsActionButton(
-                title: isAdvancedMode ? "Switch to Basic" : "Switch to Advanced",
-                systemImage: isAdvancedMode ? "sparkles" : "slider.horizontal.3"
-            ) {
-                isAdvancedMode.toggle()
-            }
-            .onMoveCommand(perform: requestSideRailEntryOnLeft)
-
-            CloudLibrarySettingsActionButton(
-                title: previewExportTitle,
-                systemImage: "square.and.arrow.up"
-            ) {
-                startPreviewExport()
-            }
-            .onMoveCommand(perform: requestSideRailEntryOnLeft)
-
-            if let exportFeedback, !exportFeedback.isEmpty {
-                Text(exportFeedback)
-                    .font(StratixTypography.rounded(14, weight: .medium, dynamicTypeSize: dynamicTypeSize))
-                    .foregroundStyle(StratixTheme.Colors.textMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-
-            CloudLibrarySettingsActionButton(
-                title: "Sign Out",
-                systemImage: "rectangle.portrait.and.arrow.right",
-                destructive: true,
-                action: onSignOut
-            )
-            .onMoveCommand(perform: requestSideRailEntryOnLeft)
         }
         .padding(.horizontal, 24)
-        .padding(.vertical, 22)
-        .frame(width: 420, alignment: .topLeading)
+        .padding(.bottom, StratixTheme.Shell.contentBottomPadding)
+        .frame(width: 440, alignment: .topLeading)
     }
 
     var headerCard: some View {
-        CloudLibraryPageSectionCard(title: "Profile", subtitle: "Account summary for this shell page") {
+        CloudLibraryPageSectionCard(title: "Account", subtitle: "Account summary for this shell page") {
             HStack(alignment: .top, spacing: 14) {
                 profileAvatar
                     .frame(width: 60, height: 60)
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text(profileName)
-                        .font(StratixTypography.rounded(23, weight: .bold, dynamicTypeSize: dynamicTypeSize))
+                        .font(StratixTypography.rounded(25, weight: .bold, dynamicTypeSize: dynamicTypeSize))
                         .foregroundStyle(StratixTheme.Colors.textPrimary)
                         .lineLimit(1)
 
                     Text(profileStatusText)
-                        .font(StratixTypography.rounded(16, weight: .semibold, dynamicTypeSize: dynamicTypeSize))
+                        .font(StratixTypography.rounded(18, weight: .semibold, dynamicTypeSize: dynamicTypeSize))
                         .foregroundStyle(StratixTheme.Colors.textSecondary)
                         .lineLimit(1)
 
                     if !profileStatusDetail.isEmpty {
                         Text(profileStatusDetail)
-                            .font(StratixTypography.rounded(15, weight: .medium, dynamicTypeSize: dynamicTypeSize))
+                            .font(StratixTypography.rounded(17, weight: .medium, dynamicTypeSize: dynamicTypeSize))
                             .foregroundStyle(StratixTheme.Colors.textMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }

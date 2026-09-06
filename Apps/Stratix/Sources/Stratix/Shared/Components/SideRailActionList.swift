@@ -23,6 +23,10 @@ extension SideRailNavigationView {
                 .focused($focusedTarget, equals: .action(action.id))
                 .onMoveCommand { direction in
                     guard isRailExpanded else { return }
+                    if direction == .right {
+                        moveFocusToContent()
+                        return
+                    }
                     if direction == .up, action.id == firstActionID, let lastExpandedNavID {
                         focusedTarget = .nav(lastExpandedNavID)
                         return
@@ -48,32 +52,29 @@ private struct SideRailActionButton: View {
     var body: some View {
         Button(action: onSelect) {
             FocusAwareView { isFocused in
-                let iconSize = isSelected ? StratixTheme.SideRail.selectedIconSize : StratixTheme.SideRail.iconSize
-                Image(systemName: action.systemImage)
-                    .font(.system(size: iconSize, weight: isSelected || isFocused ? .semibold : .regular))
-                    .foregroundStyle(
-                        isSelected
-                            ? Color.white.opacity(0.94)
-                            : Color.white.opacity(isFocused ? 0.97 : 0.76)
-                    )
-                    .frame(width: 44, height: 44)
-                    .background(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(
-                                isSelected
-                                    ? StratixTheme.Colors.focusTint.opacity(0.48)
-                                    : Color.white.opacity(isFocused ? 0.10 : 0.0)
-                            )
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .stroke(Color.white.opacity(isFocused && !isSelected ? 0.18 : 0.0), lineWidth: 1)
-                    )
-                    .scaleEffect(isSelected ? 1.04 : (isFocused ? 1.02 : 1.0))
-                    .animation(.easeOut(duration: 0.12), value: isSelected)
-                    .animation(.easeOut(duration: 0.12), value: isFocused)
-                    .frame(maxWidth: .infinity, minHeight: StratixTheme.SideRail.rowHeight, alignment: .center)
-                    .gamePassFocusRing(isFocused: isExpanded && isFocused && !isSelected, cornerRadius: 14)
+                HStack(spacing: 14) {
+                    Image(systemName: action.systemImage)
+                        .font(.system(size: StratixTheme.SideRail.iconSize, weight: isSelected || isFocused ? .bold : .semibold))
+                        .frame(width: 28, height: 28)
+
+                    if isExpanded {
+                        Text(action.accessibilityLabel)
+                            .font(.system(size: StratixTheme.SideRail.labelSize, weight: isSelected || isFocused ? .semibold : .regular, design: .rounded))
+                            .lineLimit(1)
+
+                        Spacer(minLength: 0)
+                    }
+                }
+                .foregroundStyle(SideRailRowStyle.foreground(isFocused: isFocused, isSelected: isSelected))
+                .padding(.horizontal, 14)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity, minHeight: StratixTheme.SideRail.rowHeight, alignment: .leading)
+                .background(
+                    RoundedRectangle(cornerRadius: StratixTheme.SideRail.rowCornerRadius, style: .continuous)
+                        .fill(SideRailRowStyle.fill(isFocused: isFocused, isSelected: isSelected))
+                )
+                .animation(StratixTheme.SideRail.rowFocusAnimation, value: isSelected)
+                .animation(StratixTheme.SideRail.rowFocusAnimation, value: isFocused)
             }
         }
         .buttonStyle(CloudLibraryTVButtonStyle())

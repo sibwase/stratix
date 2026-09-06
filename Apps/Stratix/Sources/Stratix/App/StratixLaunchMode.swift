@@ -59,6 +59,11 @@ enum StratixLaunchMode {
         hasArgument("-stratix-uitest-force-live-home-refresh")
     }
 
+    /// Seeds mock remote-play consoles so Consoles → StreamView UI can be exercised without a live Xbox.
+    static var isMockConsolesUITestModeEnabled: Bool {
+        hasArgument("-stratix-uitest-mock-consoles")
+    }
+
     /// Checks for a launch argument exactly as passed by the current process.
     private static func hasArgument(_ argument: String) -> Bool {
         arguments.contains(argument)

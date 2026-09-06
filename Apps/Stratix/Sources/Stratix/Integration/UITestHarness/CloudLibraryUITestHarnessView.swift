@@ -7,61 +7,10 @@ import SwiftUI
 struct CloudLibraryUITestHarnessView: View {
     @State private var selectedTile: MediaTileViewState?
     @State private var autoDetailScheduled = false
+    @State private var queryText = ""
 
-    private var homeState: CloudLibraryHomeViewState {
-        let base = CloudLibraryPreviewData.home
-        let hasContinueBadge = base.sections.contains { section in
-            section.items.contains { item in
-                if case .title(let titleItem) = item {
-                    return titleItem.tile.badgeText != nil
-                }
-                return false
-            }
-        }
-        let firstSection = base.sections.first
-        let firstTitleItem = firstSection?.items.compactMap { item -> CloudLibraryHomeTitleRailItemViewState? in
-            if case .title(let titleItem) = item {
-                return titleItem
-            }
-            return nil
-        }.first
-        guard !hasContinueBadge,
-              let firstSection,
-              let firstTitleItem else {
-            return base
-        }
-
-        let patchedFirstItem = MediaTileViewState(
-            id: firstTitleItem.tile.id,
-            titleID: firstTitleItem.tile.titleID,
-            title: firstTitleItem.tile.title,
-            subtitle: firstTitleItem.tile.subtitle,
-            caption: nil,
-            artworkURL: firstTitleItem.tile.artworkURL,
-            badgeText: "Resume in cloud",
-            aspect: firstTitleItem.tile.aspect
-        )
-        var patchedSections = base.sections
-        patchedSections[0] = CloudLibraryRailSectionViewState(
-            id: firstSection.id,
-            alias: firstSection.alias,
-            title: firstSection.title,
-            subtitle: firstSection.subtitle,
-            items: [
-                .title(
-                    CloudLibraryHomeTitleRailItemViewState(
-                        id: firstTitleItem.id,
-                        tile: patchedFirstItem,
-                        action: firstTitleItem.action
-                    )
-                )
-            ] + Array(firstSection.items.dropFirst())
-        )
-        return CloudLibraryHomeViewState(
-            heroBackgroundURL: base.heroBackgroundURL,
-            carouselItems: base.carouselItems,
-            sections: patchedSections
-        )
+    private var libraryState: CloudLibraryLibraryViewState {
+        CloudLibraryPreviewData.library
     }
 
     private var detailState: CloudLibraryTitleDetailViewState {
@@ -95,67 +44,34 @@ struct CloudLibraryUITestHarnessView: View {
     }
 
     private var continueBadgeCount: Int {
-        homeState.sections
-            .flatMap(\.items)
-            .filter { item in
-                if case .title(let titleItem) = item {
-                    return titleItem.tile.badgeText != nil
-                }
-                return false
-            }
-            .count
+        libraryState.gridItems.filter { $0.badgeText != nil }.count
     }
 
     var body: some View {
         Group {
             if selectedTile == nil {
                 ZStack(alignment: .topTrailing) {
-                    CloudLibraryHomeScreen(
-                        state: homeState,
-                        onSelectRailItem: { item in
-                            if case .title(let titleItem) = item {
-                                selectedTile = titleItem.tile
-                            }
+                    CloudLibraryLibraryScreen(
+                        state: libraryState,
+                        tileLookup: Dictionary(uniqueKeysWithValues: libraryState.gridItems.map { ($0.titleID, $0) }),
+                        queryText: $queryText,
+                        isLibrarySearchActive: false,
+                        onSelectTile: { tile in
+                            selectedTile = tile
                         },
-                        onSelectCarouselPlay: { item in
-                            selectedTile = MediaTileViewState(
-                                id: item.id,
-                                titleID: item.titleID,
-                                title: item.title,
-                                subtitle: item.subtitle,
-                                caption: nil,
-                                artworkURL: item.artworkURL,
-                                badgeText: nil,
-                                aspect: .portrait
-                            )
-                        },
-                        onSelectCarouselDetails: { item in
-                            selectedTile = MediaTileViewState(
-                                id: item.id,
-                                titleID: item.titleID,
-                                title: item.title,
-                                subtitle: item.subtitle,
-                                caption: nil,
-                                artworkURL: item.artworkURL,
-                                badgeText: nil,
-                                aspect: .portrait
-                            )
+                        onPlayTile: { tile in
+                            selectedTile = tile
                         }
                     )
                     .accessibilityElement(children: .contain)
-                    .accessibilityIdentifier("gamepass_home_screen")
+                    .accessibilityIdentifier("route_library_root")
 
                     VStack {
                         Spacer()
                         HStack {
                             Spacer()
                             Button {
-                                if let fallbackTile = homeState.sections.first?.items.compactMap({ item -> MediaTileViewState? in
-                                    if case .title(let titleItem) = item {
-                                        return titleItem.tile
-                                    }
-                                    return nil
-                                }).first {
+                                if let fallbackTile = libraryState.gridItems.first {
                                     selectedTile = fallbackTile
                                 }
                             } label: {
@@ -178,12 +94,7 @@ struct CloudLibraryUITestHarnessView: View {
                     autoDetailScheduled = true
                     DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
                         guard selectedTile == nil else { return }
-                        if let fallbackTile = homeState.sections.first?.items.compactMap({ item -> MediaTileViewState? in
-                            if case .title(let titleItem) = item {
-                                return titleItem.tile
-                            }
-                            return nil
-                        }).first {
+                        if let fallbackTile = libraryState.gridItems.first {
                             selectedTile = fallbackTile
                         }
                     }

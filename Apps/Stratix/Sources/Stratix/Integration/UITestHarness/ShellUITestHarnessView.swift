@@ -26,8 +26,6 @@ struct ShellUITestHarnessView: View {
         }
 
         switch primaryRoute {
-        case .home:
-            return ShellUITestHarnessFixtures.homeState.heroBackgroundURL
         case .library:
             return ShellUITestHarnessFixtures.libraryState.heroBackdropURL
         case .consoles:
@@ -46,8 +44,6 @@ struct ShellUITestHarnessView: View {
             return 0
         }
         switch primaryRoute {
-        case .home:
-            return 0
         case .library:
             return StratixTheme.Layout.outerPadding
         case .consoles:
@@ -60,8 +56,6 @@ struct ShellUITestHarnessView: View {
             return 0
         }
         switch primaryRoute {
-        case .home:
-            return 0
         case .library:
             return StratixTheme.Shell.contentTopPadding
         case .consoles:
@@ -74,7 +68,7 @@ struct ShellUITestHarnessView: View {
             return 0
         }
         switch primaryRoute {
-        case .home, .consoles:
+        case .consoles:
             return 0
         case .library:
             return StratixTheme.Shell.browseRouteLeadingInset
@@ -106,18 +100,16 @@ struct ShellUITestHarnessView: View {
 
     private static var initialPrimaryRoute: SideRailNavID {
         guard let override = StratixLaunchMode.uiTestBrowseRouteOverrideRawValue else {
-            return .home
+            return .library
         }
 
         switch override {
-        case "home":
-            return .home
-        case "library", "search":
+        case "home", "library", "search":
             return .library
         case "consoles":
             return .consoles
         default:
-            return .home
+            return .library
         }
     }
 
@@ -190,7 +182,7 @@ struct ShellUITestHarnessView: View {
         if streamOverlayVisible {
             ShellUITestStreamOverlay {
                 streamOverlayVisible = false
-                requestTopContentFocus(for: .home)
+                requestTopContentFocus(for: .library)
             }
         }
     }
@@ -257,29 +249,6 @@ struct ShellUITestHarnessView: View {
             )
         } else {
             switch primaryRoute {
-            case .home:
-                CloudLibraryHomeScreen(
-                    state: ShellUITestHarnessFixtures.homeState,
-                    onSelectRailItem: handleHomeRailSelection,
-                    onSelectCarouselPlay: { _ in
-                        streamOverlayVisible = true
-                    },
-                    onSelectCarouselDetails: { item in
-                        selectedTile = MediaTileViewState(
-                            id: item.id,
-                            titleID: item.titleID,
-                            title: item.title,
-                            subtitle: item.subtitle,
-                            caption: nil,
-                            artworkURL: item.artworkURL,
-                            badgeText: nil,
-                            aspect: .portrait
-                        )
-                    },
-                    onRequestSideRailEntry: requestSideRailEntry,
-                    tileLookup: ShellUITestHarnessFixtures.homeTileLookup
-                )
-                .accessibilityIdentifier("route_home_root")
             case .library:
                 CloudLibraryLibraryScreen(
                     state: harnessLibraryState,
@@ -300,15 +269,10 @@ struct ShellUITestHarnessView: View {
                     },
                     onRequestSideRailEntry: requestSideRailEntry
                 )
+                .accessibilityIdentifier("route_library_root")
             case .consoles:
                 ShellUITestConsolesRouteView(onRequestSideRailEntry: requestSideRailEntry)
             }
-        }
-    }
-
-    private func handleHomeRailSelection(_ item: CloudLibraryHomeRailItemViewState) {
-        if case .title(let titleItem) = item {
-            selectedTile = titleItem.tile
         }
     }
 
@@ -322,7 +286,7 @@ struct ShellUITestHarnessView: View {
             isLibrarySearchActive = false
             searchQueryText = ""
         }
-        if route != .home {
+        if route != .library {
             isSideRailExpanded = false
         }
         requestTopContentFocus(for: route)
@@ -355,7 +319,7 @@ struct ShellUITestHarnessView: View {
     private func handleLocalBack() {
         if streamOverlayVisible {
             streamOverlayVisible = false
-            requestTopContentFocus(for: .home)
+            requestTopContentFocus(for: .library)
             return
         }
 
@@ -372,10 +336,10 @@ struct ShellUITestHarnessView: View {
             return
         }
 
-        if primaryRoute != .home {
-            primaryRoute = .home
+        if primaryRoute != .library {
+            primaryRoute = .library
             isSideRailExpanded = false
-            requestTopContentFocus(for: .home)
+            requestTopContentFocus(for: .library)
             return
         }
 

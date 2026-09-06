@@ -9,7 +9,7 @@ struct CloudLibraryBrowseRoutePresentation: Hashable {
     let browseRoute: CloudLibraryBrowseRoute
     let loadState: CloudLibraryLoadState
     let homeState: CloudLibraryHomeViewState
-    let homeTileLookup: [TitleID: CloudLibraryHomeScreen.TileLookupEntry]
+    let homeTileLookup: [TitleID: MediaTileViewState]
     let libraryState: CloudLibraryLibraryViewState
     let libraryTileLookup: [TitleID: MediaTileViewState]
     let totalLibraryCount: Int
@@ -24,7 +24,7 @@ struct CloudLibraryBrowseRoutePresentation: Hashable {
         browseRoute: CloudLibraryBrowseRoute,
         loadState: CloudLibraryLoadState,
         homeState: CloudLibraryHomeViewState,
-        homeTileLookup: [TitleID: CloudLibraryHomeScreen.TileLookupEntry],
+        homeTileLookup: [TitleID: MediaTileViewState],
         libraryState: CloudLibraryLibraryViewState,
         libraryTileLookup: [TitleID: MediaTileViewState],
         totalLibraryCount: Int,
@@ -51,7 +51,7 @@ struct CloudLibraryBrowseRoutePresentation: Hashable {
     }
 
     static let empty = CloudLibraryBrowseRoutePresentation(
-        browseRoute: .home,
+        browseRoute: .library,
         loadState: .notLoaded,
         homeState: CloudLibraryHomeViewState(
             heroBackgroundURL: nil,
@@ -90,7 +90,7 @@ struct CloudLibraryBrowseRoutePresentationBuilder {
         totalLibraryCount: Int,
         searchBrowseItems: [MediaTileViewState],
         searchResultItems: [MediaTileViewState],
-        homeTileLookup: [TitleID: CloudLibraryHomeScreen.TileLookupEntry],
+        homeTileLookup: [TitleID: MediaTileViewState],
         libraryTileLookup: [TitleID: MediaTileViewState],
         searchTileLookup: [TitleID: MediaTileViewState],
         combinedLibraryTileLookup: [TitleID: MediaTileViewState]
@@ -107,8 +107,8 @@ struct CloudLibraryBrowseRoutePresentationBuilder {
             searchResultItems: searchResultItems,
             searchTileLookup: searchTileLookup,
             combinedLibraryTileLookup: combinedLibraryTileLookup,
-            preferredHomeTileID: focusState.focusedTileID(for: .home),
-            preferredLibraryTileID: focusState.focusedTileID(for: .library)
+            preferredHomeTileID: nil,
+            preferredLibraryTileID: focusState.settledHeroTileID(for: .library)
         )
     }
 
@@ -122,7 +122,7 @@ struct CloudLibraryBrowseRoutePresentationBuilder {
         searchBrowseItems: [MediaTileViewState],
         searchResultItems: [MediaTileViewState]
     ) -> CloudLibraryBrowseRoutePresentation {
-        let homeTileLookup = Self.homeTileLookup(from: homeState)
+        let homeTileLookup: [TitleID: MediaTileViewState] = [:]
         let libraryTileLookup = Self.libraryTileLookup(from: libraryState)
         let searchTileLookup = Self.searchTileLookup(
             searchBrowseItems: searchBrowseItems,
@@ -146,31 +146,6 @@ struct CloudLibraryBrowseRoutePresentationBuilder {
                 searchResultItems: searchResultItems
             )
         )
-    }
-
-    private static func homeTileLookup(
-        from homeState: CloudLibraryHomeViewState
-    ) -> [TitleID: CloudLibraryHomeScreen.TileLookupEntry] {
-        var homeTilePairs: [(TitleID, CloudLibraryHomeScreen.TileLookupEntry)] = []
-        homeTilePairs.reserveCapacity(
-            homeState.sections.reduce(0) { $0 + $1.items.count }
-        )
-        for section in homeState.sections {
-            for item in section.items {
-                guard case .title(let titleItem) = item else { continue }
-                homeTilePairs.append(
-                    (
-                        titleItem.tile.titleID,
-                        CloudLibraryHomeScreen.TileLookupEntry(
-                            sectionID: section.id,
-                            tile: titleItem.tile,
-                            titleID: titleItem.tile.titleID
-                        )
-                    )
-                )
-            }
-        }
-        return Dictionary(homeTilePairs, uniquingKeysWith: { current, _ in current })
     }
 
     private static func libraryTileLookup(

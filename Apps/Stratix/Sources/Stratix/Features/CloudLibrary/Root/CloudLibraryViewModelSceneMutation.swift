@@ -25,14 +25,6 @@ extension CloudLibraryViewModel {
         if !prepared.fromCache {
             rebuildItemLookup(using: index)
         }
-        rebuildHomeProjection(
-            using: index,
-            productDetails: inputs.library.productDetails,
-            detailRevision: inputs.library.detailRevision,
-            homeRevision: inputs.library.homeRevision,
-            sceneContentRevision: inputs.library.sceneContentRevision,
-            showsContinueBadge: inputs.showsContinueBadge
-        )
         rebuildLibraryProjection(
             using: index,
             productDetailsByProductID: inputs.library.productDetails,
@@ -87,7 +79,7 @@ extension CloudLibraryViewModel {
         homeFocusedTitleID: TitleID?,
         libraryFocusedTitleID: TitleID?
     ) -> CloudLibraryHeroBackgroundContext {
-        let route = (CloudLibraryBrowseRoute(rawValue: browseRouteRawValue) ?? .home).heroBackgroundRoute
+        let route = (CloudLibraryBrowseRoute(rawValue: browseRouteRawValue) ?? .library).heroBackgroundRoute
         let inputs = heroBackgroundInputs(
             route: route,
             utilityRouteVisible: utilityRouteVisible,

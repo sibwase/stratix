@@ -99,7 +99,7 @@ private struct StreamGuideOverlayPreviewHost: View {
 
     var body: some View {
         ZStack {
-            CloudLibraryAmbientBackground(imageURL: CloudLibraryPreviewData.home.heroBackgroundURL)
+            CloudLibraryAmbientBackground(imageURL: CloudLibraryPreviewData.library.heroBackdropURL)
             StreamGuideOverlayView(
                 isPresented: $shown,
                 selectedSection: $section,

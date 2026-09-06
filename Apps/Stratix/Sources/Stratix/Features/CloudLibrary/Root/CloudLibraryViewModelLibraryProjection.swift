@@ -28,9 +28,10 @@ extension CloudLibraryViewModel {
         guard projectionToken != lastLibraryProjectionToken else { return }
         lastLibraryProjectionToken = projectionToken
 
-        let trimmedSearchQuery = queryState.isLibrarySearchActive
+        let rawSearchQuery = queryState.isLibrarySearchActive
             ? queryState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
             : ""
+        let trimmedSearchQuery = rawSearchQuery.count >= 2 ? rawSearchQuery : ""
         let searchDocuments = searchDocumentsIfNeeded(
             using: index,
             productDetailsByProductID: productDetailsByProductID,

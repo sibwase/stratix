@@ -12,10 +12,10 @@ import os.signpost
 /// UIImage cache for the SwiftUI image views layered on top of it.
 actor RemoteImagePipeline {
     static let shared = RemoteImagePipeline()
-    private static let perfLogger = Logger(subsystem: "com.stratix.app", category: "CloudLibraryPerf")
     private static let perfSignpostLog = OSLog(subsystem: "com.stratix.app", category: "CloudLibraryPerf")
-    private static let decodedCountLimit = 96
-    private static let decodedCostLimit = 80 * 1_024 * 1_024
+    // Visible-tile decode budget; NSCache evicts under library-grid pressure.
+    private static let decodedCountLimit = 64
+    private static let decodedCostLimit = 48 * 1_024 * 1_024
 
     private let decodedCache = NSCache<NSString, UIImage>()
     private var inFlight: [String: Task<UIImage?, Never>] = [:]
@@ -37,55 +37,24 @@ actor RemoteImagePipeline {
         cacheKey: String,
         maxPixelSize: CGFloat?
     ) async -> UIImage? {
-        let signpostID: OSSignpostID? = {
-            #if DEBUG
-            return OSSignpostID(log: Self.perfSignpostLog)
-            #else
-            return nil
-            #endif
-        }()
-        #if DEBUG
-        if let signpostID {
-            os_signpost(
-                .begin,
-                log: Self.perfSignpostLog,
-                name: "ArtworkRequest",
-                signpostID: signpostID,
-                "kind=%{public}s url=%{public}s",
-                request.kind.rawValue,
-                request.url.absoluteString
-            )
-        }
-        #endif
-        var source = "miss"
-        defer {
-            #if DEBUG
-            if let signpostID {
-                os_signpost(
-                    .end,
-                    log: Self.perfSignpostLog,
-                    name: "ArtworkRequest",
-                    signpostID: signpostID,
-                    "kind=%{public}s url=%{public}s source=%{public}s",
-                    request.kind.rawValue,
-                    request.url.absoluteString,
-                    source
-                )
-            }
-            #endif
-        }
         if let cached = decodedCache.object(forKey: cacheKey as NSString) {
-            source = "decoded_cache"
-            #if DEBUG
-            Self.perfLogger.log("artwork_ready source=decoded_cache kind=\(request.kind.rawValue, privacy: .public) url=\(request.url.absoluteString, privacy: .public)")
-            #endif
             return cached
         }
         if let task = inFlight[cacheKey] {
-            let image = await task.value
-            source = image == nil ? "inflight_miss" : "inflight_hit"
-            return image
+            return await task.value
         }
+
+        #if DEBUG
+        let signpostID = OSSignpostID(log: Self.perfSignpostLog)
+        os_signpost(
+            .begin,
+            log: Self.perfSignpostLog,
+            name: "ArtworkRequest",
+            signpostID: signpostID,
+            "kind=%{public}s",
+            request.kind.rawValue
+        )
+        #endif
 
         let task = Task.detached(priority: Self.taskPriority(for: request.priority)) {
             await Self.fetchImage(request: request, maxPixelSize: maxPixelSize)
@@ -103,10 +72,19 @@ actor RemoteImagePipeline {
                     cost: Self.imageCostBytes(image)
                 )
             }
-            source = "shared_pipeline"
-        } else {
-            source = "pipeline_miss"
         }
+
+        #if DEBUG
+        os_signpost(
+            .end,
+            log: Self.perfSignpostLog,
+            name: "ArtworkRequest",
+            signpostID: signpostID,
+            "kind=%{public}s source=%{public}s",
+            request.kind.rawValue,
+            image == nil ? "pipeline_miss" : "shared_pipeline"
+        )
+        #endif
         return image
     }
 
@@ -126,8 +104,8 @@ actor RemoteImagePipeline {
                 kCGImageSourceCreateThumbnailFromImageAlways: true,
                 kCGImageSourceCreateThumbnailWithTransform: true,
                 kCGImageSourceThumbnailMaxPixelSize: Int(maxPixelSize),
-                kCGImageSourceShouldCacheImmediately: false,
-                kCGImageSourceShouldCache: false
+                kCGImageSourceShouldCacheImmediately: true,
+                kCGImageSourceShouldCache: true
             ]
             if let cgImage = CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary) {
                 return UIImage(cgImage: cgImage)

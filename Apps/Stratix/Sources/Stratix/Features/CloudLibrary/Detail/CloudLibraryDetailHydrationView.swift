@@ -19,33 +19,23 @@ struct CloudLibraryDetailHydrationView: View {
 
     var body: some View {
         Group {
-            if let item = viewModel.cachedItemsByTitleID[titleID] {
+            if let item = viewModel.cachedItemsByTitleID[titleID] ?? libraryController.itemsByTitleID[titleID] {
+                let currentSnapshot = detailSnapshot(for: item)
                 let inputSignature = detailInputSignature(for: item)
                 let isHydrating = viewModel.detailHydrationInFlightTitleIDs.contains(titleID)
-                let cachedDetailState = viewModel.detailStateCache.peek(titleID)?.state
-                let shouldShowDetailLoading = cachedDetailState == nil && isHydrating
-                ZStack {
-                    if let cachedDetailState {
-                        CloudLibraryTitleDetailScreen(
-                            state: cachedDetailState,
-                            onPrimaryAction: {
-                                onLaunchStream(item.typedTitleID, "detail_primary")
-                            },
-                            onSecondaryAction: onSecondaryAction,
-                            showsAmbientBackground: true,
-                            showsHeroArtwork: false,
-                            usesOuterPadding: false,
-                            interceptExitCommand: false
-                        )
-                        .equatable()
-                        .transition(.opacity)
-                    }
-                    if shouldShowDetailLoading {
-                        DetailRouteLoadingView()
-                            .transition(.opacity)
-                    }
-                }
-                .animation(.easeInOut(duration: 0.25), value: shouldShowDetailLoading)
+                let activeDetailState = viewModel.detailStateCache.peek(titleID)?.state ?? CloudLibraryDataSource.detailState(from: currentSnapshot)
+                CloudLibraryTitleDetailScreen(
+                    state: activeDetailState,
+                    onPrimaryAction: {
+                        onLaunchStream(item.typedTitleID, "detail_primary")
+                    },
+                    onSecondaryAction: onSecondaryAction,
+                    showsAmbientBackground: true,
+                    showsHeroArtwork: false,
+                    usesOuterPadding: false,
+                    interceptExitCommand: false
+                )
+                .equatable()
                 .task(id: inputSignature) {
                     if let entry = viewModel.detailStateCache.peek(titleID),
                        entry.inputSignature == inputSignature {
@@ -77,17 +67,9 @@ struct CloudLibraryDetailHydrationView: View {
         await MainActor.run {
             _ = viewModel.detailHydrationInFlightTitleIDs.insert(titleID)
         }
-        let startedAt = Date()
         async let detailTask: Void = libraryController.loadDetail(productID: item.typedProductID)
         async let achievementsTask: Void = achievementsController.loadTitleAchievements(titleID: item.typedTitleID)
         _ = await (detailTask, achievementsTask)
-        let minimumLoadingDuration: TimeInterval = 0.25
-        let elapsed = Date().timeIntervalSince(startedAt)
-        if elapsed < minimumLoadingDuration {
-            let remaining = minimumLoadingDuration - elapsed
-            let nanos = UInt64(max(0, remaining) * 1_000_000_000)
-            try? await Task.sleep(for: .nanoseconds(nanos))
-        }
         let snapshot = await MainActor.run { detailSnapshot(for: item) }
         await MainActor.run {
             _ = viewModel.detailHydrationInFlightTitleIDs.remove(titleID)

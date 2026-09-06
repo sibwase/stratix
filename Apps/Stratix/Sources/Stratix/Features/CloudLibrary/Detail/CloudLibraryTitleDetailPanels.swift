@@ -9,10 +9,7 @@ extension CloudLibraryTitleDetailScreen {
         VStack(alignment: .leading, spacing: 14) {
             detailSectionTitle("Details", isActive: focusedDetailPanelID != nil)
 
-            LazyVGrid(
-                columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)],
-                spacing: 16
-            ) {
+            VStack(alignment: .leading, spacing: 16) {
                 ForEach(state.detailPanels) { panel in
                     DetailPanelCardView(panel: panel)
                         .focused($focusedDetailPanelID, equals: panel.id)
@@ -24,8 +21,7 @@ extension CloudLibraryTitleDetailScreen {
             }
             .focusSection()
         }
-        .padding(.leading, StratixTheme.Detail.browseAlignedLeadingInset)
-        .padding(.trailing, StratixTheme.Detail.heroInnerPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     func detailSectionTitle(_ title: String, isActive: Bool) -> some View {
@@ -43,24 +39,27 @@ private struct DetailPanelCardView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text(panel.title)
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(StratixTheme.Colors.textPrimary)
+            if !panel.title.isEmpty {
+                Text(panel.title)
+                    .font(.system(size: 20, weight: .bold, design: .rounded))
+                    .foregroundStyle(StratixTheme.Colors.textPrimary)
+            }
 
             Text(panel.body)
-                .font(.system(size: 15, weight: .medium, design: .rounded))
+                .font(.system(size: 18, weight: .medium, design: .rounded))
                 .foregroundStyle(StratixTheme.Colors.textSecondary)
+                .lineSpacing(6)
                 .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(18)
-        .frame(maxWidth: .infinity, minHeight: 120, alignment: .topLeading)
+        .padding(24)
+        .frame(maxWidth: .infinity, alignment: .topLeading)
         .background(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .fill(Color.black.opacity(0.32))
+                .fill(Color.black.opacity(isFocused ? 0.45 : 0.28))
         )
         .overlay(
             RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+                .stroke(Color.white.opacity(isFocused ? 0.5 : 0.12), lineWidth: isFocused ? 2 : 1)
         )
         .focusable(true)
         .gamePassDisableSystemFocusEffect()

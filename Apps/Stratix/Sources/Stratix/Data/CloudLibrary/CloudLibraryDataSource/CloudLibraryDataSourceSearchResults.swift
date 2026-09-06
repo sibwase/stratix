@@ -47,7 +47,7 @@ extension CloudLibraryDataSource {
         searchDocumentsByTitleID: [TitleID: String]? = nil
     ) -> [CloudLibraryItem] {
         let query = queryState.searchText.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !query.isEmpty else { return [] }
+        guard query.count >= 2 else { return [] }
         return applyFiltersAndSort(
             to: index.allItems,
             queryState: queryState,
@@ -66,7 +66,7 @@ extension CloudLibraryDataSource {
         searchDocumentsByTitleID: [TitleID: String]? = nil
     ) -> [CloudLibraryItem] {
         let filteredItems: [CloudLibraryItem]
-        if searchQuery.isEmpty {
+        if searchQuery.count < 2 {
             filteredItems = items
         } else {
             filteredItems = items.filter { item in
@@ -76,6 +76,17 @@ extension CloudLibraryDataSource {
                     productDetailsByProductID: productDetailsByProductID,
                     searchDocumentsByTitleID: searchDocumentsByTitleID
                 )
+            }
+        }
+
+        if searchQuery.count >= 2 {
+            return filteredItems.sorted { lhs, rhs in
+                let lhsScore = searchMatchScore(item: lhs, query: searchQuery)
+                let rhsScore = searchMatchScore(item: rhs, query: searchQuery)
+                if lhsScore != rhsScore {
+                    return lhsScore > rhsScore
+                }
+                return lhs.name.localizedCaseInsensitiveCompare(rhs.name) == .orderedAscending
             }
         }
 
@@ -99,6 +110,52 @@ extension CloudLibraryDataSource {
                 return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
             }
         }
+    }
+
+    /// Relevance scoring for search result ordering.
+    static func searchMatchScore(item: CloudLibraryItem, query: String) -> Int {
+        let lowerName = item.name.lowercased()
+        let lowerQuery = query.lowercased()
+        if lowerName == lowerQuery {
+            return 100
+        }
+        if lowerName.hasPrefix(lowerQuery) {
+            return 90
+        }
+        if lowerName.split(separator: " ").contains(where: { $0.hasPrefix(lowerQuery) }) {
+            return 80
+        }
+        if lowerName.contains(lowerQuery) {
+            return 70
+        }
+        if item.publisherName?.lowercased().contains(lowerQuery) == true {
+            return 50
+        }
+        return 30
+    }
+
+    /// Primary metadata fields used for targeted short-query matching (names, publishers, genres).
+    static func primarySearchText(
+        for item: CloudLibraryItem,
+        productDetail: CloudLibraryProductDetail? = nil
+    ) -> String {
+        var parts: [String] = [item.name]
+        if let title = productDetail?.title, title != item.name {
+            parts.append(title)
+        }
+        if let pub = item.publisherName {
+            parts.append(pub)
+        }
+        if let dev = productDetail?.developerName {
+            parts.append(dev)
+        }
+        if let genres = productDetail?.genreLabels {
+            parts.append(contentsOf: genres)
+        }
+        if !item.attributes.isEmpty {
+            parts.append(contentsOf: item.attributes.map(\.localizedName))
+        }
+        return parts.joined(separator: " ")
     }
 
     /// Builds the searchable text blob for one title from catalog metadata and optional rich detail.
@@ -138,6 +195,14 @@ extension CloudLibraryDataSource {
         productDetailsByProductID: [ProductID: CloudLibraryProductDetail] = [:],
         searchDocumentsByTitleID: [TitleID: String]? = nil
     ) -> Bool {
+        guard query.count >= 2 else { return false }
+        if query.count < 4 {
+            let primary = primarySearchText(
+                for: item,
+                productDetail: productDetailsByProductID[item.typedProductID]
+            )
+            return primary.localizedStandardContains(query)
+        }
         let searchableText: String
         if let precomputed = searchDocumentsByTitleID?[item.typedTitleID] {
             searchableText = precomputed

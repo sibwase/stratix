@@ -3,6 +3,7 @@
 //
 
 import SwiftUI
+import StratixCore
 import StratixModels
 
 struct CloudLibraryLibraryScreen: View, Equatable {
@@ -14,23 +15,28 @@ struct CloudLibraryLibraryScreen: View, Equatable {
     var isLibrarySearchActive: Bool
     var preferredTitleID: TitleID? = nil
     let onSelectTile: (MediaTileViewState) -> Void
+    var onPlayTile: (MediaTileViewState) -> Void = { _ in }
     var onActivateSearch: () -> Void = {}
     var onFocusTileID: (TitleID?) -> Void = { _ in }
     var onSettledTileID: (TitleID?) -> Void = { _ in }
     var onSelectTab: (String) -> Void = { _ in }
     var onSelectFilter: (ChipViewState) -> Void = { _ in }
-    var onSelectSort: () -> Void = {}
+    var onSelectSort: (LibrarySortOption) -> Void = { _ in }
     var onClearFilters: () -> Void = {}
     var onClearSearch: () -> Void = {}
+    var onRemoveTileFromMRU: (MediaTileViewState) -> Void = { _ in }
     var onRequestSideRailEntry: () -> Void = {}
 
     @Environment(\.dynamicTypeSize) var dynamicTypeSize
+    @Environment(\.libraryGamepadChromeEnabled) var libraryGamepadChromeEnabled
     @Namespace var gridFocusNamespace
     @Namespace var headerFocusNamespace
+    @Namespace var letterIndexFocusNamespace
     enum LibraryFocusTarget: Hashable {
         case tab(String)
         case headerButton(String)
         case searchField
+        case letterKey(String)
         case filter(String)
         case clearSearch
         case tile(TitleID)
@@ -38,18 +44,19 @@ struct CloudLibraryLibraryScreen: View, Equatable {
     }
 
     static let clearSearchAnchorID = "library_empty_clear_search"
-    /// Matches the system focus-scroll pacing used when crossing header/grid boundaries on tvOS.
-    static let focusScrollAnimation = Animation.easeInOut(duration: 0.28)
+    static let focusScrollAnimation = StratixTheme.Library.focusScrollAnimation
 
     @FocusState var focusedTarget: LibraryFocusTarget?
     @State var lastFocusedGridTitleID: TitleID?
     @State var lastFocusedHeaderTarget: LibraryFocusTarget?
+    @State var lastFocusedLetterKey: String = "I"
     @State var libraryContentWidth: CGFloat = 1_920
     @State var letterJumpLetter: String?
     @State var permitsLetterIndexFocus = false
-    @State var letterIndexEngaged = false
+    @State var suppressNextGridFocusScroll = false
 
-    @State var cachedGridColumnCount: Int = Self.defaultGridColumnCount
+    @State var cachedGridColumnCount: Int = StratixTheme.Library.gridColumnCount
+    @State var cachedGridItemWidth: CGFloat = StratixTheme.Library.gridItemWidth
     @State var cachedColumns: [GridItem] = Self.defaultColumns
     @State var focusSettler = FocusSettleDebouncer()
     @State var pendingFocusTask: Task<Void, Never>?
@@ -58,21 +65,25 @@ struct CloudLibraryLibraryScreen: View, Equatable {
     @State var cachedLetterSectionSet: Set<String> = []
     @State var cachedLetterSectionIndexByLetter: [String: Int] = [:]
     @State var cachedFirstTitleIDByLetter: [String: TitleID] = [:]
+    @State var cachedSectionLetters: [String] = []
+    @State var cachedHeaderHeight: CGFloat = StratixTheme.Library.estimatedHeaderHeight
+    @State var scrollPositionLetter: String?
+    @State var isLibraryScrolling = false
+    @State var lastScrollOffsetY: CGFloat = 0
+    @State var letterScrollIdleTask: Task<Void, Never>?
+    @State var engineFocusedLetter: String?
+    @State var hasSettledFocusLetter = false
     @State private var cachedIndexedGridItems: [IndexedGridItem] = []
     @State var cachedTabIDs: Set<String> = []
     @State var cachedTabIndexByID: [String: Int] = [:]
     @State var cachedFilterIDs: Set<String> = []
-    let gridItemWidth = StratixTheme.Library.gridItemWidth
+    var gridItemWidth: CGFloat { cachedGridItemWidth }
     let gridItemSpacing = StratixTheme.Library.gridItemSpacing
-    let gridEdgeFocusInset = StratixTheme.Library.gridEdgeFocusInset
     static let headerAnchorID = "library_header"
-    static let defaultGridColumnCount: Int = {
-        let availableWidth = max(1920 - (StratixTheme.Library.gridEdgeFocusInset * 2), StratixTheme.Library.gridItemWidth)
-        return max(Int((availableWidth + StratixTheme.Library.gridItemSpacing) / (StratixTheme.Library.gridItemWidth + StratixTheme.Library.gridItemSpacing)), 1)
-    }()
+    static let defaultGridColumnCount = StratixTheme.Library.gridColumnCount
     static let defaultColumns: [GridItem] = Array(
         repeating: GridItem(.fixed(StratixTheme.Library.gridItemWidth), spacing: StratixTheme.Library.gridItemSpacing, alignment: .top),
-        count: defaultGridColumnCount
+        count: StratixTheme.Library.gridColumnCount
     )
 
     var showsLetterIndex: Bool {
@@ -102,6 +113,11 @@ struct CloudLibraryLibraryScreen: View, Equatable {
         let sectionLetter: String
 
         var id: String { item.id }
+    }
+
+    struct LibraryLetterScrollSample: Equatable {
+        var offsetY: CGFloat
+        var letter: String?
     }
 
     private func updateHeaderDerivedCaches() {
@@ -151,6 +167,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
         cachedLetterSectionSet = seenLetters
         cachedLetterSectionIndexByLetter = sectionIndexByLetter
         cachedFirstTitleIDByLetter = firstTitleByLetter
+        cachedSectionLetters = indexedItems.map(\.sectionLetter)
         cachedIndexedGridItems = indexedItems
     }
 
@@ -172,6 +189,13 @@ struct CloudLibraryLibraryScreen: View, Equatable {
             ScrollView {
                 VStack(alignment: .leading, spacing: StratixTheme.Library.sectionSpacing) {
                     header(scrollProxy: scrollProxy)
+                        .onGeometryChange(for: CGFloat.self) { proxy in
+                            proxy.size.height
+                        } action: { _, height in
+                            if abs(cachedHeaderHeight - height) > 0.5 {
+                                cachedHeaderHeight = height
+                            }
+                        }
 
                     if state.gridItems.isEmpty {
                         libraryEmptyStatePanel(scrollProxy: scrollProxy)
@@ -182,21 +206,50 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                                 let item = entry.item
                                 let sectionLetter = entry.sectionLetter
 
-                                MediaTileView(
-                                    state: item,
-                                    onSelect: {
-                                        onSelectTile(item)
-                                    },
-                                    forcedFocus: focusedTarget == .tile(item.titleID)
-                                )
+                                let isMyGamesTab = state.selectedTabID == LibraryTabID.myGames
+                                let isMRUItem = item.badgeText != nil || isMyGamesTab
+
+                                LibraryLetterFocusHost(letter: sectionLetter) {
+                                    MediaTileView(
+                                        state: item,
+                                        onSelect: {
+                                            if isMyGamesTab {
+                                                onPlayTile(item)
+                                            } else {
+                                                onSelectTile(item)
+                                            }
+                                        },
+                                        onPlay: isMyGamesTab ? nil : {
+                                            onPlayTile(item)
+                                        },
+                                        onViewDetails: isMyGamesTab ? {
+                                            onSelectTile(item)
+                                        } : nil,
+                                        onRemoveFromMRU: isMRUItem ? {
+                                            onRemoveTileFromMRU(item)
+                                        } : nil,
+                                        artworkOverrideSize: CGSize(
+                                            width: cachedGridItemWidth,
+                                            height: (cachedGridItemWidth * StratixTheme.Layout.tileAspect).rounded()
+                                        )
+                                    )
+                                    .equatable()
+                                }
                                 .focused($focusedTarget, equals: .tile(item.titleID))
                                 .prefersDefaultFocus(item.id == defaultGridFocusTileID, in: gridFocusNamespace)
                                 .onMoveCommand { direction in
+                                    let isChromeExit =
+                                        (direction == .left && isLeadingGridColumn(index: index))
+                                        || (direction == .up && isTopGridRow(index: index))
+                                    if MediaTileAnalogPeek.shouldBlockNeighborMove(isChromeExit: isChromeExit) {
+                                        focusedTarget = .tile(item.titleID)
+                                        return
+                                    }
+                                    suppressNextGridFocusScroll = false
                                     NavigationPerformanceTracker.recordRemoteMoveStart(surface: "library", direction: direction)
                                     if direction == .left, isLeadingGridColumn(index: index) {
+                                        focusedTarget = nil
                                         onRequestSideRailEntry()
-                                    } else if direction == .right, isRightmostGridTile(index: index), showsLetterIndex {
-                                        focusLetterIndex(for: sectionLetter)
                                     } else if direction == .up, isTopGridRow(index: index) {
                                         requestHeaderFocusFromGrid(scrollProxy: scrollProxy)
                                     }
@@ -205,60 +258,84 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                             }
                         }
                         .accessibilityIdentifier("library_grid_container")
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .frame(width: libraryGridTileSpanWidth, alignment: .leading)
                         .focusScope(gridFocusNamespace)
                         .focusSection()
-                        .padding(.horizontal, gridEdgeFocusInset)
-
-                        .animation(nil, value: state.selectedTabID)
-                        .animation(nil, value: isLibrarySearchActive)
+                        .onPreferenceChange(LibraryFocusedLetterKey.self) { letter in
+                            applyEngineFocusedLetter(letter)
+                        }
+                        .padding(.bottom, StratixTheme.Library.gridVerticalCenterInset)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
             .accessibilityIdentifier("route_library_root")
-            .scrollIndicators(.automatic, axes: .vertical)
-            .overlay(alignment: .trailing) {
+            .scrollIndicators(.never)
+            .scrollClipDisabled()
+            .scrollBounceBehavior(.basedOnSize)
+            .defaultScrollAnchor(.top)
+            .ignoresSafeArea(.keyboard)
+            .onScrollGeometryChange(for: LibraryLetterScrollSample.self) { geometry in
+                let offsetY = geometry.contentOffset.y
+                let letter: String?
                 if showsLetterIndex {
-                    CloudLibraryLibraryLetterIndexView(
-                        sections: letterSections,
-                        sectionIndexByLetter: cachedLetterSectionIndexByLetter,
-                        positionLetter: letterIndexHighlightedLetter,
-                        focusedTarget: $focusedTarget,
-                        letterFocusValue: { .letter($0) },
-                        onSelectLetter: { letter in
-                            jumpToLetter(letter, scrollProxy: scrollProxy)
-                        },
-                        onMoveFromLetterIndex: { direction in
-                            if direction == .left {
-                                returnFocusToGridFromLetterIndex(scrollProxy: scrollProxy)
-                            }
-                        },
-                        isFocusEnabled: letterIndexFocusEnabled,
-                        letterIndexEngaged: letterIndexEngaged
+                    letter = CloudLibraryLibraryLetterIndexSupport.letter(
+                        visibleMinY: geometry.visibleRect.minY,
+                        visibleMaxY: geometry.visibleRect.maxY,
+                        scrollDelta: offsetY - lastScrollOffsetY,
+                        headerHeight: cachedHeaderHeight + StratixTheme.Library.sectionSpacing,
+                        rowStride: libraryGridRowStride,
+                        columnCount: cachedGridColumnCount,
+                        sectionLetters: cachedSectionLetters
                     )
-                    .frame(maxHeight: .infinity)
-                    .padding(.trailing, 4)
+                } else {
+                    letter = scrollPositionLetter
+                }
+                return LibraryLetterScrollSample(offsetY: offsetY, letter: letter)
+            } action: { _, sample in
+                applyLibraryLetterScrollSample(sample)
+            }
+            .onScrollPhaseChange { _, newPhase in
+                if newPhase == .idle {
+                    settleLetterIndexToFocusedCard()
+                } else if !isLibraryScrolling {
+                    isLibraryScrolling = true
                 }
             }
-            .gamePassDisableSystemFocusEffect()
+            .overlay(alignment: .trailing) {
+                CloudLibraryLibraryLetterIndexView(
+                    sections: letterSections,
+                    sectionIndexByLetter: cachedLetterSectionIndexByLetter,
+                    positionLetter: letterIndexHighlightedLetter,
+                    focusedTarget: $focusedTarget,
+                    letterFocusValue: { .letter($0) },
+                    onSelectLetter: { letter in
+                        jumpToLetter(letter, scrollProxy: scrollProxy)
+                    },
+                    onMoveFromLetterIndex: { direction in
+                        if direction == .left {
+                            returnFocusToGridFromLetterIndex(scrollProxy: scrollProxy)
+                        }
+                    },
+                    isFocusEnabled: letterIndexFocusEnabled,
+                    namespace: letterIndexFocusNamespace
+                )
+                .frame(maxHeight: .infinity)
+                .padding(
+                    .top,
+                    max(0, StratixTheme.Library.letterIndexVerticalInset - StratixTheme.Shell.contentTopPadding)
+                )
+                .padding(
+                    .bottom,
+                    max(0, StratixTheme.Library.letterIndexVerticalInset - StratixTheme.Shell.contentBottomPadding)
+                )
+                .offset(x: StratixTheme.Library.letterIndexOverlayOffset)
+                .opacity(showsLetterIndex ? 1 : 0)
+                .allowsHitTesting(showsLetterIndex)
+                .accessibilityHidden(!showsLetterIndex)
+            }
             .onChange(of: focusedTarget) { old, target in
-                if case .letter = target,
-                   !permitsLetterIndexFocus,
-                   case .letter? = old {
-                    // Allow navigation within the letter index rail.
-                } else if case .letter = target, !permitsLetterIndexFocus, let old {
-                    focusedTarget = old
-                    return
-                }
-
-                if case .letter = target {
-                    permitsLetterIndexFocus = false
-                    letterIndexEngaged = true
-                }
-
                 guard let target else {
-                    letterIndexEngaged = false
                     onFocusTileID(nil)
                     onSettledTileID(nil)
                     focusSettler.cancel()
@@ -279,37 +356,41 @@ struct CloudLibraryLibraryScreen: View, Equatable {
 
                 switch target {
                 case .tile(let titleID):
-                    letterIndexEngaged = false
                     lastFocusedGridTitleID = titleID
+                    if !isLibraryScrolling, let letter = letterForTitleID(titleID) {
+                        applySettledFocusLetter(letter)
+                    }
                     NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: titleID.rawValue)
-                    onFocusTileID(titleID)
                     scheduleFocusSettled(targetLabel: titleID.rawValue, settledTitleID: titleID)
+                    // Native focus scrolling handles tile hops. scrollTo here janks a large LazyVGrid.
+                    // First-row pinning: tab/search still scrollTo the header; do not force-scroll top-row tiles.
                 case .tab(let id):
-                    letterIndexEngaged = false
                     lastFocusedHeaderTarget = target
                     onFocusTileID(nil)
                     NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "tab:\(id)")
                     scheduleFocusSettled(targetLabel: "tab:\(id)", settledTitleID: nil)
                 case .searchField:
-                    letterIndexEngaged = false
                     lastFocusedHeaderTarget = target
                     onFocusTileID(nil)
                     NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "search_field")
                     scheduleFocusSettled(targetLabel: "search_field", settledTitleID: nil)
+                case .letterKey(let key):
+                    lastFocusedLetterKey = key
+                    lastFocusedHeaderTarget = target
+                    onFocusTileID(nil)
+                    NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "keyboard:\(key)")
+                    scheduleFocusSettled(targetLabel: "keyboard:\(key)", settledTitleID: nil)
                 case .headerButton(let id):
-                    letterIndexEngaged = false
                     lastFocusedHeaderTarget = target
                     onFocusTileID(nil)
                     NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "header:\(id)")
                     scheduleFocusSettled(targetLabel: "header:\(id)", settledTitleID: nil)
                 case .filter(let id):
-                    letterIndexEngaged = false
                     lastFocusedHeaderTarget = target
                     onFocusTileID(nil)
                     NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "filter:\(id)")
                     scheduleFocusSettled(targetLabel: "filter:\(id)", settledTitleID: nil)
                 case .clearSearch:
-                    letterIndexEngaged = false
                     onFocusTileID(nil)
                     NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "clear_search")
                     scheduleFocusSettled(targetLabel: "clear_search", settledTitleID: nil)
@@ -321,6 +402,16 @@ struct CloudLibraryLibraryScreen: View, Equatable {
             }
             .onChange(of: state.gridItems, initial: true) { _, _ in
                 updateGridItemDerivedCaches()
+                if suppressNextGridFocusScroll {
+                    withAnimation(nil) {
+                        scrollProxy.scrollTo(Self.headerAnchorID, anchor: .top)
+                    }
+                }
+            }
+            .onAppear {
+                if focusedTarget == nil {
+                    focusedTarget = .tab(state.selectedTabID)
+                }
             }
             .onChange(of: state.tabs, initial: true) { _, _ in
                 updateHeaderDerivedCaches()
@@ -336,7 +427,9 @@ struct CloudLibraryLibraryScreen: View, Equatable {
             .onChange(of: state.selectedTabID) { _, _ in
                 lastFocusedGridTitleID = nil
                 letterJumpLetter = nil
+                scrollPositionLetter = nil
                 permitsLetterIndexFocus = false
+                suppressNextGridFocusScroll = true
                 withAnimation(nil) {
                     scrollProxy.scrollTo(Self.headerAnchorID, anchor: .top)
                 }
@@ -344,15 +437,12 @@ struct CloudLibraryLibraryScreen: View, Equatable {
             .onChange(of: isLibrarySearchActive) { _, isActive in
                 lastFocusedGridTitleID = nil
                 letterJumpLetter = nil
+                scrollPositionLetter = nil
                 permitsLetterIndexFocus = false
-                withAnimation(nil) {
-                    scrollProxy.scrollTo(Self.headerAnchorID, anchor: .top)
-                }
+                suppressNextGridFocusScroll = true
                 if isActive {
                     focusedTarget = .searchField
-                    NotificationCenter.default.post(name: .librarySearchRequestKeyboard, object: nil)
                 } else {
-                    NotificationCenter.default.post(name: .librarySearchResignKeyboard, object: nil)
                     if case .searchField? = focusedTarget,
                        cachedTabIDs.contains(state.selectedTabID) {
                         requestHeaderFocus(.tab(state.selectedTabID), scrollProxy: scrollProxy)
@@ -375,12 +465,15 @@ struct CloudLibraryLibraryScreen: View, Equatable {
             )
             .background {
                 CloudLibraryLibraryShoulderTabSwitch(
-                    isEnabled: true,
+                    isEnabled: libraryGamepadChromeEnabled,
                     onShoulderLeft: {
                         shiftLibraryHeaderSegment(by: -1, scrollProxy: scrollProxy)
                     },
                     onShoulderRight: {
                         shiftLibraryHeaderSegment(by: 1, scrollProxy: scrollProxy)
+                    },
+                    onThumbstickLeft: {
+                        handleThumbstickLeft()
                     }
                 )
                 .frame(width: 0, height: 0)
@@ -389,6 +482,28 @@ struct CloudLibraryLibraryScreen: View, Equatable {
         }
         .onDisappear {
             focusSettler.cancel()
+            letterScrollIdleTask?.cancel()
+            hasSettledFocusLetter = false
+        }
+    }
+
+    private func handleThumbstickLeft() {
+        if case .tile(let titleID) = focusedTarget {
+            if let index = state.gridItems.firstIndex(where: { $0.titleID == titleID }),
+               isLeadingGridColumn(index: index) {
+                focusedTarget = nil
+                onRequestSideRailEntry()
+            }
+        } else if case .tab(let tabID) = focusedTarget {
+            if tabID == state.tabs.first?.id {
+                focusedTarget = nil
+                onRequestSideRailEntry()
+            }
+        } else if case .filter(let filterID) = focusedTarget {
+            if filterID == state.filters.first?.id {
+                focusedTarget = nil
+                onRequestSideRailEntry()
+            }
         }
     }
 
@@ -400,6 +515,30 @@ struct CloudLibraryLibraryScreen: View, Equatable {
         lhs.preferredTitleID == rhs.preferredTitleID
     }
 
+}
+
+private struct LibraryFocusedLetterKey: PreferenceKey {
+    static let defaultValue: String? = nil
+    static func reduce(value: inout String?, nextValue: () -> String?) {
+        if let next = nextValue() {
+            value = next
+        }
+    }
+}
+
+private struct LibraryLetterFocusHost<Content: View>: View {
+    let letter: String
+    let content: Content
+    @Environment(\.isFocused) private var isFocused
+
+    init(letter: String, @ViewBuilder content: () -> Content) {
+        self.letter = letter
+        self.content = content()
+    }
+
+    var body: some View {
+        content.preference(key: LibraryFocusedLetterKey.self, value: isFocused ? letter : nil)
+    }
 }
 
 #if DEBUG
@@ -431,5 +570,6 @@ struct CloudLibraryLibraryScreen: View, Equatable {
     }
 
     return PreviewHost()
+        .environment(SettingsStore())
 }
 #endif

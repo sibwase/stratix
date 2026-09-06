@@ -21,6 +21,7 @@ extension CloudLibraryTitleDetailScreen {
     var gallerySection: some View {
         VStack(alignment: .leading, spacing: 14) {
             detailSectionTitle("Gallery", isActive: focusedGalleryIndex != nil)
+                .padding(.leading, 6)
 
             if state.gallery.isEmpty && state.isHydrating {
                 ScrollView(.horizontal, showsIndicators: false) {
@@ -29,8 +30,11 @@ extension CloudLibraryTitleDetailScreen {
                             GalleryLoadingCardView()
                         }
                     }
+                    .padding(.leading, 6)
                     .padding(.vertical, 4)
                 }
+                .scrollIndicators(.never)
+                .scrollClipDisabled()
             } else {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 16) {
@@ -48,20 +52,19 @@ extension CloudLibraryTitleDetailScreen {
                                     markMediaReady(galleryReadinessKey(for: item))
                                 }
                             )
+                            .id(index)
                             .focused($focusedGalleryIndex, equals: index)
-                            .onMoveCommand { direction in
-                                guard direction == .down else { return }
-                                requestDetailPanelFocus()
-                            }
                         }
                     }
+                    .padding(.leading, 6)
                     .padding(.vertical, 4)
                 }
+                .scrollIndicators(.never)
+                .scrollClipDisabled()
                 .focusSection()
             }
         }
-        .padding(.leading, StratixTheme.Detail.browseAlignedLeadingInset)
-        .padding(.trailing, StratixTheme.Detail.heroInnerPadding)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -94,8 +97,8 @@ private struct GalleryThumbnailView: View {
                 .overlay(
                     RoundedRectangle(cornerRadius: 18, style: .continuous)
                         .stroke(
-                            Color.white.opacity(isFocused ? 0.55 : 0.12),
-                            lineWidth: isFocused ? 2 : 1
+                            Color.white.opacity(isFocused ? 0.35 : 0.08),
+                            lineWidth: isFocused ? 1.5 : 1
                         )
                 )
             }
@@ -148,7 +151,7 @@ private struct GalleryLoadingCardView: View {
         .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.12), lineWidth: 1)
+                .stroke(Color.white.opacity(0.06), lineWidth: 1)
         )
     }
 }

@@ -35,19 +35,26 @@ enum ConsoleGridSection {
 extension ConsoleListView {
     var consoleGrid: some View {
         ScrollView {
-            LazyVGrid(columns: consoleGridColumns, spacing: 28) {
-                ForEach(cachedIndexedConsoles) { entry in
-                    ConsoleCardView(console: entry.console) {
-                        launchHomeStream(entry.console)
-                    }
-                    .focused($focusedTarget, equals: .console(entry.console.serverId))
-                    .onMoveCommand { direction in
-                        guard direction == .left, isLeadingGridColumn(index: entry.index) else { return }
-                        onRequestSideRailEntry()
+            VStack(alignment: .leading, spacing: StratixTheme.Library.sectionSpacing) {
+                if showTroubleshootDetails {
+                    troubleshootSection
+                        .frame(maxWidth: 1120, alignment: .leading)
+                }
+
+                LazyVGrid(columns: consoleGridColumns, spacing: 28) {
+                    ForEach(cachedIndexedConsoles) { entry in
+                        ConsoleCardView(console: entry.console) {
+                            launchHomeStream(entry.console)
+                        }
+                        .focused($focusedTarget, equals: .console(entry.console.serverId))
+                        .onMoveCommand { direction in
+                            guard direction == .left, isLeadingGridColumn(index: entry.index) else { return }
+                            onRequestSideRailEntry()
+                        }
                     }
                 }
+                .focusSection()
             }
-            .focusSection()
             .padding(.top, 8)
             .padding(.bottom, 18)
             .background(
@@ -62,7 +69,8 @@ extension ConsoleListView {
                 }
             )
         }
-        .scrollIndicators(.hidden)
+        .scrollIndicators(.never)
+        .scrollClipDisabled()
     }
 
     func updateConsoleGridLayout(for width: CGFloat) {
