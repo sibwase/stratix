@@ -486,7 +486,12 @@ extension CloudLibraryLibraryScreen {
         }
         letterJumpLetter = nil
         pendingFocusTask?.cancel()
-        focusedTarget = .letter(targetLetter)
+        permitsLetterIndexFocus = true
+        pendingFocusTask = Task { @MainActor in
+            await Task.yield()
+            guard !Task.isCancelled else { return }
+            focusedTarget = .letter(targetLetter)
+        }
     }
 
     func jumpToLetter(_ letter: String, scrollProxy: ScrollViewProxy) {
@@ -511,6 +516,7 @@ extension CloudLibraryLibraryScreen {
     }
 
     func returnFocusToGridFromLetterIndex(scrollProxy: ScrollViewProxy) {
+        permitsLetterIndexFocus = false
         if let remembered = lastFocusedGridTitleID, tileLookup[remembered] != nil {
             pendingFocusTask?.cancel()
             focusedTarget = .tile(remembered)

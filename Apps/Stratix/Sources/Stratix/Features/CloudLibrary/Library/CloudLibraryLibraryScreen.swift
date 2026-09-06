@@ -241,6 +241,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                                     let isChromeExit =
                                         (direction == .left && isLeadingGridColumn(index: index))
                                         || (direction == .up && isTopGridRow(index: index))
+                                        || (direction == .right && isRightmostGridTile(index: index) && showsLetterIndex)
                                     if MediaTileAnalogPeek.shouldBlockNeighborMove(isChromeExit: isChromeExit) {
                                         focusedTarget = .tile(item.titleID)
                                         return
@@ -250,6 +251,8 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                                     if direction == .left, isLeadingGridColumn(index: index) {
                                         focusedTarget = nil
                                         onRequestSideRailEntry()
+                                    } else if direction == .right, isRightmostGridTile(index: index), showsLetterIndex {
+                                        focusLetterIndex(for: sectionLetter)
                                     } else if direction == .up, isTopGridRow(index: index) {
                                         requestHeaderFocusFromGrid(scrollProxy: scrollProxy)
                                     }

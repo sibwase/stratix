@@ -39,9 +39,9 @@ struct MediaTileView: View, Equatable {
                             .offset(x: -hoverExpansion.width, y: hoverExpansion.height)
                     }
                 }
-                .scaleEffect(scale, anchor: .topLeading)
+                .scaleEffect(scale)
                 .offset(x: analogTilt.width * 18, y: -analogTilt.height * 18)
-                .animation(.easeOut(duration: 0.18), value: activeFocus)
+                .animation(.easeOut(duration: 0.2), value: activeFocus)
                 .modifier(MediaTileAnalogTiltModifier(isActive: activeFocus, tilt: $analogTilt))
             }
         }
@@ -132,7 +132,6 @@ struct MediaTileView: View, Equatable {
         }
         .frame(width: artworkSize.width, height: artworkSize.height)
         .hoverEffect(.highlight)
-        .hoverEffectDisabled(!activeFocus)
         .shadow(color: Color.white.opacity(activeFocus ? 0.16 : 0), radius: activeFocus ? 10 : 0)
         .shadow(
             color: Color.black.opacity(activeFocus ? 0.42 : 0.08),
@@ -189,9 +188,26 @@ struct MediaTileView: View, Equatable {
 
 private struct MediaTileFocusRaiseModifier: ViewModifier {
     @Environment(\.isFocused) private var isFocused
+    @State private var isRaised = false
 
     func body(content: Content) -> some View {
-        content.zIndex(isFocused ? 10 : 0)
+        content
+            .zIndex(isRaised ? 10 : 0)
+            .onAppear {
+                isRaised = isFocused
+            }
+            .onChange(of: isFocused) { _, focused in
+                if focused {
+                    isRaised = true
+                    return
+                }
+                Task { @MainActor in
+                    try? await Task.sleep(for: .milliseconds(200))
+                    if !isFocused {
+                        isRaised = false
+                    }
+                }
+            }
     }
 }
 
@@ -205,7 +221,9 @@ struct MediaTileAnalogTiltModifier: ViewModifier {
         content
             .task(id: isActive && !reduceMotion) {
                 guard isActive, !reduceMotion else {
-                    if tilt != .zero { tilt = .zero }
+                    if tilt != .zero {
+                        withAnimation(.easeOut(duration: 0.2)) { tilt = .zero }
+                    }
                     return
                 }
                 try? await Task.sleep(for: .milliseconds(160))
