@@ -40,8 +40,12 @@ struct StreamOverlayDetailsPanel: View {
                             gameInfoCard
                             achievementsCard
                             statsCard
-                            shortcutRow
-                            disconnectRow
+                            HStack(alignment: .center, spacing: 16) {
+                                shortcutRow
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                disconnectRow
+                                    .frame(maxWidth: .infinity, alignment: .trailing)
+                            }
                         }
                         .padding(20)
                     }

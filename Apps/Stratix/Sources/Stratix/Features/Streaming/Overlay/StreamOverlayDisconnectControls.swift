@@ -9,7 +9,6 @@ extension StreamOverlayDetailsPanel {
     var shortcutRow: some View {
         infoCard(title: "Controller Shortcuts", systemImage: "button.horizontal.top.press") {
             VStack(alignment: .leading, spacing: 6) {
-                Text("A: Disconnect")
                 Text("B: Close Overlay")
                 Text("L3 + R3 hold: Toggle Overlay")
             }
