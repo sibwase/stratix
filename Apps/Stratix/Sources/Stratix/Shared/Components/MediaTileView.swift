@@ -377,11 +377,10 @@ private struct MediaTileContextMenuModifier: ViewModifier {
     let onSelect: () -> Void
     let onViewDetails: (() -> Void)?
     let onRemoveFromMRU: (() -> Void)?
-    @Environment(\.isFocused) private var isFocused
 
     @ViewBuilder
     func body(content: Content) -> some View {
-        if isFocused, onPlay != nil || onViewDetails != nil || onRemoveFromMRU != nil {
+        if onPlay != nil || onViewDetails != nil || onRemoveFromMRU != nil {
             content.contextMenu {
                 if let onPlay {
                     Button(action: onPlay) {

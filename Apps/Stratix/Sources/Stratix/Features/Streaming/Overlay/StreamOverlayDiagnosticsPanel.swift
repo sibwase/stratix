@@ -40,12 +40,7 @@ struct StreamOverlayDetailsPanel: View {
                             gameInfoCard
                             achievementsCard
                             statsCard
-                            HStack(alignment: .center, spacing: 16) {
-                                shortcutRow
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                disconnectRow
-                                    .frame(maxWidth: .infinity, alignment: .trailing)
-                            }
+                            shortcutRow
                         }
                         .padding(20)
                     }
@@ -77,9 +72,9 @@ struct StreamOverlayDetailsPanel: View {
 
     /// Renders the panel header with artwork, status, and metadata pills.
     var header: some View {
-        HStack(alignment: .top, spacing: 16) {
+        HStack(alignment: .top, spacing: 18) {
             overlayArtwork
-                .frame(width: 180, height: 102)
+                .frame(width: 248, height: 140)
 
             VStack(alignment: .leading, spacing: 8) {
                 Text(overlayState.overlayInfo.title)
@@ -114,10 +109,7 @@ struct StreamOverlayDetailsPanel: View {
                     .scrollIndicators(.never)
                 }
             }
-
-            Spacer(minLength: 8)
-
-            closeGlyph
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 

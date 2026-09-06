@@ -8,12 +8,16 @@ extension StreamOverlayDetailsPanel {
     /// Lists the controller shortcuts shown in the overlay help card.
     var shortcutRow: some View {
         infoCard(title: "Controller Shortcuts", systemImage: "button.horizontal.top.press") {
-            VStack(alignment: .leading, spacing: 6) {
-                Text("B: Close Overlay")
-                Text("L3 + R3 hold: Toggle Overlay")
+            VStack(alignment: .leading, spacing: 14) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("B: Close Overlay")
+                    Text("L3 + R3 hold: Toggle Overlay")
+                }
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .foregroundStyle(StratixTheme.Colors.textPrimary)
+
+                disconnectRow
             }
-            .font(.system(size: 17, weight: .semibold, design: .rounded))
-            .foregroundStyle(StratixTheme.Colors.textPrimary)
         }
     }
 
@@ -22,7 +26,7 @@ extension StreamOverlayDetailsPanel {
         Button(action: onDisconnect) {
             FocusAwareView { isFocused in
                 disconnectButtonLabel
-                    .gamePassFocusRing(isFocused: isFocused, cornerRadius: 20)
+                    .gamePassFocusRing(isFocused: isFocused, cornerRadius: 16)
             }
         }
         .buttonStyle(CloudLibraryTVButtonStyle())
@@ -41,37 +45,23 @@ extension StreamOverlayDetailsPanel {
                 .font(.system(size: 22, weight: .bold, design: .rounded))
             Spacer(minLength: 8)
             Text("A")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
+                .font(.system(size: 16, weight: .heavy, design: .rounded))
+                .foregroundStyle(Color.red)
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
-                .background(Capsule().fill(Color.white.opacity(0.10)))
-                .overlay(Capsule().stroke(Color.white.opacity(0.14), lineWidth: 1))
+                .background(Capsule().fill(Color.red.opacity(0.16)))
+                .overlay(Capsule().stroke(Color.red.opacity(0.45), lineWidth: 1))
         }
         .foregroundStyle(StratixTheme.Colors.textPrimary)
         .padding(.horizontal, 18)
-        .frame(maxWidth: .infinity, minHeight: 70, alignment: .leading)
-        .streamStatusPanelBackground(cornerRadius: 20)
-    }
-
-    /// Renders the small close-key hint shown alongside the shortcut row.
-    var closeGlyph: some View {
-        HStack(spacing: 8) {
-            keycap("B")
-            keycap("⏯")
-            Text("Close")
-                .font(.system(size: 14, weight: .bold, design: .rounded))
-                .foregroundStyle(StratixTheme.Colors.textMuted)
-        }
-    }
-
-    /// Renders a tiny capsule keycap used in shortcut and close hints.
-    func keycap(_ label: String) -> some View {
-        Text(label)
-            .font(.system(size: 12, weight: .bold, design: .rounded))
-            .foregroundStyle(StratixTheme.Colors.textPrimary)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-            .background(Capsule().fill(Color.white.opacity(0.07)))
-            .overlay(Capsule().stroke(Color.white.opacity(0.10), lineWidth: 1))
+        .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .fill(Color.white.opacity(0.06))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                .stroke(Color.white.opacity(0.10), lineWidth: 1)
+        )
     }
 }
