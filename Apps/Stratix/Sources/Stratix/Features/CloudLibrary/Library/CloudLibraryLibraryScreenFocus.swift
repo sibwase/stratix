@@ -494,7 +494,7 @@ extension CloudLibraryLibraryScreen {
         }
     }
 
-    func jumpToLetter(_ letter: String, scrollProxy: ScrollViewProxy) {
+    func jumpToLetter(_ letter: String, scrollProxy: ScrollViewProxy, transferFocusToGrid: Bool = true) {
         guard let titleID = cachedFirstTitleIDByLetter[letter],
               let targetID = scrollTargetID(for: titleID) else {
             return
@@ -510,8 +510,11 @@ extension CloudLibraryLibraryScreen {
             await Task.yield()
             guard !Task.isCancelled else { return }
             lastFocusedGridTitleID = titleID
-            focusedTarget = .tile(titleID)
-            letterJumpLetter = nil
+            if transferFocusToGrid {
+                permitsLetterIndexFocus = false
+                focusedTarget = .tile(titleID)
+                letterJumpLetter = nil
+            }
         }
     }
 

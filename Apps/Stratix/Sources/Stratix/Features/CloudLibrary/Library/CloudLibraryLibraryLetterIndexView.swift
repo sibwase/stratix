@@ -11,6 +11,7 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
     var focusedTarget: FocusState<FocusValue?>.Binding
     let letterFocusValue: (String) -> FocusValue
     let onSelectLetter: (String) -> Void
+    var onHighlightLetter: ((String) -> Void)? = nil
     var onMoveFromLetterIndex: ((MoveCommandDirection) -> Void)? = nil
     var isFocusEnabled: Bool = true
     let namespace: Namespace.ID
@@ -35,9 +36,7 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
                         dynamicTypeSize: dynamicTypeSize,
                         onSelect: { onSelectLetter(letter) },
                         onMove: { direction in
-                            if direction == .left {
-                                onMoveFromLetterIndex?(.left)
-                            }
+                            handleMoveCommand(from: letter, direction: direction)
                         }
                     )
                     .focused(focusedTarget, equals: letterFocusValue(letter))
@@ -63,6 +62,33 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
 
     private func showsRailFocus(for letter: String) -> Bool {
         focusedTarget.wrappedValue == letterFocusValue(letter)
+    }
+
+    private func handleMoveCommand(from letter: String, direction: MoveCommandDirection) {
+        switch direction {
+        case .up:
+            moveLetterFocus(from: letter, offset: -1)
+        case .down:
+            moveLetterFocus(from: letter, offset: 1)
+        case .left:
+            onMoveFromLetterIndex?(.left)
+        default:
+            break
+        }
+    }
+
+    private func moveLetterFocus(from letter: String, offset: Int) {
+        let index = sectionIndexByLetter[letter] ?? sections.firstIndex(of: letter)
+        guard let index else { return }
+        let nextIndex = index + offset
+        guard sections.indices.contains(nextIndex) else { return }
+        let nextLetter = sections[nextIndex]
+        var transaction = Transaction(animation: nil)
+        transaction.disablesAnimations = true
+        withTransaction(transaction) {
+            focusedTarget.wrappedValue = letterFocusValue(nextLetter)
+        }
+        onHighlightLetter?(nextLetter)
     }
 }
 
@@ -108,9 +134,7 @@ private struct LetterIndexRow: View {
         .buttonStyle(CloudLibraryTVButtonStyle())
         .gamePassDisableSystemFocusEffect()
         .onMoveCommand { direction in
-            if direction == .left {
-                onMove?(.left)
-            }
+            onMove?(direction)
         }
     }
 }
