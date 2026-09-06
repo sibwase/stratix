@@ -2,6 +2,7 @@
 // Shows the active alphabetical index position while browsing the library grid.
 //
 
+import GameController
 import SwiftUI
 
 struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
@@ -16,6 +17,7 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
     let namespace: Namespace.ID
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var holdRepeatTask: Task<Void, Never>?
 
     var body: some View {
         GeometryReader { proxy in
@@ -57,6 +59,21 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
         }
         .frame(width: StratixTheme.Library.letterIndexWidth)
         .accessibilityIdentifier("library_letter_index")
+        .onChange(of: isFocusEnabled) { _, enabled in
+            if !enabled {
+                stopHoldRepeat()
+            }
+        }
+        .onDisappear {
+            stopHoldRepeat()
+        }
+        .onKeyPress(keys: [.upArrow, .downArrow], phases: [.repeat]) { press in
+            guard isFocusEnabled else { return .ignored }
+            let offset = press.key == .upArrow ? -1 : 1
+            guard let letter = currentRailLetter() else { return .ignored }
+            moveLetterFocus(from: letter, offset: offset)
+            return .handled
+        }
     }
 
     private func showsRailFocus(for letter: String) -> Bool {
@@ -67,12 +84,15 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
         switch direction {
         case .up:
             moveLetterFocus(from: letter, offset: -1)
+            startHoldRepeat(offset: -1)
         case .down:
             moveLetterFocus(from: letter, offset: 1)
+            startHoldRepeat(offset: 1)
         case .left:
+            stopHoldRepeat()
             onMoveFromLetterIndex?(.left)
         default:
-            break
+            stopHoldRepeat()
         }
     }
 
@@ -87,6 +107,59 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
         withTransaction(transaction) {
             focusedTarget.wrappedValue = letterFocusValue(nextLetter)
         }
+    }
+
+    private func currentRailLetter() -> String? {
+        for letter in sections where focusedTarget.wrappedValue == letterFocusValue(letter) {
+            return letter
+        }
+        return nil
+    }
+
+    private func startHoldRepeat(offset: Int) {
+        stopHoldRepeat()
+        holdRepeatTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(320))
+            guard !Task.isCancelled else { return }
+            while !Task.isCancelled, LetterIndexDPad.isHeld(offset: offset) {
+                guard let letter = currentRailLetter() else { break }
+                let index = sectionIndexByLetter[letter] ?? sections.firstIndex(of: letter)
+                guard let index, sections.indices.contains(index + offset) else { break }
+                moveLetterFocus(from: letter, offset: offset)
+                try? await Task.sleep(for: .milliseconds(70))
+            }
+        }
+    }
+
+    private func stopHoldRepeat() {
+        holdRepeatTask?.cancel()
+        holdRepeatTask = nil
+    }
+}
+
+private enum LetterIndexDPad {
+    static func isHeld(offset: Int) -> Bool {
+        for controller in GCController.controllers() {
+            if isHeld(offset: offset, on: controller.extendedGamepad?.dpad) {
+                return true
+            }
+            if isHeld(offset: offset, on: controller.microGamepad?.dpad) {
+                return true
+            }
+            if let stick = controller.extendedGamepad?.leftThumbstick {
+                if offset < 0, stick.yAxis.value > 0.55 { return true }
+                if offset > 0, stick.yAxis.value < -0.55 { return true }
+            }
+        }
+        return false
+    }
+
+    private static func isHeld(offset: Int, on dpad: GCControllerDirectionPad?) -> Bool {
+        guard let dpad else { return false }
+        if offset < 0 {
+            return dpad.up.isPressed || dpad.yAxis.value > 0.5
+        }
+        return dpad.down.isPressed || dpad.yAxis.value < -0.5
     }
 }
 
