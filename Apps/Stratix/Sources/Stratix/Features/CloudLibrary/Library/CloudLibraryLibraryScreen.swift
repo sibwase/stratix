@@ -41,6 +41,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
         case clearSearch
         case tile(TitleID)
         case letter(String)
+        case letterIndex
     }
 
     static let clearSearchAnchorID = "library_empty_clear_search"
@@ -99,6 +100,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
 
     /// Letter rail accepts focus only when entered from the grid's trailing column.
     var letterIndexFocusEnabled: Bool {
+        if case .letterIndex = focusedTarget { return true }
         if case .letter = focusedTarget { return true }
         return permitsLetterIndexFocus
     }
@@ -272,6 +274,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
+            .id(state.selectedTabID)
             .accessibilityIdentifier("route_library_root")
             .scrollIndicators(.never)
             .scrollClipDisabled()
@@ -311,7 +314,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                     sectionIndexByLetter: cachedLetterSectionIndexByLetter,
                     positionLetter: letterIndexHighlightedLetter,
                     focusedTarget: $focusedTarget,
-                    letterFocusValue: { .letter($0) },
+                    railFocusValue: .letterIndex,
                     onSelectLetter: { letter in
                         jumpToLetter(letter, scrollProxy: scrollProxy)
                     },
@@ -401,6 +404,10 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                     onFocusTileID(nil)
                     NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "letter:\(letter)")
                     scheduleFocusSettled(targetLabel: "letter:\(letter)", settledTitleID: nil)
+                case .letterIndex:
+                    onFocusTileID(nil)
+                    NavigationPerformanceTracker.recordFocusTarget(surface: "library", target: "letter_index")
+                    scheduleFocusSettled(targetLabel: "letter_index", settledTitleID: nil)
                 }
             }
             .onChange(of: state.gridItems, initial: true) { _, _ in

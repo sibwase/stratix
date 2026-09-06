@@ -2,7 +2,6 @@
 // Shows the active alphabetical index position while browsing the library grid.
 //
 
-import GameController
 import SwiftUI
 
 struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
@@ -10,14 +9,14 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
     var sectionIndexByLetter: [String: Int] = [:]
     let positionLetter: String?
     var focusedTarget: FocusState<FocusValue?>.Binding
-    let letterFocusValue: (String) -> FocusValue
+    let railFocusValue: FocusValue
     let onSelectLetter: (String) -> Void
     var onMoveFromLetterIndex: ((MoveCommandDirection) -> Void)? = nil
     var isFocusEnabled: Bool = true
     let namespace: Namespace.ID
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @State private var holdRepeatTask: Task<Void, Never>?
+    @State private var browsingLetter: String?
 
     var body: some View {
         GeometryReader { proxy in
@@ -25,34 +24,42 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
             let slotHeight = proxy.size.height / CGFloat(sectionCount)
             let inactiveSize = min(max(slotHeight * 0.70, 15), 21)
             let activeSize = min(max(slotHeight * 0.88, 19), 30)
+            let selectedLetter = browsingLetter ?? positionLetter ?? sections.first
             let rail = VStack(spacing: 0) {
                 ForEach(sections, id: \.self) { letter in
-                    LetterIndexRow(
+                    LetterIndexGlyph(
                         letter: letter,
                         isPositionMarker: letter == positionLetter,
-                        showsRailFocus: showsRailFocus(for: letter),
+                        showsRailFocus: isFocusEnabled && letter == selectedLetter,
                         slotHeight: slotHeight,
                         inactiveSize: inactiveSize,
                         activeSize: activeSize,
-                        dynamicTypeSize: dynamicTypeSize,
-                        onSelect: { onSelectLetter(letter) },
-                        onMove: { direction in
-                            handleMoveCommand(from: letter, direction: direction)
-                        }
+                        dynamicTypeSize: dynamicTypeSize
                     )
-                    .focused(focusedTarget, equals: letterFocusValue(letter))
-                    .focusable(isFocusEnabled)
                     .accessibilityLabel("Section \(letter)")
                     .accessibilityAddTraits(letter == positionLetter ? .isSelected : [])
                 }
             }
             .animation(.easeOut(duration: 0.12), value: positionLetter)
+            .animation(.easeOut(duration: 0.08), value: selectedLetter)
             .frame(maxHeight: .infinity, alignment: .center)
 
             if isFocusEnabled {
-                rail
-                    .focusScope(namespace)
-                    .focusSection()
+                Button {
+                    if let selectedLetter {
+                        onSelectLetter(selectedLetter)
+                    }
+                } label: {
+                    rail
+                }
+                .buttonStyle(CloudLibraryTVButtonStyle())
+                .gamePassDisableSystemFocusEffect()
+                .focused(focusedTarget, equals: railFocusValue)
+                .focusSection()
+                .focusScope(namespace)
+                .onMoveCommand { direction in
+                    handleMoveCommand(direction)
+                }
             } else {
                 rail
             }
@@ -60,110 +67,37 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
         .frame(width: StratixTheme.Library.letterIndexWidth)
         .accessibilityIdentifier("library_letter_index")
         .onChange(of: isFocusEnabled) { _, enabled in
-            if !enabled {
-                stopHoldRepeat()
+            if enabled {
+                browsingLetter = positionLetter ?? sections.first
             }
         }
-        .onDisappear {
-            stopHoldRepeat()
-        }
-        .onKeyPress(keys: [.upArrow, .downArrow], phases: [.repeat]) { press in
-            guard isFocusEnabled else { return .ignored }
-            let offset = press.key == .upArrow ? -1 : 1
-            guard let letter = currentRailLetter() else { return .ignored }
-            moveLetterFocus(from: letter, offset: offset)
-            return .handled
-        }
     }
 
-    private func showsRailFocus(for letter: String) -> Bool {
-        focusedTarget.wrappedValue == letterFocusValue(letter)
-    }
-
-    private func handleMoveCommand(from letter: String, direction: MoveCommandDirection) {
+    private func handleMoveCommand(_ direction: MoveCommandDirection) {
         switch direction {
         case .up:
-            moveLetterFocus(from: letter, offset: -1)
-            startHoldRepeat(offset: -1)
+            moveBrowsingLetter(offset: -1)
         case .down:
-            moveLetterFocus(from: letter, offset: 1)
-            startHoldRepeat(offset: 1)
+            moveBrowsingLetter(offset: 1)
         case .left:
-            stopHoldRepeat()
             onMoveFromLetterIndex?(.left)
         default:
-            stopHoldRepeat()
+            break
         }
     }
 
-    private func moveLetterFocus(from letter: String, offset: Int) {
-        let index = sectionIndexByLetter[letter] ?? sections.firstIndex(of: letter)
+    private func moveBrowsingLetter(offset: Int) {
+        let current = browsingLetter ?? positionLetter ?? sections.first
+        guard let current else { return }
+        let index = sectionIndexByLetter[current] ?? sections.firstIndex(of: current)
         guard let index else { return }
         let nextIndex = index + offset
         guard sections.indices.contains(nextIndex) else { return }
-        let nextLetter = sections[nextIndex]
-        var transaction = Transaction(animation: nil)
-        transaction.disablesAnimations = true
-        withTransaction(transaction) {
-            focusedTarget.wrappedValue = letterFocusValue(nextLetter)
-        }
-    }
-
-    private func currentRailLetter() -> String? {
-        for letter in sections where focusedTarget.wrappedValue == letterFocusValue(letter) {
-            return letter
-        }
-        return nil
-    }
-
-    private func startHoldRepeat(offset: Int) {
-        stopHoldRepeat()
-        holdRepeatTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(320))
-            guard !Task.isCancelled else { return }
-            while !Task.isCancelled, LetterIndexDPad.isHeld(offset: offset) {
-                guard let letter = currentRailLetter() else { break }
-                let index = sectionIndexByLetter[letter] ?? sections.firstIndex(of: letter)
-                guard let index, sections.indices.contains(index + offset) else { break }
-                moveLetterFocus(from: letter, offset: offset)
-                try? await Task.sleep(for: .milliseconds(70))
-            }
-        }
-    }
-
-    private func stopHoldRepeat() {
-        holdRepeatTask?.cancel()
-        holdRepeatTask = nil
+        browsingLetter = sections[nextIndex]
     }
 }
 
-private enum LetterIndexDPad {
-    static func isHeld(offset: Int) -> Bool {
-        for controller in GCController.controllers() {
-            if isHeld(offset: offset, on: controller.extendedGamepad?.dpad) {
-                return true
-            }
-            if isHeld(offset: offset, on: controller.microGamepad?.dpad) {
-                return true
-            }
-            if let stick = controller.extendedGamepad?.leftThumbstick {
-                if offset < 0, stick.yAxis.value > 0.55 { return true }
-                if offset > 0, stick.yAxis.value < -0.55 { return true }
-            }
-        }
-        return false
-    }
-
-    private static func isHeld(offset: Int, on dpad: GCControllerDirectionPad?) -> Bool {
-        guard let dpad else { return false }
-        if offset < 0 {
-            return dpad.up.isPressed || dpad.yAxis.value > 0.5
-        }
-        return dpad.down.isPressed || dpad.yAxis.value < -0.5
-    }
-}
-
-private struct LetterIndexRow: View {
+private struct LetterIndexGlyph: View {
     let letter: String
     let isPositionMarker: Bool
     let showsRailFocus: Bool
@@ -171,42 +105,32 @@ private struct LetterIndexRow: View {
     let inactiveSize: CGFloat
     let activeSize: CGFloat
     let dynamicTypeSize: DynamicTypeSize
-    let onSelect: () -> Void
-    var onMove: ((MoveCommandDirection) -> Void)?
 
     var body: some View {
-        Button(action: onSelect) {
-            let active = showsRailFocus
-            Text(letter)
-                .font(
-                    StratixTypography.rounded(
-                        active ? activeSize : (isPositionMarker ? activeSize * 0.95 : inactiveSize),
-                        weight: active ? .heavy : (isPositionMarker ? .bold : .semibold),
-                        dynamicTypeSize: dynamicTypeSize
-                    )
+        let active = showsRailFocus
+        Text(letter)
+            .font(
+                StratixTypography.rounded(
+                    active ? activeSize : (isPositionMarker ? activeSize * 0.95 : inactiveSize),
+                    weight: active ? .heavy : (isPositionMarker ? .bold : .semibold),
+                    dynamicTypeSize: dynamicTypeSize
                 )
-                .foregroundStyle(
-                    active
-                        ? Color.white
-                        : (isPositionMarker ? StratixTheme.Colors.focusTint : Color.white.opacity(0.45))
-                )
-                .scaleEffect(active ? 1.30 : (isPositionMarker ? 1.10 : 1.0))
-                .shadow(
-                    color: active
-                        ? Color.white.opacity(0.65)
-                        : (isPositionMarker ? StratixTheme.Colors.focusTint.opacity(0.45) : Color.clear),
-                    radius: active ? 8 : 4,
-                    x: 0,
-                    y: 0
-                )
-                .frame(maxWidth: .infinity, minHeight: slotHeight, maxHeight: slotHeight)
-                .animation(.spring(response: 0.18, dampingFraction: 0.72), value: active)
-        }
-        .buttonStyle(CloudLibraryTVButtonStyle())
-        .gamePassDisableSystemFocusEffect()
-        .onMoveCommand { direction in
-            onMove?(direction)
-        }
+            )
+            .foregroundStyle(
+                active
+                    ? Color.white
+                    : (isPositionMarker ? StratixTheme.Colors.focusTint : Color.white.opacity(0.45))
+            )
+            .scaleEffect(active ? 1.30 : (isPositionMarker ? 1.10 : 1.0))
+            .shadow(
+                color: active
+                    ? Color.white.opacity(0.65)
+                    : (isPositionMarker ? StratixTheme.Colors.focusTint.opacity(0.45) : Color.clear),
+                radius: active ? 8 : 4,
+                x: 0,
+                y: 0
+            )
+            .frame(maxWidth: .infinity, minHeight: slotHeight, maxHeight: slotHeight)
     }
 }
 

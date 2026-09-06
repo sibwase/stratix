@@ -11,18 +11,13 @@ import StratixModels
 @Suite(.serialized)
 struct AchievementsControllerTests {
     @Test
-    func suspendForStreaming_blocksAchievementLoadsUntilResumed() async {
+    func suspendForStreaming_stillAllowsOverlayAchievementLoads() async {
         let counter = CounterBox()
         let controller = AchievementsController(loadWorkflow: { _, _, _ in
             counter.value += 1
         })
 
         await controller.suspendForStreaming()
-        await controller.loadTitleAchievements(titleID: TitleID("title-1"), forceRefresh: true)
-
-        #expect(counter.value == 0)
-
-        controller.resumeAfterStreaming()
         await controller.loadTitleAchievements(titleID: TitleID("title-1"), forceRefresh: true)
 
         #expect(counter.value == 1)

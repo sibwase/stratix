@@ -112,7 +112,6 @@ public final class AchievementsController {
         titleID: TitleID,
         forceRefresh: Bool = false
     ) async {
-        guard !isSuspendedForStreaming else { return }
         guard let normalizedTitleID = normalizedTitleID(titleID) else { return }
         let taskKey = normalizedTitleID.rawValue
 
@@ -130,7 +129,6 @@ public final class AchievementsController {
             makeTask: {
                 Task { [weak self] in
                     guard let self else { return }
-                    guard await self.isSuspendedForStreaming == false else { return }
 
                     if let loadWorkflow = self.loadWorkflow {
                         await loadWorkflow(self, titleID, forceRefresh)
@@ -138,7 +136,6 @@ public final class AchievementsController {
                     }
 
                     guard let context = await self.makeAchievementLoadContext(titleID: titleID) else { return }
-                    guard await self.isSuspendedForStreaming == false else { return }
 
                     do {
                         let loadResult = try await Self.loadAchievements(context: context)
@@ -184,7 +181,6 @@ public final class AchievementsController {
     }
 
     private func applyAchievementLoadResult(_ loadResult: AchievementLoadResult, key: TitleID) {
-        guard !isSuspendedForStreaming else { return }
         if let resolvedProfile = loadResult.resolvedProfile {
             dependencies?.cacheCurrentUserProfile(resolvedProfile)
         }
