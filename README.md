@@ -23,6 +23,10 @@ This project builds on protocol and API knowledge from earlier community project
 
 Stratix is not a direct port of those codebases. It is a native tvOS implementation in Swift, but it would be inaccurate to present the project without acknowledging the earlier community work that helped establish understanding of these services and protocols.
 
+## Screenshots
+
+![Library](Docs/Screenshots/Library.png)
+
 ---
 
 ## What Is This, Exactly?
