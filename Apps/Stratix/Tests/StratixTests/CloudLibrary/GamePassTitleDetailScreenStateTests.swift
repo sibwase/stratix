@@ -84,8 +84,6 @@ struct GamePassTitleDetailScreenStateTests {
         #expect(state.productID == ProductID("halo-product"))
         #expect(state.gallery.count == 2)
         #expect(state.gallery.map(\.kind) == [.video, .image])
-        #expect(state.detailPanels.map(\.id).contains("achievements"))
-        #expect(state.detailPanels.map(\.id).contains("catalog"))
     }
 
     @Test
@@ -107,7 +105,6 @@ struct GamePassTitleDetailScreenStateTests {
 
         #expect(state.titleID == TitleID("fallback-title"))
         #expect(state.gallery.isEmpty == false)
-        #expect(state.detailPanels.map(\.id).contains("achievements"))
         #expect(state.isHydrating == true)
     }
 

@@ -3,7 +3,9 @@
 //
 
 import Testing
+import InputBridge
 import StratixCore
+import StratixModels
 import StreamingCore
 @testable import Stratix
 

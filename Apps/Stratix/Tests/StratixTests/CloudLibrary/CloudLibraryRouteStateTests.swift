@@ -93,7 +93,7 @@ final class CloudLibraryRouteStateTests: XCTestCase {
 
         routeState.returnHome()
 
-        XCTAssertEqual(routeState.browseRoute, .home)
+        XCTAssertEqual(routeState.browseRoute, .library)
         XCTAssertNil(routeState.utilityRoute)
         XCTAssertTrue(routeState.detailPath.isEmpty)
     }

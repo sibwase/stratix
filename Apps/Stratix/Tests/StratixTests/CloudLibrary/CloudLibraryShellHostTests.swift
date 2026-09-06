@@ -52,6 +52,27 @@ final class CloudLibraryShellHostTests: XCTestCase {
     }
 
     @MainActor
+    func testHandleBack_clearsThenExitsLibrarySearchBeforeLeavingLibrary() {
+        let harness = makeHarness()
+        let shell = harness.host()
+        harness.routeState.setBrowseRoute(.library)
+        harness.queryStateBox.value.isLibrarySearchActive = true
+        harness.queryStateBox.value.searchText = "halo"
+
+        shell.handleBack()
+        XCTAssertEqual(harness.queryStateBox.value.searchText, "")
+        XCTAssertTrue(harness.queryStateBox.value.isLibrarySearchActive)
+        XCTAssertEqual(harness.routeState.browseRoute, .library)
+
+        shell.handleBack()
+        XCTAssertFalse(harness.queryStateBox.value.isLibrarySearchActive)
+        XCTAssertEqual(harness.routeState.browseRoute, .library)
+
+        shell.handleBack()
+        XCTAssertEqual(harness.routeState.browseRoute, .home)
+    }
+
+    @MainActor
     func testShellHostHandlesSettingsShortcutWithoutOuterViewLogic() {
         let harness = makeHarness(selectedSettingsPane: .diagnostics)
         let shell = harness.host()
@@ -74,6 +95,49 @@ final class CloudLibraryShellHostTests: XCTestCase {
         harness.routeState.closeUtilityRoute()
         harness.routeState.pushDetail(TitleID(rawValue: "detail-title"))
         XCTAssertEqual(harness.host().contentMode, .detail)
+    }
+
+    @MainActor
+    func testHeaderMoveLeft_fromFullLibraryFocusesMyGamesInsteadOfSideRail() {
+        let tabs = [
+            CloudLibraryLibraryTabViewState(id: LibraryTabID.myGames, title: "My games"),
+            CloudLibraryLibraryTabViewState(id: LibraryTabID.fullLibrary, title: "Full library")
+        ]
+
+        XCTAssertEqual(
+            LibraryHeaderFocusPolicy.moveLeft(fromTabID: LibraryTabID.fullLibrary, tabs: tabs),
+            .focusTab(LibraryTabID.myGames)
+        )
+        XCTAssertEqual(
+            LibraryHeaderFocusPolicy.moveLeft(fromTabID: LibraryTabID.myGames, tabs: tabs),
+            .enterSideRail
+        )
+    }
+
+    func testFilterChipLayoutHidesOverflowUntilFocusApproaches() {
+        let widths: [CGFloat] = [100, 100, 100, 100, 100]
+        let maxWidth: CGFloat = 360
+
+        let idle = LibraryFilterChipLayout.visibleRange(
+            focusedIndex: nil,
+            widths: widths,
+            maxWidth: maxWidth
+        )
+        XCTAssertEqual(idle, 0..<4)
+
+        let nearOverflow = LibraryFilterChipLayout.visibleRange(
+            focusedIndex: 1,
+            widths: widths,
+            maxWidth: maxWidth
+        )
+        XCTAssertEqual(nearOverflow, 1..<5)
+
+        let closer = LibraryFilterChipLayout.visibleRange(
+            focusedIndex: 2,
+            widths: widths,
+            maxWidth: maxWidth
+        )
+        XCTAssertEqual(closer, 2..<5)
     }
 
     @MainActor

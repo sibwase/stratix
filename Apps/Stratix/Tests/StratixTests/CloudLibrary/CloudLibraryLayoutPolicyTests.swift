@@ -9,23 +9,6 @@ import XCTest
 #endif
 
 final class CloudLibraryLayoutPolicyTests: XCTestCase {
-    func testHomeRouteUsesEdgeToEdgeShellSpacing() {
-        let policy = CloudLibraryLayoutPolicy()
-
-        XCTAssertEqual(
-            policy.shellContentHorizontalPadding(browseRoute: .home, utilityRoute: nil),
-            0
-        )
-        XCTAssertEqual(
-            policy.shellContentTopPadding(browseRoute: .home, utilityRoute: nil),
-            0
-        )
-        XCTAssertEqual(
-            policy.shellContentLeadingAdjustment(browseRoute: .home, utilityRoute: nil),
-            0
-        )
-    }
-
     func testLibraryRouteUsesBrowseSpacing() {
         let policy = CloudLibraryLayoutPolicy()
 

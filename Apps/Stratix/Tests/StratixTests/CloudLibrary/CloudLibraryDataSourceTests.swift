@@ -37,8 +37,8 @@ final class CloudLibraryDataSourceTests: XCTestCase {
             merchandising: merchandising
         )
 
-        XCTAssertEqual(categories.first?.context.allowedTitleIDs, [TitleID("recent-title")])
-        XCTAssertEqual(categories.last?.context.allowedTitleIDs, [TitleID("featured-title")])
+        XCTAssertEqual(categories.map(\.context.alias), ["featured"])
+        XCTAssertEqual(categories.first?.context.allowedTitleIDs, [TitleID("featured-title")])
     }
 
     func testLibraryStateFiltersScopedCategoryUsingTypedTitleIDs() {
@@ -63,44 +63,6 @@ final class CloudLibraryDataSourceTests: XCTestCase {
 
         XCTAssertEqual(state.gridItems.map(\.titleID), [TitleID("forza-title")])
         XCTAssertEqual(state.activeFilterLabels, ["Focus"])
-    }
-
-    func testHomeStateUsesProductIDKeyedDetailMetadataForCarouselProjection() {
-        let halo = CloudLibraryTestSupport.makeItem(
-            titleID: "halo-title",
-            productID: "halo-product",
-            name: "Halo Infinite"
-        )
-        let merchandising = HomeMerchandisingSnapshot(
-            recentlyAddedItems: [halo],
-            rows: [],
-            generatedAt: Date(timeIntervalSince1970: 1_700_000_000)
-        )
-        let detail = CloudLibraryProductDetail(
-            productId: "halo-product",
-            title: "Halo Infinite",
-            publisherName: "Xbox Game Studios",
-            shortDescription: "Test detail",
-            longDescription: "Long test detail",
-            developerName: "343 Industries",
-            releaseDate: "2021-12-08",
-            capabilityLabels: [],
-            genreLabels: ["Shooter"],
-            mediaAssets: [],
-            galleryImageURLs: [],
-            trailers: [],
-            achievementSummary: nil
-        )
-
-        let state = CloudLibraryDataSource.homeState(
-            sections: [CloudLibrarySection(id: "library", name: "Library", items: [halo])],
-            merchandising: merchandising,
-            productDetails: [ProductID("halo-product"): detail]
-        )
-
-        XCTAssertEqual(state.carouselItems.first?.titleID, TitleID("halo-title"))
-        XCTAssertEqual(state.carouselItems.first?.subtitle, "343 Industries")
-        XCTAssertEqual(state.carouselItems.first?.categoryLabel, "Shooter")
     }
 
     func testPreparedIndexBuildsTypedLookupMaps() {

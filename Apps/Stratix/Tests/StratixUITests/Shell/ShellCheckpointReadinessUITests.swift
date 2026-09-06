@@ -13,7 +13,7 @@ final class ShellCheckpointReadinessUITests: ShellCheckpointUITestCase {
         XCTAssertTrue(routeRoot("route_search_root", in: seededApp).waitForExistence(timeout: 12), "Search route should exist for remembered-route seeding")
         seededApp.terminate()
 
-        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .home)
+        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .library)
         let homeRoot = waitForStoredAuthenticatedHome(in: smokeApp, timeout: 60)
         XCTAssertTrue(homeRoot.exists, "Home route root should exist after explicit home override")
         XCTAssertEqual(diagnosticsMarkerValue("browse_route_state", in: smokeApp, timeout: 12), "home")
@@ -23,7 +23,7 @@ final class ShellCheckpointReadinessUITests: ShellCheckpointUITestCase {
 
     @MainActor
     func testHomeRouteRootExistsBeforeMerchandisingReady() throws {
-        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .home)
+        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .library)
         let homeRoot = waitForStoredAuthenticatedHome(in: smokeApp, timeout: 60)
         XCTAssertTrue(homeRoot.exists, "Home route root should exist before requiring merchandising readiness")
         let merchandisingState = diagnosticsMarkerValue("home_merchandising_state", in: smokeApp, timeout: 12)
@@ -39,7 +39,7 @@ final class ShellCheckpointReadinessUITests: ShellCheckpointUITestCase {
 
     @MainActor
     func testHomeSideRailSelectionFollowsRouteBeforeMerchandisingReady() throws {
-        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .home)
+        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .library)
         let homeRoot = waitForStoredAuthenticatedHome(in: smokeApp, timeout: 60)
         XCTAssertTrue(homeRoot.exists, "Home route root should exist before checking selected side rail state")
         waitForSelectedSideRailNav("side_rail_nav_home", in: smokeApp, timeout: 12)
@@ -47,7 +47,7 @@ final class ShellCheckpointReadinessUITests: ShellCheckpointUITestCase {
 
     @MainActor
     func testHomeLoadStateMarkerAppearsDuringHomeReachability() throws {
-        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .home)
+        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .library)
         let homeRoot = waitForStoredAuthenticatedHome(in: smokeApp, timeout: 60)
         XCTAssertTrue(homeRoot.exists, "Home route root should exist")
         let loadState = diagnosticsMarkerValue("home_load_state", in: smokeApp, timeout: 12)
@@ -56,7 +56,7 @@ final class ShellCheckpointReadinessUITests: ShellCheckpointUITestCase {
 
     @MainActor
     func testRouteRestoreDiagnosticsMarkerShowsOverrideSource() throws {
-        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .home)
+        let smokeApp = try relaunchForStoredAuthenticatedShell(browseRoute: .library)
         _ = waitForStoredAuthenticatedHome(in: smokeApp, timeout: 60)
         XCTAssertEqual(
             diagnosticsMarkerValue("route_restore_state", in: smokeApp, timeout: 12),
@@ -68,7 +68,7 @@ final class ShellCheckpointReadinessUITests: ShellCheckpointUITestCase {
     @MainActor
     func testStoredAuthenticatedShellPublishesShellReadyBeforeRouteLandmarks() throws {
         let smokeApp = try relaunchForStoredAuthenticatedShell(
-            browseRoute: .home,
+            browseRoute: .library,
             waitForShellLandmarks: false
         )
 

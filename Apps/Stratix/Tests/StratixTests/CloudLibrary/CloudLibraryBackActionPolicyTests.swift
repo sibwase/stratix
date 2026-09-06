@@ -39,7 +39,7 @@ final class CloudLibraryBackActionPolicyTests: XCTestCase {
     func testResolveReturnsBrowseHomeWhenOnNonHomeRoute() {
         let routeState = CloudLibraryRouteState()
         let focusState = CloudLibraryFocusState()
-        routeState.setBrowseRoute(.library)
+        routeState.setBrowseRoute(.consoles)
 
         XCTAssertEqual(
             CloudLibraryBackActionPolicy().resolve(routeState: routeState, focusState: focusState),
@@ -56,6 +56,32 @@ final class CloudLibraryBackActionPolicyTests: XCTestCase {
         XCTAssertEqual(
             CloudLibraryBackActionPolicy().resolve(routeState: routeState, focusState: focusState),
             .enterSideRail
+        )
+    }
+
+    @MainActor
+    func testResolveClearsLibrarySearchBeforeExitingSearch() {
+        let routeState = CloudLibraryRouteState()
+        let focusState = CloudLibraryFocusState()
+        routeState.setBrowseRoute(.library)
+
+        XCTAssertEqual(
+            CloudLibraryBackActionPolicy().resolve(
+                routeState: routeState,
+                focusState: focusState,
+                isLibrarySearchActive: true,
+                librarySearchText: "halo"
+            ),
+            .clearLibrarySearch
+        )
+        XCTAssertEqual(
+            CloudLibraryBackActionPolicy().resolve(
+                routeState: routeState,
+                focusState: focusState,
+                isLibrarySearchActive: true,
+                librarySearchText: "  "
+            ),
+            .exitLibrarySearch
         )
     }
 

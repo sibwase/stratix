@@ -2,6 +2,7 @@
 // Exercises cloud library shell interaction coordinator behavior.
 //
 
+import SwiftUI
 import XCTest
 import StratixModels
 @testable import StratixCore
@@ -12,7 +13,7 @@ import StratixModels
 
 @MainActor
 final class CloudLibraryShellInteractionCoordinatorTests: XCTestCase {
-    func testOpenDetail_prewarmsBeforePushingRoute() async {
+    func testOpenDetail_pushesRouteImmediatelyAndPrewarms() async {
         let coordinator = CloudLibraryShellInteractionCoordinator()
         let routeState = CloudLibraryRouteState()
         let focusState = CloudLibraryFocusState()
@@ -23,25 +24,25 @@ final class CloudLibraryShellInteractionCoordinatorTests: XCTestCase {
             sections: [.init(id: "library", name: "Library", items: [item])]
         )
         var steps: [String] = []
+        var queryState = LibraryQueryState()
 
         await coordinator.openDetail(
             titleID,
             routeState: routeState,
             focusState: focusState,
+            queryState: Binding(get: { queryState }, set: { queryState = $0 }),
             stateSnapshot: stateSnapshot,
             viewModel: viewModel,
             prewarmDetailState: { receivedTitleID in
                 XCTAssertEqual(receivedTitleID, titleID)
                 steps.append("prewarm")
-                XCTAssertTrue(routeState.detailPath.isEmpty)
+                XCTAssertEqual(routeState.detailPath, [titleID])
             }
         )
 
-        steps.append("route")
-        XCTAssertEqual(steps, ["prewarm", "route"])
+        XCTAssertEqual(steps, ["prewarm"])
         XCTAssertEqual(routeState.detailPath, [titleID])
-        XCTAssertEqual(focusState.focusedTileID(for: .home), titleID)
-        XCTAssertEqual(focusState.settledHeroTileID(for: .home), titleID)
+        XCTAssertEqual(focusState.focusedTileID(for: .library), titleID)
     }
 
     func testApplySceneMutation_rebuildsViewModelFromStateAdapterAndQueryState() {
@@ -198,10 +199,10 @@ final class CloudLibraryShellInteractionCoordinatorTests: XCTestCase {
             TitleID(homeItem.titleId): homeItem,
             TitleID(detailItem.titleId): detailItem
         ]
-        routeState.setBrowseRoute(.home)
+        routeState.setBrowseRoute(.library)
         routeState.pushDetail(TitleID(detailItem.titleId))
-        focusState.setFocusedTileID(TitleID(homeItem.titleId), for: .home)
-        focusState.setSettledHeroTileID(TitleID(homeItem.titleId), for: .home)
+        focusState.setFocusedTileID(TitleID(homeItem.titleId), for: .library)
+        focusState.setSettledHeroTileID(TitleID(homeItem.titleId), for: .library)
 
         coordinator.rebuildHeroBackgroundContext(
             viewModel: viewModel,

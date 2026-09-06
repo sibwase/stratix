@@ -52,7 +52,7 @@ final class CloudLibraryViewModelSceneMutationTests: XCTestCase {
         XCTAssertEqual(viewModel.cachedLibraryCount, 2)
         XCTAssertEqual(viewModel.cachedItemsByTitleID[TitleID("recent-title")]?.productId, "recent-product")
         XCTAssertEqual(viewModel.cachedItemsByProductID[ProductID("library-product")]?.titleId, "library-title")
-        XCTAssertEqual(viewModel.cachedHomeState.sections.first?.id, "mru")
+        XCTAssertTrue(viewModel.cachedHomeState.sections.isEmpty)
         XCTAssertEqual(viewModel.cachedLibraryState.selectedTabID, "full-library")
         XCTAssertFalse(viewModel.cachedLibraryState.gridItems.isEmpty)
     }
@@ -75,14 +75,14 @@ final class CloudLibraryViewModelSceneMutationTests: XCTestCase {
         ]
 
         let firstTaskID = viewModel.heroBackgroundTaskID(
-            browseRouteRawValue: CloudLibrarySceneModel.HeroBackgroundRoute.home.rawValue,
+            browseRouteRawValue: CloudLibrarySceneModel.HeroBackgroundRoute.library.rawValue,
             utilityRouteVisible: false,
             detailTitleID: TitleID(detailItem.titleId),
             homeFocusedTitleID: TitleID(homeItem.titleId),
             libraryFocusedTitleID: nil
         )
         let secondTaskID = viewModel.heroBackgroundTaskID(
-            browseRouteRawValue: CloudLibrarySceneModel.HeroBackgroundRoute.home.rawValue,
+            browseRouteRawValue: CloudLibrarySceneModel.HeroBackgroundRoute.library.rawValue,
             utilityRouteVisible: false,
             detailTitleID: TitleID(detailItem.titleId),
             homeFocusedTitleID: TitleID(homeItem.titleId),
@@ -92,7 +92,7 @@ final class CloudLibraryViewModelSceneMutationTests: XCTestCase {
         XCTAssertEqual(firstTaskID, secondTaskID)
 
         viewModel.rebuildHeroBackgroundContext(
-            browseRouteRawValue: CloudLibrarySceneModel.HeroBackgroundRoute.home.rawValue,
+            browseRouteRawValue: CloudLibrarySceneModel.HeroBackgroundRoute.library.rawValue,
             utilityRouteVisible: false,
             detailTitleID: TitleID(detailItem.titleId),
             homeFocusedTitleID: TitleID(homeItem.titleId),
@@ -534,5 +534,27 @@ final class CloudLibraryViewModelSceneMutationTests: XCTestCase {
             homeItem.heroImageURL
         )
         XCTAssertEqual(viewModel.cachedHeroBackgroundContext.inputs.route, CloudLibrarySceneModel.HeroBackgroundRoute.library)
+    }
+
+    func testBrowsePresentationMutationTokenIgnoresLiveLibraryFocusChanges() {
+        let viewModel = CloudLibraryViewModel()
+        let routeState = CloudLibraryRouteState()
+        let focusState = CloudLibraryFocusState()
+        let first = viewModel.browsePresentationMutationToken(
+            loadState: .liveFresh,
+            routeState: routeState,
+            focusState: focusState
+        )
+
+        focusState.setFocusedTileID(TitleID(rawValue: "halo-title"), for: .library)
+        focusState.setSettledHeroTileID(TitleID(rawValue: "forza-title"), for: .library)
+
+        let second = viewModel.browsePresentationMutationToken(
+            loadState: .liveFresh,
+            routeState: routeState,
+            focusState: focusState
+        )
+
+        XCTAssertEqual(first, second)
     }
 }

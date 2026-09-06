@@ -16,13 +16,13 @@ final class CloudLibraryFocusStateTests: XCTestCase {
         let homeID = TitleID(rawValue: "home-title")
         let searchID = TitleID(rawValue: "search-title")
 
-        focusState.setFocusedTileID(homeID, for: .home)
-        focusState.setFocusedTileID(searchID, for: .library)
+        focusState.setFocusedTileID(homeID, for: .library)
+        focusState.setFocusedTileID(searchID, for: .consoles)
 
-        XCTAssertEqual(focusState.focusedTileID(for: .home), homeID)
-        XCTAssertEqual(focusState.focusedTileID(for: .library), searchID)
-        XCTAssertEqual(focusState.focusedTileIDsByRoute[.home], homeID)
-        XCTAssertEqual(focusState.focusedTileIDsByRoute[.library], searchID)
+        XCTAssertEqual(focusState.focusedTileID(for: .library), homeID)
+        XCTAssertEqual(focusState.focusedTileID(for: .consoles), searchID)
+        XCTAssertEqual(focusState.focusedTileIDsByRoute[.library], homeID)
+        XCTAssertEqual(focusState.focusedTileIDsByRoute[.consoles], searchID)
     }
 
     @MainActor
@@ -31,12 +31,9 @@ final class CloudLibraryFocusStateTests: XCTestCase {
         let homeID = TitleID(rawValue: "home-title")
         let libraryID = TitleID(rawValue: "library-title")
 
-        focusState.setSettledHeroTileID(homeID, for: .home)
         focusState.setSettledHeroTileID(libraryID, for: .library)
 
-        XCTAssertEqual(focusState.settledHeroTileID(for: .home), homeID)
         XCTAssertEqual(focusState.settledHeroTileID(for: .library), libraryID)
-        XCTAssertEqual(focusState.settledHomeHeroTileID, homeID)
         XCTAssertEqual(focusState.settledLibraryHeroTileID, libraryID)
     }
 
@@ -44,14 +41,14 @@ final class CloudLibraryFocusStateTests: XCTestCase {
     func testRequestTopContentFocusLeavesStoredFocusStateUnchanged() {
         let focusState = CloudLibraryFocusState()
         let homeID = TitleID(rawValue: "home-title")
-        focusState.setFocusedTileID(homeID, for: .home)
+        focusState.setFocusedTileID(homeID, for: .library)
 
-        focusState.requestTopContentFocus(for: .home)
+        focusState.requestTopContentFocus(for: .library)
         focusState.requestTopContentFocus(for: .library)
         focusState.requestTopContentFocus(for: .library)
         focusState.requestTopContentFocus(for: .consoles)
 
-        XCTAssertEqual(focusState.focusedTileID(for: .home), homeID)
+        XCTAssertEqual(focusState.focusedTileID(for: .library), homeID)
     }
 
     @MainActor

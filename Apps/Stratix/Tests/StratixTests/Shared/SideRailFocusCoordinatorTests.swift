@@ -13,14 +13,46 @@ final class SideRailFocusCoordinatorTests: XCTestCase {
         XCTAssertTrue(SideRailFocusCoordinator.trailingActions(from: []).isEmpty)
     }
 
-    func testPreferredEntryTarget_alwaysFocusesLibraryNavItem() {
+    func testPreferredEntryTarget_focusesSelectedNavWhenBrowsing() {
+        XCTAssertEqual(
+            SideRailFocusCoordinator.preferredEntryTarget(
+                activeUtilityRoute: nil,
+                trailingActions: [.init(id: "settings", systemImage: "gearshape", accessibilityLabel: "Settings")],
+                selectedNavID: .library
+            ),
+            .nav(.library)
+        )
+    }
+
+    func testOrderedNavItems_appendsUnknownIDsAfterPreferredOrder() {
+        let extra = SideRailNavItemViewState(id: .library, title: "Home", systemImage: "house.fill")
+        let consoles = SideRailNavItemViewState(id: .consoles, title: "Consoles", systemImage: "tv")
+
+        XCTAssertEqual(
+            SideRailFocusCoordinator.orderedNavItems(from: [consoles, extra]).map(\.id),
+            [.library, .consoles]
+        )
+    }
+
+    func testPreferredEntryTarget_focusesProfileActionWhenActive() {
+        XCTAssertEqual(
+            SideRailFocusCoordinator.preferredEntryTarget(
+                activeUtilityRoute: .profile,
+                trailingActions: [.init(id: "profile", systemImage: "person", accessibilityLabel: "Profile")],
+                selectedNavID: .library
+            ),
+            .action("profile")
+        )
+    }
+
+    func testPreferredEntryTarget_focusesUtilityActionWhenActive() {
         XCTAssertEqual(
             SideRailFocusCoordinator.preferredEntryTarget(
                 activeUtilityRoute: .settings,
                 trailingActions: [.init(id: "settings", systemImage: "gearshape", accessibilityLabel: "Settings")],
-                selectedNavID: .home
+                selectedNavID: .library
             ),
-            .nav(.library)
+            .action("settings")
         )
     }
 
@@ -34,7 +66,7 @@ final class SideRailFocusCoordinatorTests: XCTestCase {
         )
         XCTAssertFalse(
             SideRailFocusCoordinator.isCollapsedFocusable(
-                .nav(.home),
+                .nav(.consoles),
                 selectedNavID: .library,
                 collapsedSelectedNavFocusable: true
             )

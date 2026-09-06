@@ -7,7 +7,7 @@ import XCTest
 final class ShellCheckpointCaptureUITests: ShellCheckpointUITestCase {
     @MainActor
     func testCaptureHomeSearchLibraryCheckpoints() throws {
-        let homeApp = relaunchForShellHarness(browseRoute: .home)
+        let homeApp = relaunchForShellHarness(browseRoute: .library)
         XCTAssertTrue(homeApp.windows.firstMatch.waitForExistence(timeout: 12), "Game Pass app window must load")
 
         let homeRoot = waitForRouteRoot("route_home_root", in: homeApp, timeout: 12)

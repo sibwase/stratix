@@ -18,41 +18,14 @@ struct CloudLibraryShellHostActionTests {
         var queryState = LibraryQueryState()
         var openedTitleID: TitleID?
         var launchedStream: (TitleID, String)?
-        var enteredLibraryRoute = false
-
         let actions = CloudLibraryBrowseRouteActions(
             refreshCloudLibrary: {},
             requestSideRailEntry: { focusState.requestSideRailEntry() },
-            homeSelectRailItem: { item in
-                switch item {
-                case .title(let titleItem):
-                    switch titleItem.action {
-                    case .openDetail:
-                        openedTitleID = titleItem.tile.titleID
-                    case .launchStream(let source):
-                        launchedStream = (titleItem.tile.titleID, source)
-                    }
-                case .showAll(let card):
-                    queryState.selectedTabID = "full-library"
-                    queryState.scopedCategory = LibraryScopedCategoryContext(
-                        alias: card.alias,
-                        label: card.label,
-                        allowedTitleIDs: Set<TitleID>()
-                    )
-                    queryState.activeFilterIDs.removeAll()
-                    enteredLibraryRoute = true
-                }
-            },
-            homeSelectCarouselPlay: { item in
-                launchedStream = (item.titleID, "home_carousel_play")
-            },
-            homeSelectCarouselDetails: { item in
-                openedTitleID = item.titleID
-            },
-            homeFocusTileID: { focusState.setFocusedTileID($0, for: .home) },
-            homeSettledTileID: { focusState.setSettledHeroTileID($0, for: .home) },
             librarySelectTile: { tile in
                 openedTitleID = tile.titleID
+            },
+            libraryPlayTile: { tile in
+                launchedStream = (tile.titleID, tile.title)
             },
             libraryFocusTileID: { focusState.setFocusedTileID($0, for: .library) },
             librarySettledTileID: { focusState.setSettledHeroTileID($0, for: .library) },
@@ -63,7 +36,7 @@ struct CloudLibraryShellHostActionTests {
                 queryState.isLibrarySearchActive = true
             },
             librarySelectFilter: { _ in },
-            librarySelectSort: {},
+            librarySelectSort: { _ in },
             libraryClearFilters: {},
             searchClearQuery: {},
             searchSelectTile: { tile in
@@ -72,18 +45,12 @@ struct CloudLibraryShellHostActionTests {
             searchFocusTileID: { focusState.setFocusedTileID($0, for: .library) }
         )
 
-        let homeID = TitleID(rawValue: "home-title")
         let libraryID = TitleID(rawValue: "library-title")
         let searchID = TitleID(rawValue: "search-title")
-        actions.homeFocusTileID(homeID)
         actions.libraryFocusTileID(libraryID)
         actions.searchFocusTileID(searchID)
-        actions.homeSettledTileID(homeID)
         actions.librarySettledTileID(libraryID)
-        #expect(focusState.focusedTileID(for: .home) == homeID)
-        #expect(focusState.focusedTileID(for: .library) == libraryID)
         #expect(focusState.focusedTileID(for: .library) == searchID)
-        #expect(focusState.settledHeroTileID(for: .home) == homeID)
         #expect(focusState.settledHeroTileID(for: .library) == libraryID)
 
         let libraryTile = MediaTileViewState(
@@ -94,28 +61,6 @@ struct CloudLibraryShellHostActionTests {
         actions.librarySelectTile(libraryTile)
         #expect(openedTitleID == libraryID)
 
-        let carouselItem = CloudLibraryHomeCarouselItemViewState(
-            id: "carousel",
-            titleID: TitleID("forza-title"),
-            title: "Forza Horizon 5",
-            subtitle: nil,
-            categoryLabel: nil,
-            ratingBadgeText: nil,
-            description: nil,
-            heroBackgroundURL: nil,
-            artworkURL: nil
-        )
-        actions.homeSelectCarouselPlay(carouselItem)
-        #expect(launchedStream?.0 == TitleID("forza-title"))
-        #expect(launchedStream?.1 == "home_carousel_play")
-
-        let showAllItem = CloudLibraryHomeRailItemViewState.showAll(
-            .init(id: "show-all", alias: "action", label: "Action", totalCount: 12)
-        )
-        actions.homeSelectRailItem(showAllItem)
-        #expect(enteredLibraryRoute == true)
-        #expect(queryState.selectedTabID == "full-library")
-        #expect(queryState.scopedCategory?.alias == "action")
     }
 
     @Test

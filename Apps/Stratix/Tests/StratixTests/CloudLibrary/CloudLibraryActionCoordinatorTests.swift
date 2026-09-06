@@ -219,7 +219,7 @@ struct CloudLibraryActionCoordinatorTests {
         var focusedRoute: CloudLibraryBrowseRoute?
 
         await coordinator.handleStreamDismiss(
-            browseRoute: .home,
+            browseRoute: .library,
             stopStreaming: { steps.append("stop") },
             exitPriorityMode: { steps.append("exit") },
             requestTopContentFocus: {
@@ -229,7 +229,7 @@ struct CloudLibraryActionCoordinatorTests {
         )
 
         #expect(steps == ["stop", "exit", "focus"])
-        #expect(focusedRoute == .home)
+        #expect(focusedRoute == .library)
     }
 }
 
@@ -246,6 +246,7 @@ private final class PreviewExportSourceStub: PreviewExportSource {
     let previewExportSettingsStore = SettingsStore(defaults: UserDefaults(suiteName: "PreviewExportSourceStub")!)
     let previewExportLastAuthError: String? = nil
     let previewExportLastCloudLibraryError: String? = nil
+    let previewExportLastConsolesError: String? = nil
     let previewExportLastPresenceReadError: String? = nil
     let previewExportLastPresenceWriteError: String? = nil
     let previewExportLastSocialError: String? = nil

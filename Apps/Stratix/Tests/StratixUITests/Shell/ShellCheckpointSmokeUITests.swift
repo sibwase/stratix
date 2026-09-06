@@ -156,7 +156,7 @@ final class ShellCheckpointSmokeUITests: ShellCheckpointUITestCase {
     @MainActor
     func testHomePlayNowLaunchAndBackReturnsToHome() throws {
         if isRunningOnPhysicalDevice {
-            let hardwareApp = relaunchForShellHarness(browseRoute: .home)
+            let hardwareApp = relaunchForShellHarness(browseRoute: .library)
             XCTAssertTrue(hardwareApp.windows.firstMatch.waitForExistence(timeout: 12), "Hardware shell harness window must load")
 
             let homeRoot = waitForRouteRoot("route_home_root", in: hardwareApp, timeout: 12)

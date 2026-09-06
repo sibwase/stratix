@@ -55,9 +55,10 @@ final class CloudLibraryRoutePresentationBuilderTests: XCTestCase {
         let homeTitleID = TitleID(rawValue: "home-title")
         let libraryTitleID = TitleID(rawValue: "library-title")
         let searchTitleID = TitleID(rawValue: "search-title")
-        focusState.setFocusedTileID(homeTitleID, for: .home)
+        focusState.setFocusedTileID(homeTitleID, for: .library)
         focusState.setFocusedTileID(libraryTitleID, for: .library)
         focusState.setFocusedTileID(searchTitleID, for: .library)
+        focusState.setSettledHeroTileID(libraryTitleID, for: .library)
 
         let homeTile = MediaTileViewState(id: "home-tile", titleID: homeTitleID, title: "Home Game")
         let libraryTile = MediaTileViewState(id: "library-tile", titleID: libraryTitleID, title: "Library Game")
@@ -98,13 +99,11 @@ final class CloudLibraryRoutePresentationBuilderTests: XCTestCase {
             searchResultItems: []
         )
 
-        XCTAssertEqual(presentation.homeTileLookup[homeTitleID]?.tile, homeTile)
         XCTAssertEqual(presentation.libraryTileLookup[libraryTitleID], libraryTile)
         XCTAssertEqual(presentation.searchTileLookup[searchTitleID], searchTile)
-        XCTAssertEqual(presentation.preferredHomeTileID, homeTitleID)
+        XCTAssertNil(presentation.preferredHomeTileID)
         XCTAssertEqual(presentation.preferredLibraryTileID, libraryTitleID)
         XCTAssertEqual(presentation.combinedLibraryTileLookup[searchTitleID], searchTile)
-        XCTAssertEqual(Set(presentation.homeTileLookup.keys), [homeTitleID])
         XCTAssertEqual(Set(presentation.libraryTileLookup.keys), [libraryTitleID])
         XCTAssertEqual(Set(presentation.searchTileLookup.keys), [searchTitleID])
     }
@@ -157,7 +156,6 @@ final class CloudLibraryRoutePresentationBuilderTests: XCTestCase {
             searchResultItems: [searchResultTile]
         )
 
-        XCTAssertEqual(presentation.homeTileLookup[duplicateTitleID]?.tile.id, homeFirstTile.id)
         XCTAssertEqual(presentation.libraryTileLookup[duplicateTitleID]?.id, libraryFirstTile.id)
         XCTAssertEqual(presentation.searchTileLookup[duplicateTitleID]?.id, searchBrowseTile.id)
     }

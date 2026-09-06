@@ -10,7 +10,7 @@ import Testing
 
 struct StratixAppExitHandlingTests {
     @Test
-    func exitHandlingDecision_doesNotConsumeBackAtStableHomeRoot() {
+    func exitHandlingDecision_consumesBackAtStableHomeRoot() {
         #expect(
             ShellExitHandlingDecision.resolve(
                 utilityRoute: nil,
@@ -18,7 +18,7 @@ struct StratixAppExitHandlingTests {
                 streamOverlayVisible: false,
                 primaryRoute: .home,
                 isSideRailExpanded: true
-            ).shouldConsumeBackEvent == false
+            ).shouldConsumeBackEvent
         )
     }
 

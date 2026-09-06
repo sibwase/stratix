@@ -91,7 +91,7 @@ extension ShellCheckpointUITestCase {
         environment: [String: String] = [:]
     ) throws -> XCUIApplication {
         app.terminate()
-        app.launchArguments = mergedLaunchArguments(arguments, browseRoute: .home)
+        app.launchArguments = mergedLaunchArguments(arguments, browseRoute: .library)
         app.launchEnvironment = environment
         app.launch()
         try skipStoredAuthDependentSmokeIfUnavailable(in: app)
