@@ -31,6 +31,8 @@ Stratix is not a direct port of those codebases. It is a native tvOS implementat
 
 ![Game Details](Docs/Screenshots/Game_Details.png)
 
+![Stream Loading](Docs/Screenshots/Stream_Loading.jpg)
+
 ![Stream Overlay](Docs/Screenshots/Stream_Overlay.png)
 
 ---
