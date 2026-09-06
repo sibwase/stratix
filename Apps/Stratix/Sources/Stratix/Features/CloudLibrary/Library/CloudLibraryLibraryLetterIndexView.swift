@@ -2,7 +2,6 @@
 // Shows the active alphabetical index position while browsing the library grid.
 //
 
-import GameController
 import SwiftUI
 
 struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
@@ -29,19 +28,15 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
                     LetterIndexKey(
                         letter: letter,
                         isPositionMarker: letter == positionLetter,
-                        showsRailFocus: focusedTarget.wrappedValue == letterFocusValue(letter),
                         slotHeight: slotHeight,
                         inactiveSize: inactiveSize,
                         activeSize: activeSize,
                         dynamicTypeSize: dynamicTypeSize,
                         onSelect: { onSelectLetter(letter) },
-                        onMoveLeft: { onMoveFromLetterIndex?(.left) },
-                        onVerticalRepeat: { offset in
-                            stepFocus(offset: offset)
-                        }
+                        onMoveLeft: { onMoveFromLetterIndex?(.left) }
                     )
                     .focused(focusedTarget, equals: letterFocusValue(letter))
-                    .focusable(isFocusEnabled)
+                    .disabled(!isFocusEnabled)
                     .accessibilityLabel("Section \(letter)")
                     .accessibilityAddTraits(letter == positionLetter ? .isSelected : [])
                 }
@@ -59,86 +54,55 @@ struct CloudLibraryLibraryLetterIndexView<FocusValue: Hashable>: View {
         }
         .frame(width: StratixTheme.Library.letterIndexWidth)
         .accessibilityIdentifier("library_letter_index")
-        .task(id: isFocusEnabled) {
-            guard isFocusEnabled else { return }
-            let hold = LetterIndexHoldState()
-            LetterIndexHold.bindDirectionPads(hold)
-            var holdStartedAt: ContinuousClock.Instant?
-            var lastStepAt: ContinuousClock.Instant?
-            while !Task.isCancelled {
-                let offset = hold.offset != 0 ? hold.offset : LetterIndexHold.verticalOffset()
-                let now = ContinuousClock.now
-                if offset == 0 {
-                    holdStartedAt = nil
-                    lastStepAt = nil
-                } else if holdStartedAt == nil {
-                    holdStartedAt = now
-                    lastStepAt = now
-                } else if let started = holdStartedAt {
-                    let readyForRepeat = now - started >= .milliseconds(280)
-                    let sinceStep = lastStepAt.map { now - $0 } ?? .milliseconds(1_000)
-                    if readyForRepeat, sinceStep >= .milliseconds(65) {
-                        stepFocus(offset: offset)
-                        lastStepAt = now
-                    }
-                }
-                try? await Task.sleep(for: .milliseconds(16))
-            }
-            LetterIndexHold.unbindDirectionPads()
-        }
-    }
-
-    private func stepFocus(offset: Int) {
-        let current = sections.first { focusedTarget.wrappedValue == letterFocusValue($0) }
-        guard let current else { return }
-        let index = sectionIndexByLetter[current] ?? sections.firstIndex(of: current)
-        guard let index else { return }
-        let nextIndex = index + offset
-        guard sections.indices.contains(nextIndex) else { return }
-        focusedTarget.wrappedValue = letterFocusValue(sections[nextIndex])
     }
 }
 
-/// One A–Z key. Up/down are left to the system focus engine so a held d-pad repeats like the search keyboard.
+/// One A–Z key with pure typographical focus matching the native tvOS search panel.
 private struct LetterIndexKey: View {
     let letter: String
     let isPositionMarker: Bool
-    let showsRailFocus: Bool
     let slotHeight: CGFloat
     let inactiveSize: CGFloat
     let activeSize: CGFloat
     let dynamicTypeSize: DynamicTypeSize
     let onSelect: () -> Void
     let onMoveLeft: () -> Void
-    var onVerticalRepeat: ((Int) -> Void)? = nil
 
     var body: some View {
         Button(action: onSelect) {
-            let active = showsRailFocus
-            Text(letter)
-                .font(
-                    StratixTypography.rounded(
-                        active ? activeSize : (isPositionMarker ? activeSize * 0.95 : inactiveSize),
-                        weight: active ? .heavy : (isPositionMarker ? .bold : .semibold),
-                        dynamicTypeSize: dynamicTypeSize
+            FocusAwareView { isFocused in
+                let isCurrentPosition = isPositionMarker
+                let weight: Font.Weight = (isFocused || isCurrentPosition) ? .heavy : .semibold
+                let color: Color = isCurrentPosition
+                    ? StratixTheme.Colors.focusTint
+                    : (isFocused ? Color.white : Color.white.opacity(0.45))
+                let scale: CGFloat = isFocused ? 1.25 : (isCurrentPosition ? 1.10 : 1.0)
+                let shadowColor: Color = isCurrentPosition
+                    ? StratixTheme.Colors.focusTint.opacity(isFocused ? 0.75 : 0.45)
+                    : (isFocused ? Color.white.opacity(0.65) : Color.clear)
+                let shadowRadius: CGFloat = isFocused ? 8 : (isCurrentPosition ? 4 : 0)
+                let fontSize: CGFloat = isFocused ? activeSize : (isCurrentPosition ? activeSize * 0.95 : inactiveSize)
+
+                Text(letter)
+                    .font(
+                        StratixTypography.rounded(
+                            fontSize,
+                            weight: weight,
+                            dynamicTypeSize: dynamicTypeSize
+                        )
                     )
-                )
-                .foregroundStyle(
-                    active
-                        ? Color.white
-                        : (isPositionMarker ? StratixTheme.Colors.focusTint : Color.white.opacity(0.45))
-                )
-                .scaleEffect(active ? 1.30 : (isPositionMarker ? 1.10 : 1.0))
-                .shadow(
-                    color: active
-                        ? Color.white.opacity(0.65)
-                        : (isPositionMarker ? StratixTheme.Colors.focusTint.opacity(0.45) : Color.clear),
-                    radius: active ? 8 : 4,
-                    x: 0,
-                    y: 0
-                )
-                .frame(maxWidth: .infinity, minHeight: slotHeight, maxHeight: slotHeight)
-                .contentShape(Rectangle())
+                    .foregroundStyle(color)
+                    .scaleEffect(scale)
+                    .shadow(
+                        color: shadowColor,
+                        radius: shadowRadius,
+                        x: 0,
+                        y: 0
+                    )
+                    .frame(maxWidth: .infinity, minHeight: slotHeight, maxHeight: slotHeight)
+                    .contentShape(Rectangle())
+                    .animation(.spring(response: 0.18, dampingFraction: 0.72), value: isFocused)
+            }
         }
         .buttonStyle(CloudLibraryTVButtonStyle())
         .gamePassDisableSystemFocusEffect()
@@ -147,74 +111,6 @@ private struct LetterIndexKey: View {
                 onMoveLeft()
             }
         }
-        .onKeyPress(keys: [.upArrow, .downArrow], phases: [.repeat]) { press in
-            let offset = press.key == .upArrow ? -1 : 1
-            Task { @MainActor in
-                onVerticalRepeat?(offset)
-            }
-            return .handled
-        }
-    }
-}
-
-private final class LetterIndexHoldState: @unchecked Sendable {
-    var offset: Int = 0
-}
-
-private enum LetterIndexHold {
-    static func bindDirectionPads(_ hold: LetterIndexHoldState) {
-        let handler: GCControllerDirectionPadValueChangedHandler = { _, _, y in
-            if y > 0.45 {
-                hold.offset = -1
-            } else if y < -0.45 {
-                hold.offset = 1
-            } else {
-                hold.offset = 0
-            }
-        }
-        for controller in GCController.controllers() {
-            controller.extendedGamepad?.dpad.valueChangedHandler = handler
-            controller.microGamepad?.dpad.valueChangedHandler = handler
-            controller.extendedGamepad?.leftThumbstick.valueChangedHandler = { _, _, y in
-                if y > 0.55 {
-                    hold.offset = -1
-                } else if y < -0.55 {
-                    hold.offset = 1
-                } else if abs(y) < 0.25 {
-                    hold.offset = 0
-                }
-            }
-        }
-    }
-
-    static func unbindDirectionPads() {
-        for controller in GCController.controllers() {
-            controller.extendedGamepad?.dpad.valueChangedHandler = nil
-            controller.microGamepad?.dpad.valueChangedHandler = nil
-            controller.extendedGamepad?.leftThumbstick.valueChangedHandler = nil
-        }
-    }
-
-    static func verticalOffset() -> Int {
-        var up = false
-        var down = false
-        for controller in GCController.controllers() {
-            if let pad = controller.extendedGamepad?.dpad {
-                if pad.up.isPressed || pad.yAxis.value > 0.45 { up = true }
-                if pad.down.isPressed || pad.yAxis.value < -0.45 { down = true }
-            }
-            if let pad = controller.microGamepad?.dpad {
-                if pad.up.isPressed || pad.yAxis.value > 0.45 { up = true }
-                if pad.down.isPressed || pad.yAxis.value < -0.45 { down = true }
-            }
-            if let stick = controller.extendedGamepad?.leftThumbstick {
-                if stick.yAxis.value > 0.55 { up = true }
-                if stick.yAxis.value < -0.55 { down = true }
-            }
-        }
-        if up && !down { return -1 }
-        if down && !up { return 1 }
-        return 0
     }
 }
 
