@@ -27,6 +27,8 @@ Stratix is not a direct port of those codebases. It is a native tvOS implementat
 
 ![Library](Docs/Screenshots/Library.png)
 
+![Settings](Docs/Screenshots/Settings.png)
+
 ---
 
 ## What Is This, Exactly?
