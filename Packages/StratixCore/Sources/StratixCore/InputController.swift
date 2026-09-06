@@ -160,6 +160,16 @@ public final class InputController {
             settings.vibrationIntensity = min(settings.vibrationIntensity, 1.0)
         }
         controllerSettings = settings
+        suppressBoundSystemGestures()
+    }
+
+    /// Disables tvOS Home/Guide system gestures on connected controllers for the whole app
+    /// lifetime, not only while a stream is attached.
+    func suppressBoundSystemGestures() {
+        for controller in GCController.controllers() {
+            configureControllerSystemGestureHandling(controller)
+        }
+        ensureControllerObserversConfigured()
     }
 
     public func startupHapticsProbeEnabled(from settingsStore: SettingsStore) -> Bool {
@@ -332,11 +342,16 @@ public final class InputController {
     }
 
     private func attachController(_ controller: GCController) {
+        configureControllerSystemGestureHandling(controller)
         guard let extended = controller.extendedGamepad else { return }
         let queue = activeInputQueue
         let supportsLaunchOnlyInput = queue == nil && dependencies?.allowsStreamLaunchCancellation == true
         guard queue != nil || supportsLaunchOnlyInput else { return }
-        configureControllerSystemGestureHandling(controller)
+        extended.valueChangedHandler = nil
+        extended.leftShoulder.pressedChangedHandler = nil
+        extended.rightShoulder.pressedChangedHandler = nil
+        extended.leftThumbstick.xAxis.valueChangedHandler = nil
+
         let handler = GamepadHandler(gamepadIndex: 0)
         handler.controller = controller
 
@@ -345,8 +360,9 @@ public final class InputController {
 
         let controllerName = controller.vendorName ?? "Unknown"
         var didLogFirstControllerValueChange = false
-        var previousAPressed = false
-        var previousBPressed = false
+        var launchCancelGate = StreamLaunchCancelGate(isAPressed: extended.buttonA.isPressed)
+        var previousAPressed = extended.buttonA.isPressed
+        var previousBPressed = extended.buttonB.isPressed
         var chordRecognizer = ChordRecognizer(definitions: [
             ChordDefinition(buttons: [.leftShoulder, .rightShoulder], holdDurationMs: 0, action: .toggleStatsHUD)
         ])
@@ -378,6 +394,7 @@ public final class InputController {
             guard let queue else {
                 self.handleLaunchOnlyInput(
                     gamepad: gamepad,
+                    cancelGate: &launchCancelGate,
                     previousAPressed: &previousAPressed
                 )
                 return
@@ -428,6 +445,7 @@ public final class InputController {
                 self.handleLaunchCancelShortcut(
                     aPressed: aPressed,
                     bPressed: bPressed,
+                    cancelGate: &launchCancelGate,
                     previousAPressed: &previousAPressed,
                     previousBPressed: &previousBPressed,
                     queue: queue,
@@ -510,11 +528,12 @@ public final class InputController {
 
     private func handleLaunchOnlyInput(
         gamepad: GCExtendedGamepad,
+        cancelGate: inout StreamLaunchCancelGate,
         previousAPressed: inout Bool
     ) {
         guard dependencies?.allowsStreamLaunchCancellation == true else { return }
         let aPressed = gamepad.buttonA.isPressed
-        if aPressed && !previousAPressed {
+        if cancelGate.registerAPressed(aPressed) {
             logger.info("Launch shortcut (pre-session): A -> cancel stream launch")
             dependencies?.requestDisconnect()
         }
@@ -524,12 +543,13 @@ public final class InputController {
     private func handleLaunchCancelShortcut(
         aPressed: Bool,
         bPressed: Bool,
+        cancelGate: inout StreamLaunchCancelGate,
         previousAPressed: inout Bool,
         previousBPressed: inout Bool,
         queue: InputQueue,
         handler: GamepadHandler
     ) {
-        if aPressed && !previousAPressed {
+        if cancelGate.registerAPressed(aPressed) {
             logger.info("Launch shortcut: A -> cancel stream launch")
             dependencies?.requestDisconnect()
         }

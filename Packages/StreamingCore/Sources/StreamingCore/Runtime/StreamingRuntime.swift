@@ -257,19 +257,19 @@ actor StreamingRuntime {
             let channel = inputChannel ?? InputChannel(bridge: bridge, queue: inputQueue)
             let callbackGeneration = self.callbackGeneration
             channel.configure(
-                onVibration: { [self] report in
-                    Task {
-                        await self.handleVibration(report, generation: callbackGeneration)
+                onVibration: { [weak self] report in
+                    Task { [weak self] in
+                        await self?.handleVibration(report, generation: callbackGeneration)
                     }
                 },
-                onServerMetadata: { [self] width, height in
-                    Task {
-                        await self.handleServerMetadata(width: width, height: height, generation: callbackGeneration)
+                onServerMetadata: { [weak self] width, height in
+                    Task { [weak self] in
+                        await self?.handleServerMetadata(width: width, height: height, generation: callbackGeneration)
                     }
                 },
-                onFlushTelemetry: { [self] hz, jitterMs in
-                    Task {
-                        await self.handleInputFlushTelemetry(hz: hz, jitterMs: jitterMs, generation: callbackGeneration)
+                onFlushTelemetry: { [weak self] hz, jitterMs in
+                    Task { [weak self] in
+                        await self?.handleInputFlushTelemetry(hz: hz, jitterMs: jitterMs, generation: callbackGeneration)
                     }
                 },
                 shouldLogRawInboundMetadata: { [startupPayloadLogWindow] in
@@ -294,17 +294,17 @@ actor StreamingRuntime {
             )
             let callbackGeneration = self.callbackGeneration
             await channel.configure(
-                onHandshakeCompleted: { [self] in
-                    Task {
-                        await self.handleMessageHandshakeCompleted(generation: callbackGeneration)
+                onHandshakeCompleted: { [weak self] in
+                    Task { [weak self] in
+                        await self?.handleMessageHandshakeCompleted(generation: callbackGeneration)
                     }
                 },
                 onProtocolMessage: { event in
                     streamLogger.info("Message channel event: \(event.target, privacy: .public)")
                 },
-                onServerInitiatedDisconnect: { [self] in
-                    Task {
-                        await self.handleServerInitiatedDisconnect(generation: callbackGeneration)
+                onServerInitiatedDisconnect: { [weak self] in
+                    Task { [weak self] in
+                        await self?.handleServerInitiatedDisconnect(generation: callbackGeneration)
                     }
                 },
                 onFirstOutboundMessage: { [startupPayloadLogWindow] in

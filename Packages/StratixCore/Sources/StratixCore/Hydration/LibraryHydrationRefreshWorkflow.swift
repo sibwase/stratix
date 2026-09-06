@@ -16,7 +16,7 @@ struct LibraryHydrationRefreshWorkflow {
         guard !controller.isSuspendedForStreaming else { return }
         guard let dependencies = controller.dependencies else { return }
 
-        var tokens = dependencies.authenticatedLibraryTokens()
+        let tokens = dependencies.authenticatedLibraryTokens()
         guard var tokens else { return }
 
         if !hasUsableLibraryTokens(tokens, controller: controller) {

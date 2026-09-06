@@ -28,7 +28,9 @@ enum HomeMerchandisingSnapshotBuilder {
         logDebug: (String) -> Void
     ) async -> HomeMerchandisingBuildResult {
         let discoveryEntries = context.discovery.entries
-        let indexes = LibraryIndexBuilder.makeIndexes(from: context.latestSections)
+        let librarySections = context.latestSections.filter { $0.id == "library" }
+        let sectionsToIndex = librarySections.isEmpty ? context.latestSections : librarySections
+        let indexes = LibraryIndexBuilder.makeIndexes(from: sectionsToIndex)
         let itemsByProductID = indexes.byProductID
         let itemsByTitleID = indexes.byTitleID
         let existingRowsByAlias = Dictionary(

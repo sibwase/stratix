@@ -55,6 +55,7 @@ struct LibraryArtworkPrefetchCoordinator {
         }
         for url in uniqueURLs {
             guard !Task.isCancelled else { return }
+            guard !dependencies.isSuspendedForStreaming() else { return }
             let prefetchResult = await prefetchArtworkURL(
                 Self.artworkRequest(url: url, kind: .poster, priority: .low),
                 reason: reason,
@@ -110,25 +111,14 @@ struct LibraryArtworkPrefetchCoordinator {
 
         var seen = Set<String>()
         var prioritizedRequests: [ArtworkRequest] = []
-        let startupArtworkPrefetchLimit = 24
+        // Offscreen library tiles only need poster bytes, not full-res heroes.
+        let startupArtworkPrefetchLimit = 12
         prioritizedRequests.reserveCapacity(startupArtworkPrefetchLimit)
         for item in prioritizedItems {
-            let candidates: [(URL, ArtworkKind)] = [
-                (item.heroImageURL, .hero),
-                (item.posterImageURL, .poster),
-                (item.artURL, .poster)
-            ].compactMap { url, kind in
-                guard let url else { return nil }
-                return (url, kind)
-            }
-            for (candidate, kind) in candidates {
-                let key = candidate.absoluteString
-                guard seen.insert(key).inserted else { continue }
-                prioritizedRequests.append(Self.artworkRequest(url: candidate, kind: kind, priority: .low))
-                if prioritizedRequests.count >= startupArtworkPrefetchLimit {
-                    break
-                }
-            }
+            guard let posterURL = Self.posterURL(for: item) else { continue }
+            let key = posterURL.absoluteString
+            guard seen.insert(key).inserted else { continue }
+            prioritizedRequests.append(Self.artworkRequest(url: posterURL, kind: .poster, priority: .low))
             if prioritizedRequests.count >= startupArtworkPrefetchLimit {
                 break
             }
@@ -185,6 +175,7 @@ struct LibraryArtworkPrefetchCoordinator {
         guard !requests.isEmpty else { return }
         var results: [PrefetchResult] = []
         for request in requests {
+            guard !dependencies.isSuspendedForStreaming() else { return }
             let result = await prefetchArtworkURL(
                 request,
                 reason: "startup_home_visible",
@@ -236,17 +227,17 @@ struct LibraryArtworkPrefetchCoordinator {
             requests.append(artworkRequest(url: url, kind: kind, priority: .high))
         }
 
+        // Featured hero is on-screen; carousel/rows prefetch posters only.
         append(featuredItem?.heroImageURL ?? featuredItem?.artURL, kind: .hero)
         for item in merchandising.recentlyAddedItems.prefix(StratixConstants.Hydration.visibleCarouselItemCount) {
-            append(item.heroImageURL ?? item.artURL, kind: .hero)
-            append(item.posterImageURL ?? item.artURL ?? item.heroImageURL, kind: .poster)
+            append(posterURL(for: item), kind: .poster)
         }
         for item in mruItems.prefix(StratixConstants.Hydration.visibleHomeRowItemCount) {
-            append(item.posterImageURL ?? item.artURL ?? item.heroImageURL, kind: .poster)
+            append(posterURL(for: item), kind: .poster)
         }
         for row in merchandising.rows.prefix(StratixConstants.Hydration.visibleHomeRowCount) {
             for item in row.items.prefix(StratixConstants.Hydration.visibleHomeRowItemCount) {
-                append(item.posterImageURL ?? item.artURL ?? item.heroImageURL, kind: .poster)
+                append(posterURL(for: item), kind: .poster)
             }
         }
 
@@ -313,6 +304,10 @@ struct LibraryArtworkPrefetchCoordinator {
         priority: ArtworkPriority
     ) -> ArtworkRequest {
         ArtworkRequest(url: url, kind: kind, priority: priority)
+    }
+
+    private static func posterURL(for item: CloudLibraryItem) -> URL? {
+        item.posterImageURL ?? item.artURL
     }
 
     private func awaitShellReady(dependencies: Dependencies) async -> Bool {

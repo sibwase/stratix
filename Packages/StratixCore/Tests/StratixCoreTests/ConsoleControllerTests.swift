@@ -94,6 +94,19 @@ struct ConsoleControllerTests {
     }
 
     @Test
+    func replaceConsolesForHarness_replacesInventoryAndClearsError() {
+        let controller = ConsoleController()
+        controller.setIsLoading(true)
+        controller.setLastError("discovery failed")
+
+        controller.replaceConsolesForHarness([makeConsole()])
+
+        #expect(controller.consoles.map(\.serverId) == ["mock-console-series-x"])
+        #expect(controller.lastError == nil)
+        #expect(controller.isLoading == false)
+    }
+
+    @Test
     func resetForSignOut_clearsConsoleState() {
         let controller = ConsoleController()
         controller.setIsLoading(true)
@@ -104,6 +117,22 @@ struct ConsoleControllerTests {
         #expect(controller.consoles.isEmpty)
         #expect(controller.isLoading == false)
         #expect(controller.lastError == nil)
+    }
+
+    private func makeConsole() -> RemoteConsole {
+        let json = """
+        {
+          "deviceName": "Living Room Xbox",
+          "serverId": "mock-console-series-x",
+          "powerState": "On",
+          "consoleType": "Xbox Series X",
+          "playPath": "/play",
+          "outOfHomeWarning": false,
+          "wirelessWarning": false,
+          "isDevKit": false
+        }
+        """
+        return try! JSONDecoder().decode(RemoteConsole.self, from: Data(json.utf8))
     }
 
     private func makeTokens() -> StreamTokens {

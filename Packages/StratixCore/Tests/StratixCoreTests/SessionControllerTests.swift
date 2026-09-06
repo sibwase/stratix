@@ -77,6 +77,34 @@ struct SessionControllerTests {
     }
 
     @Test
+    func cancelSignIn_duringPollingReturnsToUnauthenticatedWithoutError() async {
+        let defaults = makeDefaults(suiteName: "SessionControllerTests.cancelSignIn.duringPollingReturnsToUnauthenticatedWithoutError")
+        let stub = SessionAuthClientStub()
+        await stub.setRequestDeviceCodeResult(.success(makeDeviceCodeInfo()))
+        await stub.setPollDelayNanoseconds(400_000_000)
+        await stub.setPollForMSATokenResult(.success("msa-access-token"))
+        await stub.setExchangeResult(.success(makeTokens()))
+        let controller = SessionController(defaults: defaults, authClient: stub)
+
+        let signIn = Task { await controller.beginSignIn() }
+        var reachedAuthenticating = false
+        for _ in 0..<50 {
+            if case .authenticating = controller.authState {
+                reachedAuthenticating = true
+                break
+            }
+            try? await Task.sleep(nanoseconds: 10_000_000)
+        }
+        #expect(reachedAuthenticating)
+
+        await controller.cancelSignIn()
+        await signIn.value
+
+        #expect(isUnauthenticated(controller.authState))
+        #expect(controller.lastAuthError == nil)
+    }
+
+    @Test
     func beginSignIn_failurePublishesErrorAndUnauthenticatedState() async {
         let defaults = makeDefaults(suiteName: "SessionControllerTests.beginSignIn.failurePublishesErrorAndUnauthenticatedState")
         let stub = SessionAuthClientStub()
@@ -188,6 +216,29 @@ struct SessionControllerTests {
     }
 
     @Test
+    func cloudConnectAuth_usesCachedTokensWhenRefreshFailsWithTLSError() async throws {
+        let defaults = makeDefaults(suiteName: "SessionControllerTests.cloudConnectAuth.usesCachedTokensWhenRefreshFailsWithTLSError")
+        let stub = SessionAuthClientStub()
+        let tlsError = NSError(
+            domain: NSURLErrorDomain,
+            code: NSURLErrorSecureConnectionFailed,
+            userInfo: [NSLocalizedDescriptionKey: "A TLS error caused the secure connection to fail."]
+        )
+        await stub.setRefreshResult(.failure(tlsError))
+        await stub.setFetchLPTResult(.success("cached-lpt"))
+        let controller = SessionController(defaults: defaults, authClient: stub)
+        let cached = makeTokens(webToken: "web-token", webTokenUHS: "uhs")
+
+        await controller.applyTokensFromCoordinator(cached, mode: .full)
+        let auth = try await controller.cloudConnectAuth(logContext: "cloud stream start")
+
+        #expect(await stub.refreshCallCount == 1)
+        #expect(await stub.fetchLPTCallCount == 1)
+        #expect(auth.tokens.xcloudToken == cached.xcloudToken)
+        #expect(auth.userToken == "cached-lpt")
+    }
+
+    @Test
     func cloudConnectAuth_throwsWhenTokenRefreshFails() async {
         let defaults = makeDefaults(suiteName: "SessionControllerTests.cloudConnectAuth.throwsWhenTokenRefreshFails")
         let stub = SessionAuthClientStub()
@@ -281,6 +332,7 @@ private actor SessionAuthClientStub: SessionAuthServing {
     var exchangeResult: Result<StreamTokens, Error> = .failure(StubError.expected)
     var fetchLPTResult: Result<String, Error> = .failure(StubError.expected)
     var refreshDelayNanoseconds: UInt64 = 0
+    var pollDelayNanoseconds: UInt64 = 0
     var refreshCallCount = 0
     var fetchLPTCallCount = 0
     var signOutCallCount = 0
@@ -313,6 +365,10 @@ private actor SessionAuthClientStub: SessionAuthServing {
         refreshDelayNanoseconds = value
     }
 
+    func setPollDelayNanoseconds(_ value: UInt64) {
+        pollDelayNanoseconds = value
+    }
+
     func restoreStreamTokens() async -> StreamTokens? {
         restoreTokens
     }
@@ -330,7 +386,11 @@ private actor SessionAuthClientStub: SessionAuthServing {
     }
 
     func pollForMSAToken(deviceCode _: String, interval _: Int) async throws -> String {
-        try pollForMSATokenResult.get()
+        if pollDelayNanoseconds > 0 {
+            try await Task.sleep(nanoseconds: pollDelayNanoseconds)
+        }
+        try Task.checkCancellation()
+        return try pollForMSATokenResult.get()
     }
 
     func exchangeForStreamTokens(msaAccessToken _: String) async throws -> StreamTokens {

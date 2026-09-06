@@ -278,20 +278,21 @@ public final class LibraryController {
     }
 
     func apply(_ action: LibraryAction) {
-        state = LibraryReducer.reduce(state: state, action: action)
+        let next = LibraryReducer.reduce(state: state, action: action)
+        if next != state {
+            state = next
+        }
     }
 
     func apply(_ actions: [LibraryAction]) {
         guard !actions.isEmpty else { return }
-        if actions.count == 1 {
-            state = LibraryReducer.reduce(state: state, action: actions[0])
-            return
-        }
         var next = state
         for action in actions {
             next = LibraryReducer.reduce(state: next, action: action)
         }
-        state = next
+        if next != state {
+            state = next
+        }
     }
 
     /// Upserts an achievement summary into the matching product detail, then persists the change.
@@ -322,6 +323,30 @@ public final class LibraryController {
             apply(.productDetailsReplaced(nextDetails))
             saveProductDetailsCache()
         }
+    }
+
+    /// Removes a game from the MRU ("My games" / Continue playing) list and updates sections and cache.
+    public func removeFromMRU(titleID: TitleID) {
+        var hiddenIDs = Set(UserDefaults.standard.stringArray(forKey: "stratix_hidden_mru_title_ids") ?? [])
+        hiddenIDs.insert(titleID.rawValue)
+        UserDefaults.standard.set(Array(hiddenIDs), forKey: "stratix_hidden_mru_title_ids")
+
+        let updatedSections = sections.compactMap { section -> CloudLibrarySection? in
+            if section.id == "mru" || section.name.localizedCaseInsensitiveContains("continue") {
+                let filtered = section.items.filter { $0.titleId != titleID.rawValue }
+                return filtered.isEmpty ? nil : CloudLibrarySection(id: section.id, name: section.name, items: filtered)
+            } else {
+                let updatedItems = section.items.map { item -> CloudLibraryItem in
+                    if item.titleId == titleID.rawValue {
+                        return item.copying(isInMRU: false)
+                    }
+                    return item
+                }
+                return CloudLibrarySection(id: section.id, name: section.name, items: updatedItems)
+            }
+        }
+        apply(.sectionsReplaced(updatedSections))
+        saveCloudLibrarySectionsCache()
     }
 
     nonisolated static func makeIndexes(

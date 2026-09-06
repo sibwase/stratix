@@ -54,6 +54,13 @@ public final class ConsoleController {
         self.consoles = consoles
     }
 
+    /// Replaces the discovered console inventory for UI-test and preview harnesses.
+    public func replaceConsolesForHarness(_ consoles: [RemoteConsole]) {
+        self.consoles = consoles
+        lastError = nil
+        isLoading = false
+    }
+
     func setIsLoading(_ isLoading: Bool) {
         self.isLoading = isLoading
     }

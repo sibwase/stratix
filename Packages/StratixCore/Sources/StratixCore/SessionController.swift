@@ -71,6 +71,7 @@ enum SessionTokenApplyMode {
 
 private enum SessionTaskID {
     static let tokenRefresh = "tokenRefresh"
+    static let signIn = "signIn"
 }
 
 private enum SessionControllerError: Error {
@@ -133,27 +134,24 @@ public final class SessionController {
 
     /// Starts the interactive device-code sign-in flow and applies the resulting tokens.
     public func beginSignIn() async {
-        lastAuthError = nil
-        do {
-            logger.info("Requesting device code…")
-            let deviceCodeInfo = try await authClient.requestDeviceCode()
-            authState = .authenticating(deviceCodeInfo)
-            logger.info("Device code obtained — polling for MSA token…")
-
-            let msaToken = try await authClient.pollForMSAToken(
-                deviceCode: deviceCodeInfo.deviceCode,
-                interval: deviceCodeInfo.interval
-            )
-            logger.info("MSA token received — exchanging for stream tokens…")
-
-            let tokens = try await authClient.exchangeForStreamTokens(msaAccessToken: msaToken)
-            await applyTokens(tokens, mode: .full)
-            logger.info("Authentication complete. xhome host: \(tokens.xhomeHost)")
-        } catch {
-            logger.error("Auth failed: \(error.localizedDescription)")
-            lastAuthError = error.localizedDescription
-            authState = .unauthenticated
+        let (task, inserted) = await taskRegistry.taskOrRegister(id: SessionTaskID.signIn) {
+            Task { @MainActor [weak self] in
+                await self?.performSignIn()
+            }
         }
+        await task.value
+        if inserted {
+            await taskRegistry.remove(id: SessionTaskID.signIn)
+        }
+    }
+
+    /// Cancels an in-flight device-code sign-in and returns to the unauthenticated landing screen.
+    public func cancelSignIn() async {
+        await taskRegistry.cancel(id: SessionTaskID.signIn)
+        guard case .authenticating = authState else { return }
+        authState = .unauthenticated
+        lastAuthError = nil
+        logger.info("Sign-in cancelled.")
     }
 
     /// Clears auth state, cancels outstanding token work, and notifies the app coordinator.
@@ -239,17 +237,26 @@ public final class SessionController {
 
     /// Refreshes stream tokens and fetches the connect user token for a cloud-stream launch.
     func cloudConnectAuth(logContext: String) async throws -> CloudConnectAuth {
-        guard case .authenticated = authState else {
+        guard case .authenticated(let cachedTokens) = authState else {
             throw SessionControllerError.unauthenticated
         }
 
         logger.info("Refreshing stream tokens before cloud stream…")
-        let refreshedTokens = try await refreshStreamTokens(logContext: logContext)
-        logger.info("Stream tokens refreshed successfully.")
+        let tokens: StreamTokens
+        do {
+            tokens = try await refreshStreamTokens(logContext: logContext)
+            logger.info("Stream tokens refreshed successfully.")
+        } catch {
+            guard NetworkTransportError.isTransient(error) else { throw error }
+            logger.warning(
+                "Stream token refresh failed with a transport error (\(error.localizedDescription)); using cached tokens for \(logContext)."
+            )
+            tokens = cachedTokens
+        }
         logger.info("Fetching LPT for xCloud /connect...")
         let connectUserToken = try await fetchLPTForCloudConnect()
         logger.info("LPT obtained for /connect auth step.")
-        return CloudConnectAuth(tokens: refreshedTokens, userToken: connectUserToken)
+        return CloudConnectAuth(tokens: tokens, userToken: connectUserToken)
     }
 
     /// Overrides the visible auth error string, primarily for controller-owned error handling.
@@ -273,6 +280,47 @@ public final class SessionController {
     func testingSetXCloudRegions(_ regions: [LoginRegion]) {
         xcloudRegions = regions
         persistXCloudRegionsIfNeeded(regions)
+    }
+
+    private func performSignIn() async {
+        lastAuthError = nil
+        do {
+            logger.info("Requesting device code…")
+            let deviceCodeInfo = try await authClient.requestDeviceCode()
+            try Task.checkCancellation()
+            authState = .authenticating(deviceCodeInfo)
+            logger.info("Device code obtained — polling for MSA token…")
+
+            let msaToken = try await authClient.pollForMSAToken(
+                deviceCode: deviceCodeInfo.deviceCode,
+                interval: deviceCodeInfo.interval
+            )
+            try Task.checkCancellation()
+            logger.info("MSA token received — exchanging for stream tokens…")
+
+            let tokens = try await authClient.exchangeForStreamTokens(msaAccessToken: msaToken)
+            try Task.checkCancellation()
+            await applyTokens(tokens, mode: .full)
+            logger.info("Authentication complete. xhome host: \(tokens.xhomeHost)")
+        } catch {
+            if isCancellationError(error) {
+                if case .authenticating = authState {
+                    authState = .unauthenticated
+                }
+                lastAuthError = nil
+                logger.info("Sign-in cancelled.")
+                return
+            }
+            logger.error("Auth failed: \(error.localizedDescription)")
+            lastAuthError = error.localizedDescription
+            authState = .unauthenticated
+        }
+    }
+
+    private func isCancellationError(_ error: Error) -> Bool {
+        if error is CancellationError { return true }
+        let nsError = error as NSError
+        return nsError.domain == NSURLErrorDomain && nsError.code == NSURLErrorCancelled
     }
 
     private func applyTokens(_ tokens: StreamTokens, mode: SessionTokenApplyMode) async {

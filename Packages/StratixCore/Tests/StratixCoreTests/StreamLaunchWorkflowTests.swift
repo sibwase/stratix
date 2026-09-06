@@ -246,7 +246,7 @@ struct StreamLaunchWorkflowTests {
         #expect(await connectEvents.snapshot() == ["connect-start", "connect-end"])
         #expect(
             published.filter { action in
-                guard case .homeLaunchRequested("console-1") = action else { return false }
+                guard case .homeLaunchRequested(consoleId: "console-1") = action else { return false }
                 return true
             }.count == 1
         )
@@ -337,6 +337,6 @@ struct StreamLaunchWorkflowTests {
             )
         )
 
-        #expect(secondStartPublished.contains(.homeLaunchRequested("console-1")))
+        #expect(secondStartPublished.contains(.homeLaunchRequested(consoleId: "console-1")))
     }
 }

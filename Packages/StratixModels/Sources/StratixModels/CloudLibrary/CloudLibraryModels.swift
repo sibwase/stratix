@@ -62,6 +62,23 @@ public struct CloudLibraryItem: Identifiable, Sendable, Equatable {
         self.supportedInputTypes = supportedInputTypes
         self.isInMRU = isInMRU
     }
+
+    public func copying(isInMRU: Bool) -> CloudLibraryItem {
+        CloudLibraryItem(
+            titleId: titleId,
+            productId: productId,
+            name: name,
+            shortDescription: shortDescription,
+            artURL: artURL,
+            posterImageURL: posterImageURL,
+            heroImageURL: heroImageURL,
+            galleryImageURLs: galleryImageURLs,
+            publisherName: publisherName,
+            attributes: attributes,
+            supportedInputTypes: supportedInputTypes,
+            isInMRU: isInMRU
+        )
+    }
 }
 
 public enum CloudLibraryMediaKind: String, Sendable, Equatable, Codable {

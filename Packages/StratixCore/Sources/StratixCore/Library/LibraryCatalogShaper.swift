@@ -38,7 +38,9 @@ enum LibraryShaper {
         productByXCloudTitleId: [String: CatalogProduct],
         mruProductIds: Set<ProductID>
     ) -> [CloudLibrarySection] {
-        let mruItems: [CloudLibraryItem] = mruEntries.compactMap { entry in
+        let hiddenMRUTitleIDs = Set(UserDefaults.standard.stringArray(forKey: "stratix_hidden_mru_title_ids") ?? [])
+        let filteredMRUEntries = mruEntries.filter { !hiddenMRUTitleIDs.contains($0.titleID.rawValue) }
+        let mruItems: [CloudLibraryItem] = filteredMRUEntries.compactMap { entry in
             let resolved = resolvedProduct(
                 forTitleID: entry.titleID,
                 productID: entry.productID,
@@ -61,12 +63,13 @@ enum LibraryShaper {
                 productMap: productMap,
                 productByXCloudTitleId: productByXCloudTitleId
             )
+            let inMRU = mruProductIds.contains(title.productID) && !hiddenMRUTitleIDs.contains(title.titleID.rawValue)
             return makeItem(
                 titleID: title.titleID,
                 productID: title.productID,
                 product: resolved,
                 fallback: title,
-                isInMRU: mruProductIds.contains(title.productID)
+                isInMRU: inMRU
             )
         }
         .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }

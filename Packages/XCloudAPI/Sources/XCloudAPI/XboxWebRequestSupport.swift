@@ -23,6 +23,7 @@ enum XboxWebRequestSupport {
         body: Data? = nil
     ) -> URLRequest {
         var request = URLRequest(url: url)
+        request.timeoutInterval = 12.0
         request.httpMethod = method
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue(contractVersion, forHTTPHeaderField: "x-xbl-contract-version")

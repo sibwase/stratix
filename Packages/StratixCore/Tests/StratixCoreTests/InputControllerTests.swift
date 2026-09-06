@@ -105,4 +105,38 @@ struct InputControllerTests {
 
         #expect(commands.isEmpty)
     }
+
+    @Test
+    func streamLaunchCancelGate_ignoresAButtonAlreadyHeldAtAttach() {
+        var gate = StreamLaunchCancelGate(isAPressed: true)
+
+        #expect(gate.registerAPressed(true) == false)
+        #expect(gate.registerAPressed(false) == false)
+        #expect(gate.registerAPressed(true) == true)
+    }
+
+    @Test
+    func networkTransportError_classifiesTLSFailuresAsTransient() {
+        let tlsError = NSError(
+            domain: NSURLErrorDomain,
+            code: NSURLErrorSecureConnectionFailed,
+            userInfo: [NSLocalizedDescriptionKey: "A TLS error caused the secure connection to fail."]
+        )
+        #expect(NetworkTransportError.isTransient(tlsError))
+        #expect(
+            NetworkTransportError.isTransient(
+                NSError(domain: "test", code: 1, userInfo: [NSLocalizedDescriptionKey: "expected"])
+            ) == false
+        )
+    }
+
+    @Test
+    func streamLaunchCancelGate_cancelsOnFreshAPressWhenIdleAtAttach() {
+        var gate = StreamLaunchCancelGate(isAPressed: false)
+
+        #expect(gate.registerAPressed(true) == true)
+        #expect(gate.registerAPressed(true) == false)
+        #expect(gate.registerAPressed(false) == false)
+        #expect(gate.registerAPressed(true) == true)
+    }
 }

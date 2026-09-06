@@ -170,7 +170,7 @@ public struct MultiProducerSingleConsumerAsyncChannel<Element, Failure: Error>: 
   ///   producer while the channel should be passed to the consumer.
   public static func makeChannel(
     of elementType: Element.Type = Element.self,
-    throwing failureType: Failure.Type = Never.self,
+    throwing failureType: Failure.Type,
     backpressureStrategy: Source.BackpressureStrategy
   ) -> sending ChannelAndStream {
     let storage = _Storage(
@@ -179,6 +179,13 @@ public struct MultiProducerSingleConsumerAsyncChannel<Element, Failure: Error>: 
     let source = Source(storage: storage)
 
     return .init(channel: .init(storage: storage), source: source)
+  }
+
+  public static func makeChannel(
+    of elementType: Element.Type = Element.self,
+    backpressureStrategy: Source.BackpressureStrategy
+  ) -> sending ChannelAndStream where Failure == Never {
+    makeChannel(of: elementType, throwing: Never.self, backpressureStrategy: backpressureStrategy)
   }
 
   init(storage: _Storage) {

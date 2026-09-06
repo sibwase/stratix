@@ -408,7 +408,22 @@ public actor MicrosoftAuthService {
         guard let refreshToken = await tokenStore.loadRefreshToken() else {
             throw AuthError.noStreamToken
         }
-        return try await fetchLPT(refreshToken: refreshToken)
+        do {
+            return try await fetchLPT(refreshToken: refreshToken)
+        } catch {
+            if let cached = await cachedLPTIfValid() {
+                return cached
+            }
+            throw error
+        }
+    }
+
+    private func cachedLPTIfValid() async -> String? {
+        guard let token = await tokenStore.loadLPTToken(), !token.isEmpty else { return nil }
+        if let expiry = await tokenStore.loadLPTTokenExpiry(), expiry <= Date() {
+            return nil
+        }
+        return token
     }
 
     /// Mirrors xal-node's getMsalToken() path: exchange the MSA refresh token for a Passport

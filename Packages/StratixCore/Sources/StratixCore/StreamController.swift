@@ -35,6 +35,7 @@ public final class StreamController {
     public var lastReconnectSuppressionReason: StreamReconnectSuppressionReason? {
         state.lastReconnectSuppressionReason
     }
+    public var lastStreamStartFailure: String? { state.lastStreamStartFailure }
     public static var defaultReconnectTotalWindowSeconds: Int {
         StreamReconnectPolicy.defaultTotalRetryWindowSeconds
     }
@@ -155,12 +156,20 @@ public final class StreamController {
     }
 
     func apply(_ action: StreamAction) {
-        state = StreamReducer.reduce(state: state, action: action)
+        let next = StreamReducer.reduce(state: state, action: action)
+        if next != state {
+            state = next
+        }
     }
 
     func apply(_ actions: [StreamAction]) {
+        guard !actions.isEmpty else { return }
+        var next = state
         for action in actions {
-            state = StreamReducer.reduce(state: state, action: action)
+            next = StreamReducer.reduce(state: next, action: action)
+        }
+        if next != state {
+            state = next
         }
     }
 

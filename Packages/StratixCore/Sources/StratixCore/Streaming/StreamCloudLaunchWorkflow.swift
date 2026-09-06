@@ -121,7 +121,6 @@ final class StreamCloudLaunchWorkflow {
                 .streamStartFailed(message),
                 .sessionAttachmentStateSet(.detached)
             ])
-            environment.requestLaunchExit()
             return
         }
 
@@ -133,7 +132,6 @@ final class StreamCloudLaunchWorkflow {
                 .streamStartFailed(message),
                 .sessionAttachmentStateSet(.detached)
             ])
-            environment.requestLaunchExit()
             return
         }
 
@@ -182,7 +180,6 @@ final class StreamCloudLaunchWorkflow {
                 .streamStartFailed(message),
                 .sessionAttachmentStateSet(.detached)
             ])
-            environment.requestLaunchExit()
             return
         }
 
