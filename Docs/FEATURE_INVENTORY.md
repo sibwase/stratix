@@ -104,8 +104,8 @@ One current-repo detail worth keeping explicit: cloud launch is deliberately con
 | Stream start from browse/detail surfaces | Implemented | Launch actions in the library experience feed the real stream startup workflows. |
 | Clean disconnect | Implemented | Disconnect and shell recovery are explicit parts of the live runtime path. |
 | Session keepalive | Implemented | Keepalive behavior is part of the stream-session management layer. |
-| xHome launch flow | Implemented | The repo contains home-console streaming support in addition to xCloud. |
-| Auto-reconnect | Partial | Recovery exists, but reconnect is still more conservative than a true seamless session resume. |
+| xHome launch flow | Implemented | Home-console streaming exists; it still needs more real-device testing than the cloud path. |
+| Auto-reconnect | Implemented | Stream recovery resumes the session without a full relaunch. |
 | Queue wait-time fetch | Partial | API and model support exist, but the wait-time number is not yet surfaced as a polished user-facing launch screen element. |
 | Region override | Partial | Region override exists in current settings and config surfaces, but the UX is still simpler than a full server-driven region picker. |
 | Multiple concurrent streams | Not Started | The live product supports one active stream at a time. |

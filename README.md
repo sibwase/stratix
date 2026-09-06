@@ -7,9 +7,8 @@
 [![tvOS 26](https://img.shields.io/badge/tvOS-26.0-black.svg?logo=apple)](https://developer.apple.com/tvos/)
 [![Platform: Apple TV](https://img.shields.io/badge/Platform-Apple%20TV-lightgrey.svg?logo=apple)](https://www.apple.com/apple-tv-4k/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Release: 1.0](https://img.shields.io/badge/Release-1.0-brightgreen.svg)](https://github.com/sibwase/stratix/releases/tag/v1.0.0)
 
-This repository is a fork of [nafields/stratix](https://github.com/nafields/stratix) with the 1.0 library-first shell, Local console restyle, and a one-command Apple TV install script.
+This repository is a fork of [nafields/stratix](https://github.com/nafields/stratix).
 
 Stratix is a native tvOS app that brings Xbox Game Pass cloud gaming to Apple TV. It is a native Swift implementation of the xCloud and xHome client experience for tvOS, built because Apple TV has no browser runtime and Microsoft does not make an official Apple TV app.
 
@@ -23,26 +22,6 @@ This project builds on protocol and API knowledge from earlier community project
 - [unknownskl/xbox-xcloud-player](https://github.com/unknownskl/xbox-xcloud-player) — WebRTC player and streaming groundwork
 
 Stratix is not a direct port of those codebases. It is a native tvOS implementation in Swift, but it would be inaccurate to present the project without acknowledging the earlier community work that helped establish understanding of these services and protocols.
-
-## Screenshots
-
-[![Watch the Stratix demo video](Docs/Screenshots/Home.png)](Docs/Screenshots/Demo.mp4)
-
-[Watch the demo video](Docs/Screenshots/Demo.mp4)
-
-| Sign In | Loading |
-|---|---|
-| ![Sign In](Docs/Screenshots/Sign-In.png) | ![Loading](Docs/Screenshots/Loading.png) |
-
-| Home| Side Menu |
-|---|---|
-|![Home](Docs/Screenshots/Home.png) | ![Side Menu](Docs/Screenshots/Side_Menu.png) |
-
-| Game Details | Search |
-|---|---|
-| ![Game Details](Docs/Screenshots/Game_Details.png) | ![Search](Docs/Screenshots/Search.png) |
-
-This is the 1.0 release of the [sibwase/stratix](https://github.com/sibwase/stratix) fork. Core library, streaming, and local-console flows are in place. Contributions are welcome.
 
 ---
 
@@ -63,10 +42,10 @@ Stratix also supports **xHome** streaming. If you own an Xbox console, you can s
 | Feature | Status | Notes |
 |---|---|---|
 | Microsoft device-code sign-in | ✅ Working | Full token lifecycle with automatic refresh |
-| Cloud library browsing | ✅ Working | Home rails, full library grid, and search |
+| Cloud library browsing | ✅ Working | Full library grid and search |
 | Title detail screens | ✅ Working | Metadata, artwork, launch actions |
 | xCloud game streaming | ✅ Working | Primary streaming path, battle-tested |
-| xHome console streaming | ⚠️ Not Fully Tested | Local console streaming over home network |
+| xHome console streaming | ⚠️ Need testing | Local console streaming over home network |
 | Controller input | ✅ Working | Gamepad capture and 125 Hz input channel |
 | Metal video rendering | ✅ Working | Metal-backed renderer with sample-buffer fallback |
 | In-stream guide overlay | ✅ Working | Accessible overlay during active streams |
@@ -75,7 +54,7 @@ Stratix also supports **xHome** streaming. If you own an Xbox console, you can s
 | Diagnostics and stream stats | ✅ Working | In-stream stats overlay and logging pipeline |
 | Multi-account support | ❌ Not yet | Single Microsoft account only |
 | Party and invite UX | ❌ Not yet | No group play features yet |
-| Seamless auto-reconnect | ⚠️ Partial | Reconnect exists but is conservative |
+| Seamless auto-reconnect | ✅ Working | Stream recovery resumes the session without a full relaunch |
 
 For the full breakdown of what works, what is partial, and what is explicitly planned, see [`Docs/FEATURE_INVENTORY.md`](Docs/FEATURE_INVENTORY.md).
 
@@ -86,7 +65,6 @@ A few things are deliberately not finished yet and are worth naming upfront so t
 - **Multi-account:** The app assumes one Microsoft account at a time. Switching accounts requires signing out completely.
 - **Party and invites:** No group play, no invites, no friend-session joining. This is a significant gap for social gaming but is on the roadmap.
 - **Search | UI/UX:** Search and navigation work ok. But disappear occasionaly or trigger the side-rail inadvertantly. Create a PR if you have a fix or proposal.
-- **Conservative reconnect:** If a stream drops, it reconnects — but not seamlessly. There is a noticeable recovery flow rather than a transparent resume.
 
 If any of these affects you, they are also great places to contribute.
 

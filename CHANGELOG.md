@@ -8,8 +8,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
-## [1.0.0] — 2026-09-06
-
 ### Added
 - Library-first shell: Full library is the default browse surface; the side rail uses Library and Local.
 - Local (My Consoles) screen restyle with shared chrome and header actions for refresh/troubleshoot.
