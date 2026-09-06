@@ -490,7 +490,7 @@ extension CloudLibraryLibraryScreen {
         pendingFocusTask = Task { @MainActor in
             await Task.yield()
             guard !Task.isCancelled else { return }
-            focusedTarget = .letterIndex
+            focusedTarget = .letter(targetLetter)
         }
     }
 

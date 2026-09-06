@@ -314,7 +314,7 @@ struct CloudLibraryLibraryScreen: View, Equatable {
                     sectionIndexByLetter: cachedLetterSectionIndexByLetter,
                     positionLetter: letterIndexHighlightedLetter,
                     focusedTarget: $focusedTarget,
-                    railFocusValue: .letterIndex,
+                    letterFocusValue: { .letter($0) },
                     onSelectLetter: { letter in
                         jumpToLetter(letter, scrollProxy: scrollProxy)
                     },
