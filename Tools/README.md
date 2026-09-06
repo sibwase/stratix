@@ -5,7 +5,7 @@ This directory contains repo support tooling for Stratix.
 ## Main Areas
 
 - `ci/`: guard scripts and contract checks used by local and CI validation
-- `dev/`: local validation wrappers and development helpers
+- `dev/`: local validation wrappers, development helpers, and `install-apple-tv.sh` for a one-command device install
 - `docs/`: documentation/export helpers
 - `review/`: review and audit helpers
 - `perf/`: profiling and performance workflows

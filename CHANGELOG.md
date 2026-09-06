@@ -8,6 +8,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-09-06
+
+### Added
+- Library-first shell: Full library is the default browse surface; the side rail uses Library and Local.
+- Local (My Consoles) screen restyle with shared chrome and header actions for refresh/troubleshoot.
+- Stream launch cancel gate so a held A press does not immediately dismiss a new stream.
+- TLS/auth fallback to cached tokens when Microsoft login is unreachable.
+- Alphabetical letter rail that tracks live library scrolling and settles on the focused card.
+- `Tools/dev/install-apple-tv.sh` to build and install onto a paired Apple TV.
+
+### Changed
+- Game tiles keep title/studio left-aligned and scaled with the focused poster.
+- Artwork decode and poster prefetch are tighter for large library grids.
+
+### Removed
+- Home browse route UI and unused home lockup design tokens.
+
 ## [0.1.0-alpha] — 2026-04-07
 
 ### Initial public release

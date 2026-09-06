@@ -7,7 +7,9 @@
 [![tvOS 26](https://img.shields.io/badge/tvOS-26.0-black.svg?logo=apple)](https://developer.apple.com/tvos/)
 [![Platform: Apple TV](https://img.shields.io/badge/Platform-Apple%20TV-lightgrey.svg?logo=apple)](https://www.apple.com/apple-tv-4k/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
-[![Status: Early Alpha](https://img.shields.io/badge/Status-Early%20Alpha-yellow.svg)]()
+[![Release: 1.0](https://img.shields.io/badge/Release-1.0-brightgreen.svg)](https://github.com/sibwase/stratix/releases/tag/v1.0.0)
+
+This repository is a fork of [nafields/stratix](https://github.com/nafields/stratix) with the 1.0 library-first shell, Local console restyle, and a one-command Apple TV install script.
 
 Stratix is a native tvOS app that brings Xbox Game Pass cloud gaming to Apple TV. It is a native Swift implementation of the xCloud and xHome client experience for tvOS, built because Apple TV has no browser runtime and Microsoft does not make an official Apple TV app.
 
@@ -40,7 +42,7 @@ Stratix is not a direct port of those codebases. It is a native tvOS implementat
 |---|---|
 | ![Game Details](Docs/Screenshots/Game_Details.png) | ![Search](Docs/Screenshots/Search.png) |
 
-This is an early public alpha. The core flows work. There are rough edges. Specifically around UI/UX. Contributions are very welcome.
+This is the 1.0 release of the [sibwase/stratix](https://github.com/sibwase/stratix) fork. Core library, streaming, and local-console flows are in place. Contributions are welcome.
 
 ---
 
@@ -108,9 +110,17 @@ If any of these affects you, they are also great places to contribute.
 
 **1. Clone the repository.**
 ```bash
-git clone https://github.com/nafields/stratix.git
+git clone https://github.com/sibwase/stratix.git
 cd stratix
 ```
+
+**Install on a connected Apple TV in one command** (Xcode 26+, Apple TV in Developer Mode, signed in to a development team):
+
+```bash
+bash Tools/dev/install-apple-tv.sh
+```
+
+If several Apple TVs are paired, set `APPLE_TV_DEVICE_ID` to the UDID from Xcode → Window → Devices and Simulators.
 
 **2. Open the workspace — not the project file.**
 ```bash
